@@ -29,13 +29,40 @@
 #include <vector>
 #include <string>
 #include <iostream>
-#include <boost/log/trivial.hpp>
+#include <stdint.h>
 
 using namespace std;
 
 class Utils {
 private:
 public:
+    //String utils
+    static bool starts_with(const string s, const string prefix); 
+    static bool ends_with(const string s, const string suffix); 
+    static bool contains(const string s, const string substr);
+    //End string utils
+
+    //File utils
+    static bool hasExtension(const string &file);
+    static string extension(const string &file);
+    static string removeExtension(string file);
+    static bool isDirectory(string dirname);
+    static vector<string> getFilesWithPrefix(string dir, string prefix);
+    static vector<string> getFilesWithSuffix(string dir, string suffix);
+    static vector<string> getFiles(string dir, bool ignoreExtension = false);
+    static vector<string> getSubdirs(string dir);
+    static long getNBytes(std::string input);
+    static bool isCompressed(std::string input);
+    static bool exists(std::string file);
+    static uint64_t fileSize(string file);
+    static void create_directories(string newdir);
+    static void remove(string file);
+    static void remove_all(string path);
+    static void rename(string oldfile, string newfile);
+    static string parentDir(string file);
+    static string filename(string path);
+    //End file utils
+
     static int numberOfLeadingZeros(unsigned int number) {
         if (number == 0)
             return 32;
@@ -176,16 +203,6 @@ public:
     static int getNumberPhysicalCores();
 
     static long quickSelect(long *vector, int size, int k);
-
-    static vector<string> getFilesWithPrefix(string dir, string prefix);
-
-    static vector<string> getFiles(string dir, bool ignoreExtension = false);
-
-    static vector<string> getSubdirs(string dir);
-
-    static long getNBytes(std::string input);
-
-    static bool isCompressed(std::string input);
 
     static long long unsigned getCPUCounter();
 

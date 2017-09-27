@@ -19,50 +19,17 @@
  * under the License.
 **/
 
-#include <boost/chrono.hpp>
-
-#include <boost/log/trivial.hpp>
-#include <boost/log/utility/setup/console.hpp>
-#include <boost/log/core.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/support/date_time.hpp>
-#include <boost/log/utility/setup/common_attributes.hpp>
-
-#include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/path.hpp>
-
 #include <boost/program_options.hpp>
-
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 
 #include <kognac/kognac.h>
 #include <kognac/compressor.h>
+#include <kognac/logs.h>
 
-
-namespace timens = boost::chrono;
-namespace logging = boost::log;
-namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
 using namespace std;
-
-void initLogging(logging::trivial::severity_level level) {
-    logging::add_common_attributes();
-    logging::add_console_log(std::cerr,
-                             logging::keywords::format =
-                                 (logging::expressions::stream << "["
-                                  << logging::expressions::attr <
-                                  boost::log::attributes::current_thread_id::value_type > (
-                                      "ThreadID") << " "
-                                  << logging::expressions::format_date_time <
-                                  boost::posix_time::ptime > ("TimeStamp",
-                                          "%H:%M:%S") << " - "
-                                  << logging::trivial::severity << "] "
-                                  << logging::expressions::smessage));
-    boost::shared_ptr<logging::core> core = logging::core::get();
-    core->set_filter(logging::trivial::severity >= level);
-}
 
 void printHelp(const char *programName, po::options_description & desc) {
     cout << "Usage: " << programName << " [parameters]" << endl << endl;
@@ -73,7 +40,7 @@ void initParams(int argc, const char** argv, po::variables_map &vm,
                 po::options_description &cmdline_options) {
 
     cmdline_options.add_options()
-    ("logLevel,l", po::value<logging::trivial::severity_level>(), "Set the log level (accepted values: trace, debug, info, warning, error, fatal). Default is info.")
+    //("logLevel,l", TRACE, "Set the log level (accepted values: trace, debug, info, warning, error, fatal). Default is info.")
     ("input,i", po::value<string>(), "input. REQUIRED")
     ("help,h", "print help message")
     ("fp,f", po::value<bool>()->default_value(false), "Use FPTree to mine classes. Default is 'false'")
@@ -99,11 +66,11 @@ int main(int argc, const char **argv) {
     initParams(argc, argv, vm, desc);
 
     //Init logging
-    logging::trivial::severity_level level =
+    /*logging::trivial::severity_level level =
         vm.count("logLevel") ?
         vm["logLevel"].as<logging::trivial::severity_level>() :
         logging::trivial::info;
-    initLogging(level);
+    initLogging(level);*/
 
     if (argc == 1 || vm.count("help") || !vm.count("input")
             || !vm.count("output") || !vm.count("sampleArg1")) {
@@ -134,18 +101,19 @@ int main(int argc, const char **argv) {
     }
 
     Kognac kognac(input, output, maxPatternLength);
-    BOOST_LOG_TRIVIAL(info) << "Sampling the graph ...";
+    LOG(INFO) << "Sampling the graph ...";
+    //LOG(INFO) << "Sampling the graph ...";
     kognac.sample(sampleMethod, sampleArg, sampleArg2, parallelThreads,
                   maxConcurrentThreads);
-    BOOST_LOG_TRIVIAL(info) << "Creating the dictionary mapping ...";
+    LOG(INFO) << "Creating the dictionary mapping ...";
     kognac.compress(parallelThreads, maxConcurrentThreads, useFP, minSupport,
             serializeTaxonomy);
 
     if (compressGraph) {
-        BOOST_LOG_TRIVIAL(info) << "Compressing the triples ...";
+        LOG(INFO) << "Compressing the triples ...";
         kognac.compressGraph(parallelThreads, maxConcurrentThreads);
     }
-    BOOST_LOG_TRIVIAL(info) << "Done.";
+    LOG(INFO) << "Done.";
 
 
     return 0;

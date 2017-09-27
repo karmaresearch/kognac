@@ -24,8 +24,6 @@
 
 #include <kognac/murmurhash3.h>
 
-#include <boost/functional/hash.hpp>
-
 #include <cstring>
 
 using namespace std;
@@ -117,8 +115,9 @@ public:
 
     static size_t hashArray(const uint64_t *array, const size_t size) {
         size_t seed = 0;
+        std::hash<uint64_t> hasher;
         for (size_t i = 0; i < size; ++i) {
-            boost::hash_combine(seed, array[i]);
+            seed ^= hasher(array[i]) + 0x9e3779b9 + (seed<<6) + (seed>>2);
         }
         return seed;
     }

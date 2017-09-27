@@ -24,8 +24,6 @@
 #include <mutex>
 #include <list>
 
-#include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/path.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 
@@ -35,7 +33,6 @@
 #include <kognac/fpgrowth.h>
 #include <kognac/compressor.h>
 
-namespace fs = boost::filesystem;
 using namespace std;
 
 struct Kognac_TextClassID {

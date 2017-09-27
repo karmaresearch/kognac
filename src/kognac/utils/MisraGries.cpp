@@ -30,9 +30,6 @@
 #include <algorithm>
 #include <vector>
 
-#include <boost/log/trivial.hpp>
-
-
 MG :: MG (const unsigned long size) : heapSize(size) {
     lookupMap.set_empty_key(make_pair(0, MG_EMPTY_KEY));
     lookupMap.set_deleted_key(make_pair(0, MG_DELETED_KEY));

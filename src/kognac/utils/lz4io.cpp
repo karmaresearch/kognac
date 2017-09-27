@@ -21,8 +21,7 @@
 
 #include <kognac/lz4io.h>
 #include <kognac/utils.h>
-
-#include <boost/log/trivial.hpp>
+#include <kognac/logs.h>
 
 #include <cstring>
 
@@ -45,7 +44,7 @@ void LZ4Writer::compressAndWriteBuffer() {
                                       uncompressedBufferLen);
 #endif
     if (compressedSize == 0 || compressedSize > SIZE_COMPRESSED_SEG - 21) {
-        BOOST_LOG_TRIVIAL(error) << "I could not compress in the given buffer";
+        LOG(ERROR) << "I could not compress in the given buffer";
         throw 10;
     }
     Utils::encode_intLE(compressedBuffer, 9, compressedSize);
@@ -53,7 +52,7 @@ void LZ4Writer::compressAndWriteBuffer() {
     os.write(compressedBuffer, compressedSize + 21);
 
     if (!os.good()) {
-        BOOST_LOG_TRIVIAL(error) << "Problems with writing the file " << path <<
+        LOG(ERROR) << "Problems with writing the file " << path <<
                                  "good=" << os.good() << " eof=" << os.eof() << " fail=" << os.fail() << " bad=" << os.bad();
         throw 10;
     }
@@ -164,7 +163,7 @@ LZ4Writer::~LZ4Writer() {
     os.flush();
 
     if (!os.good()) {
-        BOOST_LOG_TRIVIAL(error) << "Problems in closing the file " << path;
+        LOG(ERROR) << "Problems in closing the file " << path;
     }
 
     os.close();

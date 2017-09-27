@@ -37,10 +37,10 @@ void MultiDiskLZ4Writer::run() {
     while (true) {
         std::list<BlockToWrite> blocks;
 
-        auto start = boost::chrono::system_clock::now();
+        auto start = std::chrono::system_clock::now();
         std::unique_lock<std::mutex> lk(mutexBlockToWrite);
         cvBlockToWrite.wait(lk, std::bind(&DiskLZ4Writer::areBlocksToWrite, this));
-        time_waitingwriting += boost::chrono::system_clock::now() - start;
+        time_waitingwriting += std::chrono::system_clock::now() - start;
 
         if (addedBlocksToWrite > 0) {
             //Search the first non-empty file to write
@@ -57,7 +57,7 @@ void MultiDiskLZ4Writer::run() {
             break;
         }
 
-        start = boost::chrono::system_clock::now();
+        start = std::chrono::system_clock::now();
 
         //First get the right file to open
         auto it = blocks.begin();
@@ -72,11 +72,11 @@ void MultiDiskLZ4Writer::run() {
                 openedstreams[filetoremove] = false;
                 nopenedstreams--;
             }
-            //BOOST_LOG_TRIVIAL(debug) << "Open file " << files[idFile];
+            //LOG(DEBUG) << "Open file " << files[idFile];
             string path = files[idFile].filestowrite[currentfileidx];
             streams[idFile].open(path, ios_base::ate | ios_base::app);
             if (!streams[idFile].good()) {
-                BOOST_LOG_TRIVIAL(error) << "Problems opening file " << idFile;
+                LOG(ERROR) << "Problems opening file " << idFile;
             }
             openedstreams[idFile] = true;
             historyopenedfiles.push_back(idFile);
@@ -91,20 +91,20 @@ void MultiDiskLZ4Writer::run() {
                 streams[idFile].close();
                 streams[idFile].open(path, ios_base::ate | ios_base::app);
                 if (!streams[idFile].good()) {
-                    BOOST_LOG_TRIVIAL(error) << "Problems opening file " << idFile;
+                    LOG(ERROR) << "Problems opening file " << idFile;
                 }
             }
             //Write and check the writing was successful
             streams[idFile].write(it->buffer, it->sizebuffer);
             if (!streams[idFile].good()) {
-                BOOST_LOG_TRIVIAL(error) << "Problems writing the file " << idFile;
+                LOG(ERROR) << "Problems writing the file " << idFile;
             }
 
             it++;
         }
-        time_rawwriting += boost::chrono::system_clock::now() - start;
+        time_rawwriting += std::chrono::system_clock::now() - start;
 
-        //BOOST_LOG_TRIVIAL(debug) << "WRITING TIME " << time_rawwriting.count()
+        //LOG(DEBUG) << "WRITING TIME " << time_rawwriting.count()
         //                         << "ec. Waitingwriting " << time_waitingwriting.count()
         //                         << "sec." << " Waiting buffer "
         //                         << time_waitingbuffer.count() << "sec.";

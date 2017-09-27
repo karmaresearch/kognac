@@ -33,23 +33,12 @@
 #include <kognac/sorter.h>
 #include <kognac/filemerger.h>
 #include <kognac/filemerger2.h>
+#include <kognac/logs.h>
 
 #include <iostream>
 #include <utility>
 #include <cstdlib>
 
-#include <boost/lexical_cast.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/thread.hpp>
-#include <boost/thread/condition_variable.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/chrono.hpp>
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/lexical_cast.hpp>
-
-namespace fs = boost::filesystem;
-namespace timens = boost::chrono;
 using namespace std;
 
 bool lessTermFrequenciesDesc(const std::pair<string, long> &p1,
@@ -247,7 +236,7 @@ void Compressor::uncompressTriples(ParamsUncompressTriples params) {
         delete heap;
     }
 
-    BOOST_LOG_TRIVIAL(debug) << "Parsed triples: " << count << " not valid: " << countNotValid;
+    LOG(DEBUG) << "Parsed triples: " << count << " not valid: " << countNotValid;
 }
 
 void Compressor::sampleTerm(const char *term, int sizeTerm, int sampleArg,
@@ -384,7 +373,7 @@ void Compressor :: uncompressTriplesForMGCS (vector<FileInfo> &files, MG *heap, 
         delete[] supportBuffers[2];
     }
 
-    BOOST_LOG_TRIVIAL(debug) << "Parsed triples: " << count << " not valid: " << countNotValid;
+    LOG(DEBUG) << "Parsed triples: " << count << " not valid: " << countNotValid;
 }
 
 void Compressor :: extractTermsForMGCS (ParamsExtractCommonTermProcedure params, const set<string>& freq, const CountSketch *cs) {
@@ -461,7 +450,7 @@ void Compressor :: extractTermsForMGCS (ParamsExtractCommonTermProcedure params,
         }
     }
 
-    BOOST_LOG_TRIVIAL(debug) << "Hashtable size after extraction " << map->size() << ". Frequent terms " << countFrequent << " infrequent " << countInfrequent;
+    LOG(DEBUG) << "Hashtable size after extraction " << map->size() << ". Frequent terms " << countFrequent << " infrequent " << countInfrequent;
 
     if (copyHashes) {
         delete[] prevEntries[0];
@@ -607,7 +596,7 @@ void Compressor::uncompressAndSampleTriples(vector<FileInfo> &files,
     }
 
     delete[] supportBuffer2;
-    BOOST_LOG_TRIVIAL(debug) << "Parsed triples: " << count << " not valid: " << countNotValid;
+    LOG(DEBUG) << "Parsed triples: " << count << " not valid: " << countNotValid;
 }
 
 void Compressor::extractUncommonTerm(const char *term, const int sizeTerm,
@@ -738,7 +727,7 @@ void Compressor::extractUncommonTerms(const int dictPartitions,
         int sizeTerm = 0;
         int flag = reader->readByte(inputFileId); //Ignore it. Should always be 0
         if (flag != 0) {
-            BOOST_LOG_TRIVIAL(error) << "Flag should always be zero!";
+            LOG(ERROR) << "Flag should always be zero!";
             throw 10;
         }
 
@@ -838,7 +827,7 @@ void Compressor::extractCommonTerms(ParamsExtractCommonTermProcedure params) {
         pos = (pos + 1) % 3;
     }
 
-    BOOST_LOG_TRIVIAL(debug) << "Hashtable size after extraction " << map->size() << ". Frequent terms " << countFrequent;
+    LOG(DEBUG) << "Hashtable size after extraction " << map->size() << ". Frequent terms " << countFrequent;
 
 }
 
@@ -948,7 +937,7 @@ void Compressor::newCompressTriples(ParamsNewCompressProcedure params) {
         nextPos = tripleId & 0x3;
         nextTerm = uncommonTermsReader->readLong(idReader);
     } else {
-        BOOST_LOG_TRIVIAL(debug) << "No uncommon file is provided";
+        LOG(DEBUG) << "No uncommon file is provided";
     }
 
     long currentTripleId = params.part;
@@ -988,7 +977,7 @@ void Compressor::newCompressTriples(ParamsNewCompressProcedure params) {
                     bool ok = false;
                     if (ignorePredicates && i == 1) {
                         if (size != 2) {
-                            BOOST_LOG_TRIVIAL(error) << "Strange. This term should be empty ...";
+                            LOG(ERROR) << "Strange. This term should be empty ...";
                             throw 10;
                         }
                         triple[i] = 0; //Give the ID 0 to all predicates
@@ -1064,18 +1053,18 @@ void Compressor::newCompressTriples(ParamsNewCompressProcedure params) {
 
     if (uncommonTermsReader != NULL) {
         if (!(uncommonTermsReader->isEOF(idReader))) {
-            BOOST_LOG_TRIVIAL(error) << "There are still elements to read in the uncommon file";
+            LOG(ERROR) << "There are still elements to read in the uncommon file";
             throw 10;
         }
     }
     delete[] tTriple;
 
-    BOOST_LOG_TRIVIAL(debug) << "Compressed triples " << compressedTriples << " compressed terms " << compressedTerms << " uncompressed terms " << uncompressedTerms;
+    LOG(DEBUG) << "Compressed triples " << compressedTriples << " compressed terms " << compressedTerms << " uncompressed terms " << uncompressedTerms;
 }
 
 bool Compressor::isSplittable(string path) {
-    if (boost::algorithm::ends_with(path, ".gz")
-            || boost::algorithm::ends_with(path, ".bz2")) {
+    if (Utils::ends_with(path, ".gz")
+            || Utils::ends_with(path, ".bz2")) {
         return false;
     } else {
         return true;
@@ -1084,28 +1073,22 @@ bool Compressor::isSplittable(string path) {
 
 vector<FileInfo> *Compressor::splitInputInChunks(const string &input, int nchunks, string prefix) {
     /*** Get list all files ***/
-    fs::path pInput(input);
     vector<FileInfo> infoAllFiles;
     long totalSize = 0;
-    if (fs::is_directory(pInput)) {
-        fs::directory_iterator end;
-        for (fs::directory_iterator dir_iter(input); dir_iter != end;
-                ++dir_iter) {
-            if (dir_iter->path().filename().string()[0] != '.' &&
-                    (prefix == "" ||
-                     boost::starts_with(dir_iter->path().filename().string(), prefix))) {
-                long fileSize = fs::file_size(dir_iter->path());
-                totalSize += fileSize;
-                FileInfo i;
-                i.size = fileSize;
-                i.start = 0;
-                i.path = dir_iter->path().string();
-                i.splittable = isSplittable(dir_iter->path().string());
-                infoAllFiles.push_back(i);
-            }
+    if (Utils::isDirectory(input)) {
+        std::vector<string> children = Utils::getFilesWithPrefix(input, prefix);
+        for(auto f : children) {
+            long fileSize = Utils::fileSize(f);
+            totalSize += fileSize;
+            FileInfo i;
+            i.size = fileSize;
+            i.start = 0;
+            i.path = f;
+            i.splittable = isSplittable(f);
+            infoAllFiles.push_back(i);
         }
     } else {
-        long fileSize = fs::file_size(input);
+        long fileSize = Utils::fileSize(input);
         totalSize += fileSize;
         FileInfo i;
         i.size = fileSize;
@@ -1115,7 +1098,7 @@ vector<FileInfo> *Compressor::splitInputInChunks(const string &input, int nchunk
         infoAllFiles.push_back(i);
     }
 
-    BOOST_LOG_TRIVIAL(info) << "Going to parse " << infoAllFiles.size() << " files. Total size in bytes: " << totalSize << " bytes";
+    LOG(INFO) << "Going to parse " << infoAllFiles.size() << " files. Total size in bytes: " << totalSize << " bytes";
 
     /*** Sort the input files by size, and split the files through the multiple processors ***/
     std::sort(infoAllFiles.begin(), infoAllFiles.end(), cmpInfoFiles);
@@ -1171,154 +1154,9 @@ vector<FileInfo> *Compressor::splitInputInChunks(const string &input, int nchunk
                 itr < files[i].end(); ++itr) {
             totalSize += itr->size;
         }
-        BOOST_LOG_TRIVIAL(debug) << "Files in split " << i << ": " << files[i].size() << " size " << totalSize;
+        LOG(DEBUG) << "Files in split " << i << ": " << files[i].size() << " size " << totalSize;
     }
     return files;
-}
-
-//J: This procedure is commented because we concluded this approach was not worth to test it (too slow)
-void Compressor::do_mcgs() {
-    //    // Fix size of MG heap for calculating memory
-    //    const unsigned long partitionHeapSize = MGCS_HEAP_SIZE;  // Input parameter for the number of top-k elements required
-    //
-    //    // Each element in the Heap stores an element and a count
-    //    const unsigned long memForHeap = (partitionHeapSize * maxReadingThreads) * (MAX_TERM_SIZE + 2 + sizeof(long));
-    //    BOOST_LOG_TRIVIAL(debug) << "Total Heap size (across all partitions) = " << memForHeap << " bytes.";
-    //
-    //    // Calculate size of the CS Hash Tables
-    //    long memForCS = (long)(Utils::getSystemMemory() * 0.8) - memForHeap;
-    //
-    //    long numHashTabs = MGCS_HASH_TABLES;
-    //    long numHashBuck = (long)(memForCS / numHashTabs);  // TODO If prime then better
-    //    BOOST_LOG_TRIVIAL(debug) << "Count Sketch with " << numHashTabs << " hash tables with " << numHashBuck << " buckets each. Total memory = " << memForCS << " bytes.";
-    //
-    //
-    //    // Creat global Count-Sketch data structure
-    //    CountSketch *cs = new CountSketch(numHashTabs, numHashBuck);
-    //
-    //
-    //    // Uncompress the input triples in a parallel fashion
-    //    MG **MGheaps = new MG*[parallelProcesses];
-    //
-    //    long *distinctValues = new long[parallelProcesses];
-    //    memset(distinctValues, 0, sizeof(long)*parallelProcesses);
-    //
-    //    boost::thread *threads = new boost::thread[parallelProcesses - 1];
-    //    SchemaExtractor *extractors = new SchemaExtractor[parallelProcesses - 1];
-    //
-    //    int chunksToProcess = 0;
-    //    while (chunksToProcess < parallelProcesses) {
-    //        for (int i = 1; ( (i < maxReadingThreads) && ((chunksToProcess + i) < parallelProcesses) ); i++) {
-    //            MGheaps[chunksToProcess + i] = new MG (partitionHeapSize);  // Create the Misra-Gries structure for each thread
-    //
-    //            tmpFileNames[chunksToProcess + i] = kbPath + string("/tmp-") + boost::lexical_cast<string>(chunksToProcess + i);
-    //
-    //            threads[i - 1] = boost::thread(boost::bind(&Compressor::uncompressTriplesForMGCS, this,
-    //                                           files[chunksToProcess + i], MGheaps[chunksToProcess + i], cs,
-    //                                           tmpFileNames[chunksToProcess + i], copyHashes ? extractors + i - 1 : NULL,
-    //                                           distinctValues + i + chunksToProcess));
-    //        }
-    //
-    //        MGheaps[chunksToProcess] = new MG (partitionHeapSize);
-    //        tmpFileNames[chunksToProcess] = kbPath + string("/tmp-") + to_string(chunksToProcess);
-    //
-    //        uncompressTriplesForMGCS(files[chunksToProcess], MGheaps[chunksToProcess], cs, tmpFileNames[chunksToProcess],
-    //                                 copyHashes ? extractors : NULL, distinctValues + chunksToProcess);
-    //
-    //        for (int i = 1; i < maxReadingThreads; i++) {
-    //            threads[i - 1].join();
-    //        }
-    //
-    //        // Merge the heaps of MG obtained as above
-    //        BOOST_LOG_TRIVIAL(debug) << "Merging the MG heaps...";
-    //
-    //        for (int i = 0; i < maxReadingThreads; i++) {
-    //            if ((chunksToProcess + i) != 0) {
-    //                StringToNumberMap partitionOutput = (MGheaps[chunksToProcess + i])->getHeapElements();
-    //                MGheaps[0]->merge(partitionOutput);
-    //
-    //                delete MGheaps[chunksToProcess + i];
-    //            }
-    //        }
-    //
-    //        chunksToProcess += maxReadingThreads;  // Increment chunk value to process next chunk of data
-    //    }
-    //
-    //    // Merge the schema extractors
-    //    if (copyHashes) {
-    //        BOOST_LOG_TRIVIAL(debug) << "Merge the extracted schema";
-    //        for (int i = 0; i < parallelProcesses - 1; ++i) {
-    //            schemaExtrator->merge(extractors[i]);
-    //        }
-    //        BOOST_LOG_TRIVIAL(debug) << "Prepare the schema...";
-    //        schemaExtrator->prepare();
-    //        BOOST_LOG_TRIVIAL(debug) << "... done";
-    //    }
-    //    delete[] extractors;
-    //
-    //
-    //    // Obtain the top-k elements in MGheaps[0]
-    //    set<string> freqElements;
-    //    const StringToNumberMap top_k = MGheaps[0]->getHeapElements();
-    //    StringToNumberMap::const_iterator it = top_k.begin();
-    //
-    //    for (; it != top_k.end(); it++) {
-    //        freqElements.insert(it->first);
-    //    }
-    //
-    //
-    //    // Write frequent and infrequent items in dictionary
-    //    /*** Extract the common URIs ***/
-    //    ParamsExtractCommonTermProcedure params;
-    //    params.tables = NULL;
-    //    params.dictPartitions = dictPartitions;
-    //    params.maxMapSize = sampleArg;
-    //    params.parallelProcesses = parallelProcesses;
-    //    params.copyHashes = copyHashes;
-    //
-    //    BOOST_LOG_TRIVIAL(debug) << "Extract the common terms";
-    //    for (int i = 1; i < parallelProcesses; ++i) {
-    //        params.inputFile = tmpFileNames[i];
-    //        params.map = &commonTermsMaps[i];
-    //        params.dictFileName = dictFileNames[i];
-    //        params.idProcess = i;
-    //        params.singleTerms = uncommonDictFileNames[i];
-    //        threads[i - 1] = boost::thread(
-    //                             boost::bind(&Compressor::extractTermsForMGCS,
-    //                                         this, params, freqElements, cs));
-    //    }
-    //    params.inputFile = tmpFileNames[0];
-    //    params.map = &commonTermsMaps[0];
-    //    params.dictFileName = dictFileNames[0];
-    //    params.idProcess = 0;
-    //    params.singleTerms = uncommonDictFileNames[0];
-    //    extractTermsForMGCS(params, freqElements, cs);
-    //    for (int i = 1; i < parallelProcesses; ++i) {
-    //        threads[i - 1].join();
-    //    }
-    //
-    //    // Insert the frequent elements in the finalMap structure
-    //    BOOST_LOG_TRIVIAL(debug) << "Frequent Terms " << freqElements.size();
-    //    finalMap->set_empty_key(EMPTY_KEY);
-    //    finalMap->set_deleted_key(DELETED_KEY);
-    //
-    //    set<string>::iterator it1 = freqElements.begin();
-    //    for (; it1 != freqElements.end(); it1++) {
-    //        unsigned long frq = cs->GetFreqEstimate(*it1);
-    //
-    //        char supportArray[MAX_TERM_SIZE];
-    //        memcpy(supportArray + 2, it1->c_str(), it1->size() + 1);
-    //        Utils::encode_short(supportArray, it1->size());
-    //        const char *newkey = poolForMap->addNew(supportArray, it1->size() + 2);
-    //        finalMap->insert(std::make_pair(newkey, frq));
-    //    }
-    //
-    //    // Delete the heaps and the other data structures
-    //    BOOST_LOG_TRIVIAL(debug) << "Delete some datastructures";
-    //    delete[] distinctValues;
-    //    delete[] MGheaps;
-    //    delete[] threads;
-    //
 }
 
 void Compressor::parse(int dictPartitions, int sampleMethod, int sampleArg,
@@ -1355,7 +1193,7 @@ void Compressor::parse(int dictPartitions, int sampleMethod, int sampleArg,
 
     SchemaExtractor *extractors = new SchemaExtractor[parallelProcesses];
 
-    timens::system_clock::time_point start = timens::system_clock::now();
+    std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
     GStringToNumberMap *commonTermsMaps =
         new GStringToNumberMap[parallelProcesses];
     if (sampleMethod == PARSE_COUNTMIN) {
@@ -1367,12 +1205,12 @@ void Compressor::parse(int dictPartitions, int sampleMethod, int sampleArg,
                 maxReadingThreads, copyHashes,
                 extractors, files, commonTermsMaps, true, ignorePredicates);
     } else if (sampleMethod == PARSE_MGCS) {
-        BOOST_LOG_TRIVIAL(error) << "No longer supported";
+        LOG(ERROR) << "No longer supported";
         throw 10;
         do_mcgs();
     } else { //PARSE_SAMPLE
         if (ignorePredicates) {
-            BOOST_LOG_TRIVIAL(error) << "The option ignorePredicates is not implemented in combination with sampling";
+            LOG(ERROR) << "The option ignorePredicates is not implemented in combination with sampling";
             throw 10;
         }
         do_sample(dictPartitions, sampleArg, sampleArg2, maxReadingThreads,
@@ -1380,26 +1218,26 @@ void Compressor::parse(int dictPartitions, int sampleMethod, int sampleArg,
                 commonTermsMaps);
     }
 
-    boost::chrono::duration<double> sec = boost::chrono::system_clock::now() - start;
-    BOOST_LOG_TRIVIAL(debug) << "Time heavy hitters detection = " << sec.count() * 1000 << " ms";
+    std::chrono::duration<double> sec = std::chrono::system_clock::now() - start;
+    LOG(DEBUG) << "Time heavy hitters detection = " << sec.count() * 1000 << " ms";
 
     /*** Merge the schema extractors ***/
     if (copyHashes) {
-        BOOST_LOG_TRIVIAL(debug) << "Merge the extracted schema";
+        LOG(DEBUG) << "Merge the extracted schema";
         for (int i = 0; i < parallelProcesses; ++i) {
             schemaExtrator->merge(extractors[i]);
         }
         if (!onlySample) {
-            BOOST_LOG_TRIVIAL(debug) << "Prepare the schema...";
+            LOG(DEBUG) << "Prepare the schema...";
             schemaExtrator->prepare();
-            BOOST_LOG_TRIVIAL(debug) << "... done";
+            LOG(DEBUG) << "... done";
         }
     }
     delete[] extractors;
 
     if (!onlySample) {
         /*** Extract the uncommon terms ***/
-        BOOST_LOG_TRIVIAL(debug) << "Extract the uncommon terms";
+        LOG(DEBUG) << "Extract the uncommon terms";
         DiskLZ4Reader **readers = new DiskLZ4Reader*[maxReadingThreads];
         DiskLZ4Writer **writers = new DiskLZ4Writer*[maxReadingThreads];
         for (int i = 0; i < maxReadingThreads; ++i) {
@@ -1409,10 +1247,10 @@ void Compressor::parse(int dictPartitions, int sampleMethod, int sampleArg,
                     parallelProcesses / maxReadingThreads, 3);
         }
 
-        boost::thread *threads = new boost::thread[parallelProcesses];
+        std::thread *threads = new std::thread[parallelProcesses];
         for (int i = 1; i < parallelProcesses; ++i) {
-            threads[i - 1] = boost::thread(
-                    boost::bind(&Compressor::extractUncommonTerms, this,
+            threads[i - 1] = std::thread(
+                    std::bind(&Compressor::extractUncommonTerms, this,
                         dictPartitions, readers[i % maxReadingThreads],
                         i / maxReadingThreads,
                         copyHashes,
@@ -1435,7 +1273,7 @@ void Compressor::parse(int dictPartitions, int sampleMethod, int sampleArg,
         delete[] readers;
         delete[] writers;
 
-        BOOST_LOG_TRIVIAL(debug) << "Finished the extraction of the uncommon terms";
+        LOG(DEBUG) << "Finished the extraction of the uncommon terms";
         delete[] threads;
     }
     delete[] commonTermsMaps;
@@ -1454,7 +1292,7 @@ unsigned int Compressor::getThresholdForUncommon(
     for (int i = 0; i < parallelProcesses; ++i) {
         nTerms = max(nTerms, distinctValues[i]);
     }
-    BOOST_LOG_TRIVIAL(debug) << "Estimated number of terms per partition: " << nTerms;
+    LOG(DEBUG) << "Estimated number of terms per partition: " << nTerms;
     long termsPerBlock = max((long)1, (long)(nTerms / sizeHashTable)); //Terms per block
     long tu1 = max((long) 1, tables1[0]->getThreshold(sizeHashTable - sampleArg));
     long tu2 = max((long) 1, tables2[0]->getThreshold(sizeHashTable - sampleArg));
@@ -1481,7 +1319,7 @@ void Compressor::do_countmin_secondpass(const int dictPartitions,
             parallelProcesses, sizeHashTable,
             sampleArg, distinctValues,
             tables1, tables2, tables3);
-    BOOST_LOG_TRIVIAL(debug) << "Threshold to mark elements as uncommon: " <<
+    LOG(DEBUG) << "Threshold to mark elements as uncommon: " <<
         thresholdForUncommon;
 
     /*** Extract the common URIs ***/
@@ -1497,7 +1335,7 @@ void Compressor::do_countmin_secondpass(const int dictPartitions,
     params.thresholdForUncommon = thresholdForUncommon;
     params.copyHashes = copyHashes;
     params.ignorePredicates = ignorePredicates;
-    boost::thread *threads = new boost::thread[parallelProcesses - 1];
+    std::thread *threads = new std::thread[parallelProcesses - 1];
 
     //Init the DiskReaders
     DiskLZ4Reader **readers = new DiskLZ4Reader*[maxReadingThreads];
@@ -1506,14 +1344,14 @@ void Compressor::do_countmin_secondpass(const int dictPartitions,
                 parallelProcesses / maxReadingThreads, 3);
     }
 
-    BOOST_LOG_TRIVIAL(debug) << "Extract the common terms";
+    LOG(DEBUG) << "Extract the common terms";
     for (int i = 1; i < parallelProcesses; ++i) {
         params.reader = readers[i % maxReadingThreads];
         params.idReader = i / maxReadingThreads;
         params.map = &commonTermsMaps[i];
         params.idProcess = i;
-        threads[i - 1] = boost::thread(
-                boost::bind(&Compressor::extractCommonTerms, this, params));
+        threads[i - 1] = std::thread(
+                std::bind(&Compressor::extractCommonTerms, this, params));
     }
     params.reader = readers[0];
     params.idReader = 0;
@@ -1562,7 +1400,7 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
     }
     // Fixed: maxSize for very small inputs
     maxSize = std::max((long)sampleArg, maxSize);
-    BOOST_LOG_TRIVIAL(debug) << "Size Input: " << nBytesInput <<
+    LOG(DEBUG) << "Size Input: " << nBytesInput <<
         " bytes. Max table size=" << maxSize;
     long memForHashTables = (long)(Utils::getSystemMemory() * 0.5)
         / (1 + parallelProcesses) / 3;
@@ -1571,29 +1409,29 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
             (long)std::max((unsigned int)1000000,
                 (unsigned int)(memForHashTables / sizeof(long))));
 
-    BOOST_LOG_TRIVIAL(debug) << "Size hash table " << sizeHashTable;
+    LOG(DEBUG) << "Size hash table " << sizeHashTable;
 
     if (parallelProcesses % maxReadingThreads != 0) {
-        BOOST_LOG_TRIVIAL(error) << "The maximum number of threads must be a multiplier of the reading threads";
+        LOG(ERROR) << "The maximum number of threads must be a multiplier of the reading threads";
         throw 10;
     }
 
     //Set up the output file names
     for (int i = 0; i < maxReadingThreads; ++i) {
-        tmpFileNames[i] = kbPath + string("/tmp-") + boost::lexical_cast<string>(i);
+        tmpFileNames[i] = kbPath + string("/tmp-") + to_string(i);
     }
 
     DiskReader **readers = new DiskReader*[maxReadingThreads];
-    boost::thread *threadReaders = new boost::thread[maxReadingThreads];
+    std::thread *threadReaders = new std::thread[maxReadingThreads];
     DiskLZ4Writer **writers = new DiskLZ4Writer*[maxReadingThreads];
     for (int i = 0; i < maxReadingThreads; ++i) {
         readers[i] = new DiskReader(max(2,
                     (int)(parallelProcesses / maxReadingThreads) * 2), &files[i]);
-        threadReaders[i] = boost::thread(boost::bind(&DiskReader::run, readers[i]));
+        threadReaders[i] = std::thread(std::bind(&DiskReader::run, readers[i]));
         writers[i] = new DiskLZ4Writer(tmpFileNames[i], parallelProcesses / maxReadingThreads, 3);
     }
 
-    boost::thread *threads = new boost::thread[parallelProcesses - 1];
+    std::thread *threads = new std::thread[parallelProcesses - 1];
 
     ParamsUncompressTriples params;
     //Set only global params
@@ -1617,8 +1455,8 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
         params.extractor = copyHashes ? extractors + i : NULL;
         params.distinctValues = distinctValues + i;
         params.resultsMGS = usemisgra ? &resultsMGS[i] : NULL;
-        threads[i - 1] = boost::thread(
-                boost::bind(&Compressor::uncompressTriples, this,
+        threads[i - 1] = std::thread(
+                std::bind(&Compressor::uncompressTriples, this,
                     params));
     }
     tables1[0] = new Hashtable(sizeHashTable,
@@ -1651,11 +1489,11 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
     delete[] threadReaders;
 
     //Merging the tables
-    BOOST_LOG_TRIVIAL(debug) << "Merging the tables...";
+    LOG(DEBUG) << "Merging the tables...";
 
     for (int i = 0; i < parallelProcesses; ++i) {
         if (i != 0) {
-            BOOST_LOG_TRIVIAL(debug) << "Merge table " << (i);
+            LOG(DEBUG) << "Merge table " << (i);
             tables1[0]->merge(tables1[i]);
             tables2[0]->merge(tables2[i]);
             tables3[0]->merge(tables3[i]);
@@ -1680,7 +1518,7 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
                 parallelProcesses, sizeHashTable,
                 sampleArg, distinctValues,
                 tables1, tables2, tables3);
-        BOOST_LOG_TRIVIAL(debug) << "The minimum frequency required is " << minFreq;
+        LOG(DEBUG) << "The minimum frequency required is " << minFreq;
 
         /*** Then go through all elements and take the frequency from the
          * count_min tables ***/
@@ -1699,7 +1537,7 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
         }
 
         /*** Sort the list and keep the highest n ***/
-        BOOST_LOG_TRIVIAL(debug) << "There are " << listFrequentTerms.size() << " potential frequent terms";
+        LOG(DEBUG) << "There are " << listFrequentTerms.size() << " potential frequent terms";
         std::sort(listFrequentTerms.begin(), listFrequentTerms.end(),
                 lessTermFrequenciesDesc);
 
@@ -1723,7 +1561,7 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
     }
 
     /*** Delete the hashtables ***/
-    BOOST_LOG_TRIVIAL(debug) << "Delete some datastructures";
+    LOG(DEBUG) << "Delete some datastructures";
     table1 = std::shared_ptr<Hashtable>(tables1[0]);
     table2 = std::shared_ptr<Hashtable>(tables2[0]);
     table3 = std::shared_ptr<Hashtable>(tables3[0]);
@@ -1736,10 +1574,10 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
     if (!usemisgra) {
         finalMap->set_empty_key(EMPTY_KEY);
         finalMap->set_deleted_key(DELETED_KEY);
-        BOOST_LOG_TRIVIAL(debug) << "Merge the local common term maps";
+        LOG(DEBUG) << "Merge the local common term maps";
         mergeCommonTermsMaps(finalMap, commonTermsMaps, parallelProcesses);
     }
-    BOOST_LOG_TRIVIAL(debug) << "Size hashtable with common terms " << finalMap->size();
+    LOG(DEBUG) << "Size hashtable with common terms " << finalMap->size();
 
     delete[] threads;
 }
@@ -1753,16 +1591,16 @@ void Compressor::do_sample(const int dictPartitions, const int sampleArg,
         GStringToNumberMap *commonTermsMaps) {
     //Perform only a sample
     int chunksToProcess = 0;
-    boost::thread *threads = new boost::thread[maxReadingThreads - 1];
+    std::thread *threads = new std::thread[maxReadingThreads - 1];
     while (chunksToProcess < parallelProcesses) {
         for (int i = 1;
                 i < maxReadingThreads
                 && (chunksToProcess + i) < parallelProcesses;
                 ++i) {
             tmpFileNames[chunksToProcess + i] = kbPath + string("/tmp-")
-                + boost::lexical_cast<string>(chunksToProcess + i);
-            threads[i - 1] = boost::thread(
-                    boost::bind(&Compressor::uncompressAndSampleTriples,
+                + to_string(chunksToProcess + i);
+            threads[i - 1] = std::thread(
+                    std::bind(&Compressor::uncompressAndSampleTriples,
                         this,
                         files[chunksToProcess + i],
                         tmpFileNames[chunksToProcess + i],
@@ -1802,11 +1640,11 @@ void Compressor::do_sample(const int dictPartitions, const int sampleArg,
     }
 
     /*** Sort all the pairs by term ***/
-    BOOST_LOG_TRIVIAL(debug) << "Sorting the sample of " << sampledTerms.size();
+    LOG(DEBUG) << "Sorting the sample of " << sampledTerms.size();
     std::sort(sampledTerms.begin(), sampledTerms.end(), &sampledTermsSorter1);
 
     /*** Merge sample ***/
-    BOOST_LOG_TRIVIAL(debug) << "Merging sorted results";
+    LOG(DEBUG) << "Merging sorted results";
     std::vector<std::pair<string, size_t>> sampledTermsUniq;
     size_t i = 0;
     for (std::vector<std::pair<string, size_t>>::iterator
@@ -1826,7 +1664,7 @@ void Compressor::do_sample(const int dictPartitions, const int sampleArg,
             &sampledTermsSorter2);
 
     /*** Pick the top n and copy them in finalMap ***/
-    BOOST_LOG_TRIVIAL(debug) << "Copy in the hashmap the top k. The sorted sample contains " << sampledTermsUniq.size();
+    LOG(DEBUG) << "Copy in the hashmap the top k. The sorted sample contains " << sampledTermsUniq.size();
     finalMap->set_empty_key(EMPTY_KEY);
     finalMap->set_deleted_key(DELETED_KEY);
     char supportTerm[MAX_TERM_SIZE];
@@ -1839,13 +1677,12 @@ void Compressor::do_sample(const int dictPartitions, const int sampleArg,
         finalMap->insert(make_pair(newkey, sampledTermsUniq[i].second));
     }
 
-    BOOST_LOG_TRIVIAL(debug) << "Size hashtable with common terms " << finalMap->size();
+    LOG(DEBUG) << "Size hashtable with common terms " << finalMap->size();
 }
 
 bool Compressor::areFilesToCompress(int parallelProcesses, string *tmpFileNames) {
     for (int i = 0; i < parallelProcesses; ++i) {
-        fs::path pFile(tmpFileNames[i]);
-        if (fs::exists(pFile) && fs::file_size(pFile) > 0) {
+        if (Utils::exists(tmpFileNames[i]) && Utils::fileSize(tmpFileNames[i]) > 0) {
             return true;
         }
     }
@@ -1869,9 +1706,9 @@ void Compressor::sortAndDumpToFile(vector<SimplifiedAnnotatedTerm> &terms,
     if (removeDuplicates) {
         throw 10; //I removed the code below to check for duplicates
     }
-    //BOOST_LOG_TRIVIAL(debug) << "Sorting and writing to file " << outputFile << " " << terms.size() << " elements. Removedupl=" << removeDuplicates;
+    //BOOST_LOG_TRIVIAL(DEBUG) << "Sorting and writing to file " << outputFile << " " << terms.size() << " elements. Removedupl=" << removeDuplicates;
     std::sort(terms.begin(), terms.end(), SimplifiedAnnotatedTerm::sless);
-    //BOOST_LOG_TRIVIAL(debug) << "Finished sorting";
+    //BOOST_LOG_TRIVIAL(DEBUG) << "Finished sorting";
     LZ4Writer *outputSegment = new LZ4Writer(outputFile);
     //const char *prevTerm = NULL;
     //int sizePrevTerm = 0;
@@ -1888,25 +1725,25 @@ void Compressor::sortAndDumpToFile(vector<SimplifiedAnnotatedTerm> &terms,
         //}
     }
     delete outputSegment;
-    //BOOST_LOG_TRIVIAL(debug) << "Written sorted elements: " << countOutput;
+    //BOOST_LOG_TRIVIAL(DEBUG) << "Written sorted elements: " << countOutput;
 }
 
 void Compressor::sortAndDumpToFile(vector<SimplifiedAnnotatedTerm> &terms,
         DiskLZ4Writer *writer,
         const int id) {
-    boost::chrono::system_clock::time_point start = boost::chrono::system_clock::now();
+    std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
     std::sort(terms.begin(), terms.end(), SimplifiedAnnotatedTerm::sless);
-    boost::chrono::duration<double> dur = boost::chrono::system_clock::now() - start;
-    //BOOST_LOG_TRIVIAL(debug) << "Time sorting " << terms.size() << " elements was " << dur.count() << "sec.";
-    start = boost::chrono::system_clock::now();
+    std::chrono::duration<double> dur = std::chrono::system_clock::now() - start;
+    //BOOST_LOG_TRIVIAL(DEBUG) << "Time sorting " << terms.size() << " elements was " << dur.count() << "sec.";
+    start = std::chrono::system_clock::now();
     writer->writeLong(id, terms.size());
     for (vector<SimplifiedAnnotatedTerm>::iterator itr = terms.begin();
             itr != terms.end();
             ++itr) {
         itr->writeTo(id, writer);
     }
-    dur = boost::chrono::system_clock::now() - start;
-    //BOOST_LOG_TRIVIAL(debug) << "Time dumping " << terms.size() << " terms on the writing buffer " << dur.count() << "sec.";
+    dur = std::chrono::system_clock::now() - start;
+    //BOOST_LOG_TRIVIAL(DEBUG) << "Time dumping " << terms.size() << " terms on the writing buffer " << dur.count() << "sec.";
 
 }
 
@@ -1916,7 +1753,7 @@ void Compressor::immemorysort(string **inputFiles,
         string outputFile, //int *noutputFiles,
         bool removeDuplicates,
         const long maxSizeToSort, bool sample) {
-    //timens::system_clock::time_point start = timens::system_clock::now();
+    //std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
 
     //Split maxSizeToSort in n threads
     const long maxMemPerThread = maxSizeToSort / parallelProcesses;
@@ -1925,7 +1762,7 @@ void Compressor::immemorysort(string **inputFiles,
     memset(readers, 0, sizeof(DiskLZ4Reader*)*maxReadingThreads);
     bool empty = true;
     for (int i = 0; i < maxReadingThreads; ++i) {
-        if (fs::exists(inputFiles[i][0])) {
+        if (Utils::exists(inputFiles[i][0])) {
             readers[i] = new DiskLZ4Reader(inputFiles[i][0],
                     parallelProcesses / maxReadingThreads,
                     3);
@@ -1951,14 +1788,14 @@ void Compressor::immemorysort(string **inputFiles,
     }
 
     if (!empty) {
-        boost::thread *threads = new boost::thread[parallelProcesses - 1];
+        std::thread *threads = new std::thread[parallelProcesses - 1];
         for (int i = 1; i < parallelProcesses; ++i) {
             DiskLZ4Reader *reader = readers[i % maxReadingThreads];
             DiskLZ4Writer *writer = writers[i % maxReadingThreads];
             MultiDiskLZ4Writer *sampleWriter = sampleWriters[i % maxReadingThreads];
             if (reader) {
-                threads[i - 1] = boost::thread(
-                        boost::bind(
+                threads[i - 1] = std::thread(
+                        std::bind(
                             &Compressor::inmemorysort_seq,
                             reader,
                             writer,
@@ -1994,39 +1831,6 @@ void Compressor::immemorysort(string **inputFiles,
     delete[] readers;
     delete[] writers;
     delete[] sampleWriters;
-
-    /*    //Collect all files
-          std::vector<string> files;
-          boost::filesystem::path parentDir =
-          boost::filesystem::path(outputFile).parent_path();
-          string prefix =
-          boost::filesystem::path(outputFile).filename().string() + string(".");
-          for (boost::filesystem::directory_iterator itr(parentDir);
-          itr != boost::filesystem::directory_iterator(); ++itr) {
-          if (boost::filesystem::is_regular_file(itr->path())) {
-          if (boost::starts_with(itr->path().filename().string(), prefix)) {
-          files.push_back(itr->path().string());
-          }
-          }
-          }
-
-          for (int i = 0; i < files.size(); ++i) {
-          string renamedFile = files[i] + "-old";
-          boost::filesystem::rename(boost::filesystem::path(files[i]),
-          boost::filesystem::path(renamedFile));
-          files[i] = renamedFile;
-          }
-          for (int i = 0; i < files.size(); ++i) {
-          string of = outputFile + string(".") + to_string(i);
-          boost::filesystem::rename(boost::filesystem::path(files[i]),
-          boost::filesystem::path(of));
-          }
-     *noutputFiles = files.size();*/
-
-    //boost::chrono::duration<double> sec = boost::chrono::system_clock::now()
-    //                                      - start;
-    //BOOST_LOG_TRIVIAL(debug) << "Total sorting time = " << sec.count() * 1000
-    //                         << " ms";
 }
 
 void Compressor::inmemorysort_seq(DiskLZ4Reader *reader,
@@ -2043,7 +1847,7 @@ void Compressor::inmemorysort_seq(DiskLZ4Reader *reader,
     StringCollection supportCollection(BLOCK_SUPPORT_BUFFER_COMPR);
     long bytesAllocated = 0;
 
-    //BOOST_LOG_TRIVIAL(debug) << "Start immemory_seq method. MaxMemPerThread=" << maxMemPerThread;
+    //BOOST_LOG_TRIVIAL(DEBUG) << "Start immemory_seq method. MaxMemPerThread=" << maxMemPerThread;
 
     //long count = 0;
     int sampleCount = 0;
@@ -2109,37 +1913,23 @@ std::vector<string> Compressor::getPartitionBoundaries(const string kbdir,
     //Read all sample strings
     std::vector<std::pair<const char *, int>> sample;
     StringCollection col(10 * 1024 * 1024);
-    fs::directory_iterator end;
-
-    for (fs::directory_iterator dir_iter(kbdir); dir_iter != end;
-            ++dir_iter) {
-        if (boost::ends_with(dir_iter->path().filename().string(), "-sample")) {
-            //Read the content
-            {
-                LZ4Reader r(dir_iter->path().string());
-                while (!r.isEof()) {
-                    int size;
-                    const char *s = r.parseString(size);
-                    const char *news = col.addNew(s, size);
-                    sample.push_back(std::make_pair(news, size));
-                }
+    std::vector<string> children = Utils::getFilesWithSuffix(kbdir, "-sample");
+    for (auto child : children) {
+        //Read the content
+        {
+            LZ4Reader r(child);
+            while (!r.isEof()) {
+                int size;
+                const char *s = r.parseString(size);
+                const char *news = col.addNew(s, size);
+                sample.push_back(std::make_pair(news, size));
             }
-            fs::remove(dir_iter->path().string());
-        }/* else if (sample.empty() &&
-            dir_iter->path().filename().string() == "dict-0-u.0") {
-        //Read one triple
-        LZ4Reader r(dir_iter->path().string());
-        while (!r.isEof()) {
-        int size;
-        const char *s = r.parseString(size);
-        const char *news = col.addNew(s, size);
-        sample.push_back(std::make_pair(news, size));
         }
-        }*/
+        Utils::remove(child);
     }
 
     /*if (sample.empty()) {
-      BOOST_LOG_TRIVIAL(error) << "Sample should not be empty!";
+      BOOST_LOG_TRIVIAL(ERROR) << "Sample should not be empty!";
       throw 10;
       }*/
 
@@ -2148,7 +1938,7 @@ std::vector<string> Compressor::getPartitionBoundaries(const string kbdir,
 
     std::vector<string> output;
     size_t sizePartition = sample.size() / partitions;
-    BOOST_LOG_TRIVIAL(debug) << "sample.size()=" << sample.size()
+    LOG(DEBUG) << "sample.size()=" << sample.size()
         << " sizePartition=" << sizePartition
         << " remainder=" << (sample.size() % partitions);
     for (size_t i = 0; i < sample.size(); ++i) {
@@ -2227,7 +2017,7 @@ void Compressor::sortRangePartitionedTuples(DiskLZ4Reader *reader,
         counter++;
         countFile--;
     }
-    BOOST_LOG_TRIVIAL(debug) << "Partitioned " << counter << " terms.";
+    LOG(DEBUG) << "Partitioned " << counter << " terms.";
     delete output;
 }
 
@@ -2245,12 +2035,12 @@ void Compressor::rangePartitionFiles(int readThreads, int maxThreads,
         infiles.push_back(infile);
     }
 
-    std::vector<boost::thread> threads(maxThreads);
+    std::vector<std::thread> threads(maxThreads);
     for (int i = 1; i < maxThreads; ++i) {
         DiskLZ4Reader *reader = readers[i % readThreads];
         string outputFile = prefixInputFiles + string("-range-") + to_string(i);
         threads[i] =
-            boost::thread(boost::bind(&Compressor::sortRangePartitionedTuples,
+            std::thread(std::bind(&Compressor::sortRangePartitionedTuples,
                         reader,
                         i / readThreads,
                         outputFile,
@@ -2268,8 +2058,8 @@ void Compressor::rangePartitionFiles(int readThreads, int maxThreads,
         delete readers[i];
     }
     for (int i = 0; i < infiles.size(); ++i) {
-        fs::remove(infiles[i]);
-        fs::remove(infiles[i] + ".idx");
+        Utils::remove(infiles[i]);
+        Utils::remove(infiles[i] + ".idx");
     }
     delete[] readers;
 }
@@ -2289,20 +2079,17 @@ void Compressor::sortPartition(ParamsSortPartition params) {
 
     std::vector<string> filesToSort;
 
-    fs::path parentDir = fs::path(prefixInputFiles).parent_path();
-    fs::directory_iterator ei;
-    for (fs::directory_iterator diter(parentDir); diter != ei; ++diter) {
-        if (fs::is_regular_file(diter->status())) {
-            auto pfile = diter->path();
-            if (boost::algorithm::contains(pfile.string(), "range")) {
-                if (pfile.has_extension()) {
-                    string ext = pfile.extension().string();
-                    if (ext == string(".") + to_string(part)) {
-                        if (fs::file_size(pfile.string()) > 0) {
-                            filesToSort.push_back(pfile.string());
-                        } else {
-                            fs::remove(pfile.string());
-                        }
+    string parentDir = Utils::parentDir(prefixInputFiles);
+    std::vector<string> children = Utils::getFiles(parentDir);
+    for (auto child : children) {
+        if (Utils::contains(child, "range")) {
+            if (Utils::hasExtension(child)) {
+                string ext = Utils::extension(child);
+                if (ext == string(".") + to_string(part)) {
+                    if (Utils::fileSize(child) > 0) {
+                        filesToSort.push_back(child);
+                    } else {
+                        Utils::remove(child);
                     }
                 }
             }
@@ -2337,7 +2124,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
                     (sizeof(SimplifiedAnnotatedTerm) * tuples.size()))
                 >= maxMem) {
             //if (bytesAllocated > 800000) {
-            BOOST_LOG_TRIVIAL(debug) << "Dumping file " << idx << " with "
+            LOG(DEBUG) << "Dumping file " << idx << " with "
                 << tuples.size() << " tuples ...";
             string ofile = outputFile + string(".") + to_string(idx);
             idx++;
@@ -2383,13 +2170,13 @@ void Compressor::sortPartition(ParamsSortPartition params) {
         }
 
         for (auto file : filesToSort) {
-            fs::remove(file);
+            Utils::remove(file);
         }
-        BOOST_LOG_TRIVIAL(debug) << "Number of prefixes " << prefixset.size();
+        LOG(DEBUG) << "Number of prefixes " << prefixset.size();
 
         if (idx == 0) {
             //All data fit in main memory. Do not need to write it down
-            BOOST_LOG_TRIVIAL(debug) << "All terms (" << tuples.size() << ") fit in main memory";
+            LOG(DEBUG) << "All terms (" << tuples.size() << ") fit in main memory";
             std::sort(tuples.begin(), tuples.end(), SimplifiedAnnotatedTerm::sless);
 
             //The following code is replicated below.
@@ -2437,11 +2224,11 @@ void Compressor::sortPartition(ParamsSortPartition params) {
             }
 
             *counter = counterTerms + 1;
-            BOOST_LOG_TRIVIAL(debug) << "Partition " << part << " contains " <<
+            LOG(DEBUG) << "Partition " << part << " contains " <<
                 counterPairs << " tuples " <<
                 (counterTerms + 1) << " terms";
             for (auto f : sortedFiles) {
-                fs::remove(fs::path(f));
+                Utils::remove(f);
             }
         } else {
             if (tuples.size() > 0) {
@@ -2450,7 +2237,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
                 sortedFiles.push_back(ofile);
             }
 
-            BOOST_LOG_TRIVIAL(debug) << "Merge " << sortedFiles.size()
+            LOG(DEBUG) << "Merge " << sortedFiles.size()
                 << " files in order to sort the partition";
 
             while (sortedFiles.size() >= 4) {
@@ -2490,11 +2277,11 @@ void Compressor::sortPartition(ParamsSortPartition params) {
                 //Remove them
                 sortedFiles.push_back(ofile);
                 for (auto f : batchFiles) {
-                    fs::remove(fs::path(f));
+                    Utils::remove(f);
                     sortedFiles.erase(sortedFiles.begin());
                 }
             }
-            BOOST_LOG_TRIVIAL(debug) << "Final merge";
+            LOG(DEBUG) << "Final merge";
 
             //Create a file
             //std::unique_ptr<LZ4Writer> dictWriter(new LZ4Writer(dictfile));
@@ -2547,18 +2334,18 @@ void Compressor::sortPartition(ParamsSortPartition params) {
             int i = 0;
             for (auto f : sortedFiles) {
                 mergerReader->unsetPartition(idWriter * 3 + i);
-                fs::remove(fs::path(f));
+                Utils::remove(f);
                 i++;
             }
 
             delete[] previousTerm;
             *counter = counterTerms + 1;
-            BOOST_LOG_TRIVIAL(debug) << "Partition " << part << " contains "
+            LOG(DEBUG) << "Partition " << part << " contains "
                 << counterPairs << " tuples "
                 << (counterTerms + 1) << " terms";
 
             for (auto f : sortedFiles) {
-                fs::remove(fs::path(f));
+                Utils::remove(f);
             }
         }
         writer->setTerminated(idWriter);
@@ -2566,23 +2353,20 @@ void Compressor::sortPartition(ParamsSortPartition params) {
     }
 
     void Compressor::concatenateFiles_seq(string prefix, int part) {
-        BOOST_LOG_TRIVIAL(debug) << "Concatenating files in partition " << part;
+        LOG(DEBUG) << "Concatenating files in partition " << part;
         std::vector<string> filestoconcat;
 
-        fs::path parentDir = fs::path(prefix).parent_path();
-        fs::directory_iterator ei;
-        for (fs::directory_iterator diter(parentDir); diter != ei; ++diter) {
-            if (fs::is_regular_file(diter->status())) {
-                auto pfile = diter->path();
-                if (boost::algorithm::contains(pfile.string(), "range")) {
-                    if (pfile.has_extension()) {
-                        string ext = pfile.extension().string();
-                        if (ext == string(".") + to_string(part)) {
-                            if (fs::file_size(pfile.string()) > 0) {
-                                filestoconcat.push_back(pfile.string());
-                            } else {
-                                fs::remove(pfile.string());
-                            }
+        string parentDir = Utils::parentDir(prefix);
+        std::vector<string> children = Utils::getFiles(parentDir);
+        for(auto child : children) {
+            if (Utils::contains(child, "range")) {
+                if (Utils::hasExtension(child)) {
+                    string ext = Utils::extension(child);
+                    if (ext == string(".") + to_string(part)) {
+                        if (Utils::fileSize(child) > 0) {
+                            filestoconcat.push_back(child);
+                        } else {
+                            Utils::remove(child);
                         }
                     }
                 }
@@ -2596,7 +2380,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
                 std::ifstream input(filestoconcat[i], std::ios_base::binary);
                 fdest << input.rdbuf();
                 input.close();
-                fs::remove(filestoconcat[i]);
+                Utils::remove(filestoconcat[i]);
             }
             fdest.close();
         }
@@ -2606,11 +2390,11 @@ void Compressor::sortPartition(ParamsSortPartition params) {
             int parallelProcesses,
             int maxReadingThreads) {
 
-        boost::thread *threads = new boost::thread[maxReadingThreads];
+        std::thread *threads = new std::thread[maxReadingThreads];
         int part = 0;
         while (part < parallelProcesses) {
             for (int i = 0; i < maxReadingThreads; ++i) {
-                threads[i] = boost::thread(Compressor::concatenateFiles_seq,
+                threads[i] = std::thread(Compressor::concatenateFiles_seq,
                         prefix, part + i);
             }
             for (int i = 0; i < maxReadingThreads; ++i) {
@@ -2629,12 +2413,12 @@ void Compressor::sortPartition(ParamsSortPartition params) {
         //Before I start sorting the files, I concatenate files together
         concatenateFiles(prefixInputFile, parallelProcesses, maxReadingThreads);
 
-        std::vector<boost::thread> threads(partitions);
+        std::vector<std::thread> threads(partitions);
         std::vector<string> outputfiles;
         std::vector<uint64_t> counters(partitions);
         long maxMem = max((long) 128 * 1024 * 1024,
                 (long) (Utils::getSystemMemory() * 0.7)) / partitions;
-        BOOST_LOG_TRIVIAL(debug) << "Max memory per thread " << maxMem;
+        LOG(DEBUG) << "Max memory per thread " << maxMem;
 
         DiskLZ4Writer **writers = new DiskLZ4Writer*[maxReadingThreads];
         MultiDiskLZ4Writer **dictwriters = new MultiDiskLZ4Writer*[maxReadingThreads];
@@ -2675,7 +2459,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
             params.counter = &counters[i];
             params.maxMem = maxMem;
 
-            threads[i] = boost::thread(boost::bind(Compressor::sortPartition,
+            threads[i] = std::thread(std::bind(Compressor::sortPartition,
                         params));
         }
         for (int i = 0; i < partitions; ++i) {
@@ -2683,13 +2467,13 @@ void Compressor::sortPartition(ParamsSortPartition params) {
         }
 
         for (int i = 0; i < maxReadingThreads; ++i) {
-            BOOST_LOG_TRIVIAL(debug) << "Delete writer " << i;
+            LOG(DEBUG) << "Delete writer " << i;
             delete writers[i];
-            BOOST_LOG_TRIVIAL(debug) << "Delete dict writer " << i;
+            LOG(DEBUG) << "Delete dict writer " << i;
             delete dictwriters[i];
-            BOOST_LOG_TRIVIAL(debug) << "Delete multidisk reader " << i;
+            LOG(DEBUG) << "Delete multidisk reader " << i;
             delete mreaders[i];
-            BOOST_LOG_TRIVIAL(debug) << "Delete multidisk merge reader " << i;
+            LOG(DEBUG) << "Delete multidisk merge reader " << i;
             mergereaders[i]->stop();
             delete mergereaders[i];
         }
@@ -2697,7 +2481,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
         delete[] dictwriters;
         delete[] mreaders;
         delete[] mergereaders;
-        BOOST_LOG_TRIVIAL(debug) << "Finished sorting partitions. Now shuffling by triple ID";
+        LOG(DEBUG) << "Finished sorting partitions. Now shuffling by triple ID";
 
         //Re-read the sorted tuples and write by tripleID
         DiskLZ4Reader **readers = new DiskLZ4Reader*[maxReadingThreads];
@@ -2719,7 +2503,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
 
         long startCounter = counter;
         for (int i = 0; i < partitions; ++i) {
-            threads[i] = boost::thread(boost::bind(
+            threads[i] = std::thread(std::bind(
                         &Compressor::assignCountersAndPartByTripleID,
                         startCounter, readers[i % maxReadingThreads],
                         i / maxReadingThreads,
@@ -2739,8 +2523,8 @@ void Compressor::sortPartition(ParamsSortPartition params) {
 
         for (int i = 0; i < maxReadingThreads; ++i) {
             delete readers[i];
-            fs::remove(outputfiles[i]);
-            fs::remove(outputfiles[i] + ".idx");
+            Utils::remove(outputfiles[i]);
+            Utils::remove(outputfiles[i] + ".idx");
             delete twriters[i];
         }
         delete[] readers;
@@ -2866,18 +2650,18 @@ void Compressor::sortPartition(ParamsSortPartition params) {
             int maxReadingThreads) {
 
         //Sample one file: Get boundaries for parallelProcesses range partitions
-        fs::path p = fs::path(prefixInputFile).parent_path();
-        const std::vector<string> boundaries = getPartitionBoundaries(p.string(),
+        string p = Utils::parentDir(prefixInputFile);
+        const std::vector<string> boundaries = getPartitionBoundaries(p,
                 parallelProcesses);
         assert(boundaries.size() <= parallelProcesses - 1);
 
         //Range-partitions all the files in the input collection
-        BOOST_LOG_TRIVIAL(debug) << "Range-partitions the files...";
+        LOG(DEBUG) << "Range-partitions the files...";
         rangePartitionFiles(maxReadingThreads, parallelProcesses, prefixInputFile,
                 boundaries);
 
         //Collect all ranged-partitions files by partition and globally sort them.
-        BOOST_LOG_TRIVIAL(debug) << "Sort and assign the counters to the files...";
+        LOG(DEBUG) << "Sort and assign the counters to the files...";
         sortPartitionsAndAssignCounters(prefixInputFile,
                 dictOutput,
                 outputFile2,
@@ -2912,11 +2696,11 @@ void Compressor::sortPartition(ParamsSortPartition params) {
 
             count++;
             if (count % 100000000 == 0)
-                BOOST_LOG_TRIVIAL(debug) << "Loaded " << count << " Memory so far " << Utils::getUsedMemory();
+                LOG(DEBUG) << "Loaded " << count << " Memory so far " << Utils::getUsedMemory();
         }
 
         if (filesToMerge.empty()) {
-            BOOST_LOG_TRIVIAL(debug) << "Sorting and dumping all triples";
+            LOG(DEBUG) << "Sorting and dumping all triples";
             //Sort them
             std::sort(pairs.begin(), pairs.end(), TriplePair::sLess);
             //Dump them inmmediately
@@ -2926,7 +2710,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
                 writer->writeLong(idWriter, tp.term);
             }
         } else {
-            BOOST_LOG_TRIVIAL(debug) << "Start merging the fragments";
+            LOG(DEBUG) << "Start merging the fragments";
             if (pairs.size() > 0) {
                 string file = tmpfileprefix + string(".") + to_string(idx++);
                 sortAndDumpToFile2(pairs, file);
@@ -2944,7 +2728,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
 
             //Remove the input files
             for (int i = 0; i < filesToMerge.size(); ++i) {
-                fs::remove(filesToMerge[i]);
+                Utils::remove(filesToMerge[i]);
             }
         }
         writer->setTerminated(idWriter);
@@ -2961,11 +2745,11 @@ void Compressor::sortPartition(ParamsSortPartition params) {
             ByteArrayToNumberMap * finalMap,
             const bool ignorePredicates) {
 
-        BOOST_LOG_TRIVIAL(debug) << "Start compression threads... ";
+        LOG(DEBUG) << "Start compression threads... ";
         /*** Compress the triples ***/
         int iter = 0;
         while (areFilesToCompress(parallelProcesses, tmpFileNames)) {
-            BOOST_LOG_TRIVIAL(debug) << "Start iteration " << iter;
+            LOG(DEBUG) << "Start iteration " << iter;
             string prefixOutputFile = "input-" + to_string(iter);
 
             DiskLZ4Reader **readers = new DiskLZ4Reader*[maxReadingThreads];
@@ -2997,7 +2781,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
                 writers[i] = new MultiDiskLZ4Writer(chunks[i], 3, 3);
             }
 
-            boost::thread *threads = new boost::thread[parallelProcesses - 1];
+            std::thread *threads = new std::thread[parallelProcesses - 1];
             ParamsNewCompressProcedure p;
             p.nperms = nperms;
             p.signaturePerms = signaturePerms;
@@ -3011,8 +2795,8 @@ void Compressor::sortPartition(ParamsSortPartition params) {
                 p.readerUncommonTerms = uncommonReaders[i % maxReadingThreads];
                 p.writer = writers[i % maxReadingThreads];
                 p.idxWriter = (i / maxReadingThreads) * nperms;
-                threads[i - 1] = boost::thread(
-                        boost::bind(&Compressor::newCompressTriples, p));
+                threads[i - 1] = std::thread(
+                        std::bind(&Compressor::newCompressTriples, p));
             }
             p.idReader = 0;
             p.reader = readers[0];
@@ -3028,8 +2812,8 @@ void Compressor::sortPartition(ParamsSortPartition params) {
 
             for (int i = 0; i < maxReadingThreads; ++i) {
                 delete readers[i];
-                fs::remove(tmpFileNames[i]);
-                fs::remove(tmpFileNames[i] + ".idx");
+                Utils::remove(tmpFileNames[i]);
+                Utils::remove(tmpFileNames[i] + ".idx");
                 delete uncommonReaders[i];
                 delete writers[i];
             }
@@ -3040,7 +2824,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
             //New iteration!
             finalMap->clear();
             iter++;
-            BOOST_LOG_TRIVIAL(debug) << "Finish iteration";
+            LOG(DEBUG) << "Finish iteration";
         }
     }
 
@@ -3050,26 +2834,21 @@ void Compressor::sortPartition(ParamsSortPartition params) {
             const int ndicts, vector<string> uncommonFiles,
             vector<string> &outputFiles) {
 
-        BOOST_LOG_TRIVIAL(debug) << "Memory used so far: " << Utils::getUsedMemory();
+        LOG(DEBUG) << "Memory used so far: " << Utils::getUsedMemory();
 
         /*** Sort the files which contain the triple source ***/
         vector<vector<string>> inputFinalSorting(parallelProcesses);
 
         assert(uncommonFiles.size() == 1);
-        auto pdir = fs::path(uncommonFiles[0]).parent_path();
-        string nameFile = fs::path(uncommonFiles[0]).filename().string();
-        fs::directory_iterator ei;
-        for (fs::directory_iterator diter(pdir); diter != ei; ++diter) {
-            if (fs::is_regular_file(diter->status())) {
-                auto pfile = diter->path();
-                if (boost::starts_with(pfile.filename().string(), nameFile)) {
-                    if (pfile.has_extension()) {
-                        string ext = pfile.extension().string();
-                        int idx;
-                        stringstream(ext.substr(1, ext.length() - 1)) >> idx;
-                        inputFinalSorting[idx].push_back(diter->path().string());
-                    }
-                }
+        string pdir = Utils::parentDir(uncommonFiles[0]);
+        string nameFile = Utils::filename(pdir);
+        std::vector<string> children = Utils::getFilesWithPrefix(pdir, nameFile);
+        for(auto child : children) {
+            if (Utils::hasExtension(child)) {
+                string ext = Utils::extension(child);
+                int idx;
+                stringstream(ext.substr(1, ext.length() - 1)) >> idx;
+                inputFinalSorting[idx].push_back(child);
             }
         }
 
@@ -3091,14 +2870,14 @@ void Compressor::sortPartition(ParamsSortPartition params) {
             }
         }
 
-        BOOST_LOG_TRIVIAL(debug) << "Start threads ...";
+        LOG(DEBUG) << "Start threads ...";
 
-        boost::thread *threads = new boost::thread[parallelProcesses - 1];
+        std::thread *threads = new std::thread[parallelProcesses - 1];
         const long maxMem = max((long) MIN_MEM_SORT_TRIPLES,
                 (long) (Utils::getSystemMemory() * 0.6) / parallelProcesses);
         for (int i = 1; i < parallelProcesses; ++i) {
-            threads[i - 1] = boost::thread(
-                    boost::bind(&Compressor::sortByTripleID,
+            threads[i - 1] = std::thread(
+                    std::bind(&Compressor::sortByTripleID,
                         readers[i % maxReadingThreads],
                         writers[i % maxReadingThreads],
                         i / maxReadingThreads,
@@ -3122,7 +2901,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
         delete[] readers;
         for (auto files : inputFinalSorting) {
             for (auto file : files)
-                fs::remove(fs::path(file));
+                Utils::remove(file);
         }
     }
 
@@ -3136,7 +2915,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
             bool sample) {
         long maxMemAllocate = max((long) (BLOCK_SUPPORT_BUFFER_COMPR * 2),
                 (long) (Utils::getSystemMemory() * 0.70 / ndicts));
-        BOOST_LOG_TRIVIAL(debug) << "Max memory to use to sort inmemory a number of terms: " << maxMemAllocate << " bytes";
+        LOG(DEBUG) << "Max memory to use to sort inmemory a number of terms: " << maxMemAllocate << " bytes";
         immemorysort(input, maxReadingThreads, parallelProcesses, prefixOutputFiles[0],
                 filterDuplicates, maxMemAllocate, sample);
     }
@@ -3149,7 +2928,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
             const bool ignorePredicates) {
 
         /*** Sort the infrequent terms ***/
-        BOOST_LOG_TRIVIAL(debug) << "Sorting uncommon dictionary entries for partitions";
+        LOG(DEBUG) << "Sorting uncommon dictionary entries for partitions";
         string *uncommonDictionaries = new string[ndicts];
         for (int i = 0; i < ndicts; ++i) {
             uncommonDictionaries[i] = dictionaries[i] + string("-u");
@@ -3162,13 +2941,13 @@ void Compressor::sortPartition(ParamsSortPartition params) {
                 NULL,
                 false,
                 true);
-        BOOST_LOG_TRIVIAL(debug) << "...done";
+        LOG(DEBUG) << "...done";
 
         /*** Deallocate the dictionary files ***/
         for (int i = 0; i < maxReadingThreads; ++i) {
             delete[] dictFileNames[i];
-            fs::remove(fs::path(uncommonDictFileNames[i][0]));
-            fs::remove(fs::path(uncommonDictFileNames[i][0] + string(".idx")));
+            Utils::remove(uncommonDictFileNames[i][0]);
+            Utils::remove(uncommonDictFileNames[i][0] + string(".idx"));
             delete[] uncommonDictFileNames[i];
         }
         delete[] dictFileNames;
@@ -3189,22 +2968,22 @@ void Compressor::sortPartition(ParamsSortPartition params) {
         }
 
         /*** Assign a number to the popular entries ***/
-        BOOST_LOG_TRIVIAL(debug) << "Assign a number to " << finalMap->size() <<
+        LOG(DEBUG) << "Assign a number to " << finalMap->size() <<
             " popular terms in the dictionary";
         assignNumbersToCommonTermsMap(finalMap, counters, writers, NULL, ndicts, true);
 
         /*** Assign a number to the other entries. Split them into two files.
          * The ones that must be loaded into the hashmap, and the ones used for
          * the merge join ***/
-        BOOST_LOG_TRIVIAL(debug) << "Merge (and assign counters) of dictionary entries";
+        LOG(DEBUG) << "Merge (and assign counters) of dictionary entries";
         if (ndicts > 1) {
-            BOOST_LOG_TRIVIAL(error) << "The current version of the code supports only one dictionary partition";
+            LOG(ERROR) << "The current version of the code supports only one dictionary partition";
             throw 10;
         }
         mergeNotPopularEntries(uncommonDictionaries[0], dictionaries[0],
                 uncommonFiles[0], &counters[0], ndicts,
                 parallelProcesses, maxReadingThreads);
-        BOOST_LOG_TRIVIAL(debug) << "... done";
+        LOG(DEBUG) << "... done";
 
         /*** Remove unused data structures ***/
         for (int i = 0; i < ndicts; ++i) {
@@ -3214,31 +2993,31 @@ void Compressor::sortPartition(ParamsSortPartition params) {
         delete[] writers;
 
         /*** Sort files by triple source ***/
-        BOOST_LOG_TRIVIAL(debug) << "Sort uncommon triples by triple id";
+        LOG(DEBUG) << "Sort uncommon triples by triple id";
         vector<string> sortedFiles;
         sortFilesByTripleSource(kbPath, maxReadingThreads, parallelProcesses,
                 ndicts, uncommonFiles, sortedFiles);
-        BOOST_LOG_TRIVIAL(debug) << "... done";
+        LOG(DEBUG) << "... done";
 
         /*** Compress the triples ***/
         compressTriples(maxReadingThreads, parallelProcesses, ndicts,
                 permDirs, nperms, signaturePerms,
                 notSoUncommonFiles, sortedFiles, tmpFileNames,
                 poolForMap, finalMap, ignorePredicates);
-        BOOST_LOG_TRIVIAL(debug) << "... done";
+        LOG(DEBUG) << "... done";
 
         /*** Clean up remaining datastructures ***/
         delete[] counters;
         for (int i = 0; i < maxReadingThreads; ++i) {
-            fs::remove(sortedFiles[i]);
-            fs::remove(sortedFiles[i] + ".idx");
+            Utils::remove(sortedFiles[i]);
+            Utils::remove(sortedFiles[i] + ".idx");
         }
         delete[] tmpFileNames;
         delete poolForMap;
         delete finalMap;
         poolForMap = NULL;
         finalMap = NULL;
-        BOOST_LOG_TRIVIAL(debug) << "Compression is finished";
+        LOG(DEBUG) << "Compression is finished";
     }
 
     bool stringComparator(string stringA, string stringB) {
@@ -3270,8 +3049,8 @@ void Compressor::sortPartition(ParamsSortPartition params) {
     }
 
     bool _lessExtensions(const string & a, const string & b) {
-        string ea = fs::path(a).extension().string();
-        string eb = fs::path(b).extension().string();
+        string ea = Utils::extension(a);
+        string eb = Utils::extension(b);
 
         int idxa, idxb;
         std::istringstream ss1(ea.substr(1, ea.length() - 1));
@@ -3284,14 +3063,12 @@ void Compressor::sortPartition(ParamsSortPartition params) {
     std::vector<string> Compressor::getAllDictFiles(string prefixDict) {
         std::vector<string> output;
 
-        fs::directory_iterator end;
-        fs::path parentDir = fs::path(prefixDict).parent_path();
-        string filename = fs::path(prefixDict).filename().string();
-        for (fs::directory_iterator dir_iter(parentDir); dir_iter != end;
-                ++dir_iter) {
-            if (boost::starts_with(dir_iter->path().filename().string(), filename)
-                    && dir_iter->path().has_extension()) {
-                output.push_back(dir_iter->path().string());
+        string parentDir = Utils::parentDir(prefixDict);
+        string filename = Utils::filename(prefixDict);
+        std::vector<string> children = Utils::getFilesWithPrefix(parentDir, filename);
+        for(auto child : children) {
+            if (Utils::hasExtension(child)) {
+                output.push_back(child);
             }
         }
 

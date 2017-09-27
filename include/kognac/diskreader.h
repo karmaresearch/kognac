@@ -3,15 +3,9 @@
 
 #include <kognac/filereader.h>
 
-#include <boost/log/trivial.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/chrono.hpp>
-
 #include <mutex>
 #include <condition_variable>
 #include <vector>
-
-namespace fs = boost::filesystem;
 
 class DiskReader {
 private:
@@ -34,7 +28,7 @@ private:
 
     bool finished;
 
-    boost::chrono::duration<double> waitingTime;
+    std::chrono::duration<double> waitingTime;
 
     long maxsize;
 

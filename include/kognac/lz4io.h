@@ -24,8 +24,8 @@
 
 #include <kognac/utils.h>
 #include <kognac/consts.h>
+#include <kognac/logs.h>
 #include <lz4.h>
-#include <boost/log/trivial.hpp>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -51,7 +51,7 @@ public:
         os(file) {
         this->path = file;
         if (!os.good()) {
-            BOOST_LOG_TRIVIAL(error) << "Failed to open the file " << file;
+            LOG(ERROR) << "Failed to open the file " << file;
         }
 
         uncompressedBufferLen = 0;
@@ -98,7 +98,7 @@ private:
         }
 
         if (!is.good() || is.gcount() != 21) {
-            BOOST_LOG_TRIVIAL(error) << "Problems reading from the file. Only " << is.gcount() << " out of 21 were being read" << endl;
+            LOG(ERROR) << "Problems reading from the file. Only " << is.gcount() << " out of 21 were being read";
         }
 
         int token = header[8] & 0xFF;
@@ -111,22 +111,22 @@ private:
         case 16:
             is.read(uncompressedBuffer, uncompressedLen);
             if (!is.good()) {
-                BOOST_LOG_TRIVIAL(error) << "Problems reading from the file. Only " << is.gcount() << " out of " << uncompressedLen << " were being read" << endl;
+                LOG(ERROR) << "Problems reading from the file. Only " << is.gcount() << " out of " << uncompressedLen << " were being read";
             }
             break;
         case 32:
             is.read(compressedBuffer, compressedLen);
             if (!is.good()) {
-                BOOST_LOG_TRIVIAL(error) << "Problems reading from the file. Only " << is.gcount() << " out of " << compressedLen << " were being read" << endl;
+                LOG(ERROR) << "Problems reading from the file. Only " << is.gcount() << " out of " << compressedLen << " were being read";
             }
 
             if (!LZ4_decompress_fast(compressedBuffer, uncompressedBuffer,
                                      uncompressedLen)) {
-                BOOST_LOG_TRIVIAL(error) << "Error in the decompression.";
+                LOG(ERROR) << "Error in the decompression.";
             }
             break;
         default:
-            BOOST_LOG_TRIVIAL(error) << "Unrecognized block format. This should not happen. File " << file << " is broken.";
+            LOG(ERROR) << "Unrecognized block format. This should not happen. File " << file << " is broken.";
             exit(1);
         }
         currentOffset = 0;
@@ -138,7 +138,7 @@ public:
         is(file) {
 
         if (!is.good()) {
-            BOOST_LOG_TRIVIAL(error) << "Failed to open the file " << file;
+            LOG(ERROR) << "Failed to open the file " << file;
         }
 
         uncompressedBufferLen = 0;

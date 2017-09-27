@@ -44,8 +44,6 @@
 #include <kognac/MisraGries.h>
 
 #include <sparsehash/dense_hash_map>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/thread.hpp>
 
 #include <queue>
 #include <iostream>

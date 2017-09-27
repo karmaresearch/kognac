@@ -1,8 +1,6 @@
 #include <kognac/multidisklz4reader.h>
 
-#include <boost/filesystem.hpp>
-
-namespace fs = boost::filesystem;
+#include <assert.h>
 
 MultiDiskLZ4Reader::MultiDiskLZ4Reader(int maxNPartitions,
         int nbuffersPerPartition,
@@ -41,7 +39,7 @@ bool MultiDiskLZ4Reader::areNewBuffers(const int id) {
 void MultiDiskLZ4Reader::readbuffer(int partitionToRead,
         char *buffer) {
     //Read the file and put the content in the disk buffer
-    boost::chrono::system_clock::time_point start = boost::chrono::system_clock::now();
+    std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
     PartInfo &part = partitions[partitionToRead];
     if (!part.opened && nopenedstreams == maxopenedstreams) {
         //I must close one stream
@@ -64,7 +62,7 @@ void MultiDiskLZ4Reader::readbuffer(int partitionToRead,
         }
         part.idxfile++;
         part.positionfile = 0;
-        part.sizecurrentfile = fs::file_size(part.files[part.idxfile]);
+        part.sizecurrentfile = Utils::fileSize(part.files[part.idxfile]);
     }
     if (!part.opened) {
         //Open the file
@@ -80,12 +78,12 @@ void MultiDiskLZ4Reader::readbuffer(int partitionToRead,
     sizeToBeRead = min(sizeToBeRead, (size_t) SIZE_DISK_BUFFER);
     part.stream.read(buffer, sizeToBeRead);
     part.positionfile += sizeToBeRead;
-    time_rawreading += boost::chrono::system_clock::now() - start;
+    time_rawreading += std::chrono::system_clock::now() - start;
 
     //Put the content of the disk buffer in the blockToRead container
-    start = boost::chrono::system_clock::now();
+    start = std::chrono::system_clock::now();
     std::unique_lock<std::mutex> lk2(m_files[partitionToRead]);
-    time_files[partitionToRead] += boost::chrono::system_clock::now() - start;
+    time_files[partitionToRead] += std::chrono::system_clock::now() - start;
 
     BlockToRead b;
     b.buffer = buffer;
@@ -115,10 +113,10 @@ void MultiDiskLZ4Reader::run() {
 
     while (true) {
         //Get a disk buffer
-        boost::chrono::system_clock::time_point start = boost::chrono::system_clock::now();
+        std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
         std::unique_lock<std::mutex> l(m_diskbufferpool);
         cond_diskbufferpool.wait(l, std::bind(&DiskLZ4Reader::availableDiskBuffer, this));
-        time_diskbufferpool += boost::chrono::system_clock::now() - start;
+        time_diskbufferpool += std::chrono::system_clock::now() - start;
 
         char *buffer = diskbufferpool.back();
         diskbufferpool.pop_back();
@@ -143,12 +141,12 @@ void MultiDiskLZ4Reader::run() {
             }
         }
         if (skipped == partitions.size()) {
-            BOOST_LOG_TRIVIAL(debug) << "Exiting ...";
+            LOG(DEBUG) << "Exiting ...";
             diskbufferpool.push_back(buffer);
             break;
         } else if (!found) {
             if (firstPotentialPart == -1) {
-                BOOST_LOG_TRIVIAL(error) << "FirstPotentialPer == -1";
+                LOG(ERROR) << "FirstPotentialPer == -1";
                 throw 10;
             }
             partitionToRead = firstPotentialPart;

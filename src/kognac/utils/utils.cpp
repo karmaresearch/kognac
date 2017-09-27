@@ -46,23 +46,123 @@
 #endif
 
 #include <kognac/lz4io.h>
-
-#include <boost/filesystem.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/log/trivial.hpp>
+#include <kognac/logs.h>
 
 #include <algorithm>
 #include <vector>
 #include <string>
-
-namespace fs = boost::filesystem;
+#include <dirent.h>
+#include <set>
+#include <assert.h>
 
 using namespace std;
+
+/**** FILE UTILS ****/
+//Return only the files or the entire path?
+vector<string> Utils::getFilesWithPrefix(string dirname, string prefix) {
+    vector<string> files;
+    DIR *d = opendir(dirname.c_str());
+    struct dirent *dir;
+    if (d) {
+        while ((dir = readdir(d)) != NULL) {
+            if (dir->d_name[0] != '.' && Utils::starts_with(string(dir->d_name), prefix))
+                files.push_back(string(dir->d_name));
+        }
+        closedir(d);
+    }
+    return files;
+}
+
+vector<string> Utils::getSubdirs(string dirname) {
+    vector<string> files;
+    DIR *d = opendir(dirname.c_str());
+    struct dirent *dir;
+    if (d) {
+        while ((dir = readdir(d)) != NULL) {
+            if (dir->d_type == DT_DIR && dir->d_name[0] != '.') {
+                files.push_back(string(dir->d_name));
+            }
+        }
+        closedir(d);
+    }
+    return files;
+}
+
+vector<string> Utils::getFiles(string dirname, bool ignoreExtension) {
+    std::set<string> sfiles;
+    DIR *d = opendir(dirname.c_str());
+    struct dirent *dir;
+    if (d) {
+        while ((dir = readdir(d)) != NULL) {
+            if (dir->d_type == DT_REG && dir->d_name[0] != '.') {
+                if (ignoreExtension) {
+                    sfiles.insert(Utils::removeExtension(string(dir->d_name)));
+                } else {
+                    sfiles.insert(string(dir->d_name));
+                }
+            }
+        }
+        closedir(d);
+    }
+    std::vector<string> files;
+    for(auto s : sfiles)
+        files.push_back(s);
+    return files;
+}
+vector<string> Utils::getFilesWithSuffix(string dir, string suffix) {
+    //TODO
+}
+bool Utils::hasExtension(const string &file){
+    //TODO
+}
+string Utils::extension(const string &file) {
+    //TODO
+    //return ".gz"
+}
+string Utils::removeExtension(string file) {
+    //TODO
+}
+bool Utils::isDirectory(string dirname) {
+    //TODO
+}
+uint64_t Utils::fileSize(string file) {
+    //TODO
+}
+void Utils::create_directories(string newdir) {
+    //TODO
+}
+void Utils::remove(string file) {
+    //TODO
+}
+void Utils::remove_all(string path) {
+    //TODO
+}
+void Utils::rename(string oldfile, string newfile) {
+    //TODO
+}
+string Utils::parentDir(string file) {
+    //TODO
+}
+string Utils::filename(string path) {
+    //TODO
+}
+bool Utils::exists(std::string file) {
+    //TODO
+}
+/**** END FILE UTILS ****/
+/**** START STRING UTILS ****/
+bool Utils::starts_with(const string s, const string prefix) {
+}
+bool Utils::ends_with(const string s, const string suffix) {
+}
+bool Utils::contains(const string s, const string substr) {
+}
+/**** END STRING UTILS ****/
 
 int Utils::numBytes(long number) {
     long max = 32;
     if (number < 0) {
-        BOOST_LOG_TRIVIAL(error) << "Negative number " << number;
+        LOG(ERROR) << "Negative number " << number;
     }
     for (int i = 1; i <= 8; i++) {
         if (number < max) {
@@ -70,7 +170,7 @@ int Utils::numBytes(long number) {
         }
         max *= 256;
     }
-    BOOST_LOG_TRIVIAL(error) << "Number is too large: " << number;
+    LOG(ERROR) << "Number is too large: " << number;
     return -1;
 }
 
@@ -319,7 +419,7 @@ long Utils::decode_longWithHeader(char* buffer) {
 void Utils::encode_longWithHeader0(char* buffer, long n) {
 
     if (n < 0) {
-        BOOST_LOG_TRIVIAL(error) << "Number is negative";
+        LOG(ERROR) << "Number is negative";
         exit(1);
     }
 
@@ -336,7 +436,7 @@ void Utils::encode_longWithHeader0(char* buffer, long n) {
 void Utils::encode_longWithHeader1(char* buffer, long n) {
 
     if (n < 0) {
-        BOOST_LOG_TRIVIAL(error) << "Number is negative";
+        LOG(ERROR) << "Number is negative";
         exit(1);
     }
 
@@ -504,7 +604,7 @@ int Utils::decode_vint2(char* buffer, int *offset) {
 
 int Utils::encode_vlong2(char* buffer, int offset, long n) {
     if (n < 0) {
-        BOOST_LOG_TRIVIAL(error) << "Number is negative. This is not allowed with vlong2";
+        LOG(ERROR) << "Number is negative. This is not allowed with vlong2";
         throw 10;
     }
 
@@ -525,7 +625,7 @@ int Utils::encode_vlong2(char* buffer, int offset, long n) {
 
 uint16_t Utils::encode_vlong2(char* buffer, long n) {
     if (n < 0) {
-        BOOST_LOG_TRIVIAL(error) << "Number is negative. This is not allowed with vlong2";
+        LOG(ERROR) << "Number is negative. This is not allowed with vlong2";
         throw 10;
     }
 
@@ -563,7 +663,7 @@ void Utils::encode_vlong2_fixedLen(char* buffer, long n, const uint8_t len) {
     buffer++;
     int remBytes = len - (buffer - beginbuffer);
     while (--remBytes >= 0) {
-        *buffer = 128;
+        *buffer = (char)128;
         buffer++;
     }
     assert((buffer - beginbuffer) == len);
@@ -631,7 +731,7 @@ long Utils::decode_vlongWithHeader1(char* buffer, const int end, int *p) {
 
 int Utils::encode_vlongWithHeader0(char* buffer, long n) {
     if (n < 0) {
-        BOOST_LOG_TRIVIAL(error) << "Number is negative";
+        LOG(ERROR) << "Number is negative";
         return -1;
     }
 
@@ -645,7 +745,7 @@ int Utils::encode_vlongWithHeader0(char* buffer, long n) {
 
 int Utils::encode_vlongWithHeader1(char* buffer, long n) {
     if (n < 0) {
-        BOOST_LOG_TRIVIAL(error) << "Number is negative";
+        LOG(ERROR) << "Number is negative";
         return -1;
     }
 
@@ -829,62 +929,6 @@ long long unsigned Utils::getCPUCounter() {
     return ((unsigned long long)a) | (((unsigned long long)d) << 32);;
 }
 
-vector<string> Utils::getFilesWithPrefix(string dir, string prefix) {
-    vector<string> files;
-    for (fs::directory_iterator itr(dir); itr != fs::directory_iterator();
-            ++itr) {
-        if (fs::is_regular_file(itr->status())) {
-            string s = itr->path().filename().string();
-            if (boost::algorithm::starts_with(s, prefix)) {
-                files.push_back(s);
-            }
-        }
-    }
-    return files;
-}
-
-vector<string> Utils::getFiles(string dir, bool ignoreExtension) {
-    vector<string> files;
-    if (!ignoreExtension) {
-        for (fs::directory_iterator itr(dir); itr != fs::directory_iterator();
-                ++itr) {
-            if (fs::is_regular_file(itr->status())
-                    && itr->path().filename().string()[0] != '.') {
-                string s = itr->path().string();
-                files.push_back(s);
-            }
-        }
-    } else {
-        std::set<string> s_files;
-        for (fs::directory_iterator itr(dir); itr != fs::directory_iterator();
-                ++itr) {
-            if (fs::is_regular_file(itr->status())
-                    && itr->path().filename().string()[0] != '.') {
-                string s = itr->path().string();
-                //Remove the extension
-                s_files.insert(itr->path().parent_path().string() + "/" + itr->path().stem().string());
-            }
-        }
-        for (auto s : s_files) {
-            files.push_back(s);
-        }
-    }
-    return files;
-}
-
-vector<string> Utils::getSubdirs(string dir) {
-    vector<string> files;
-    for (fs::directory_iterator itr(dir); itr != fs::directory_iterator();
-            ++itr) {
-        if (fs::is_directory(itr->status())
-                && itr->path().filename().string()[0] != '.') {
-            string s = itr->path().string();
-            files.push_back(s);
-        }
-    }
-    return files;
-}
-
 int Utils::getNumberPhysicalCores() {
     return sysconf( _SC_NPROCESSORS_ONLN);
 }
@@ -907,33 +951,57 @@ long Utils::quickSelect(long *vector, int size, int k) {
 }
 
 long Utils::getNBytes(std::string input) {
-    if (fs::is_directory(input)) {
+    if (Utils::isDirectory(input)) {
         long size = 0;
-        for (fs::directory_iterator itr(input); itr != fs::directory_iterator();
-                ++itr) {
-            if (fs::is_regular(itr->path())) {
-                size += fs::file_size(itr->path());
+        DIR *d = opendir(input.c_str());
+        struct dirent *dir;
+        if (d) {
+            while ((dir = readdir(d)) != NULL) {
+                if (dir->d_type == DT_REG) {
+                    size += Utils::fileSize(input + "/" + string(dir->d_name));
+                }
             }
+            closedir(d);
         }
+        /*for (fs::directory_iterator itr(input); itr != fs::directory_iterator();
+          ++itr) {
+          if (fs::is_regular(itr->path())) {
+          size += fs::file_size(itr->path());
+          }
+          }*/
         return size;
     } else {
-        return fs::file_size(fs::path(input));
+        return Utils::fileSize(input);
     }
 }
 
 bool Utils::isCompressed(std::string input) {
-    if (fs::is_directory(input)) {
+    if (Utils::isDirectory(input)) {
         bool isCompressed = false;
-        for (fs::directory_iterator itr(input); itr != fs::directory_iterator();
-                ++itr) {
-            if (fs::is_regular(itr->path())) {
-                if (itr->path().extension() == string(".gz"))
-                    isCompressed = true;
+        DIR *d = opendir(input.c_str());
+        struct dirent *dir;
+        if (d) {
+            while ((dir = readdir(d)) != NULL) {
+                if (dir->d_type == DT_REG) {
+                    string path = input + "/" + string(dir->d_name);
+                    if (Utils::extension(path) == string(".gz")) {
+                        isCompressed = true;
+                    }
+                }
             }
+            closedir(d);
         }
+
+        /*for (fs::directory_iterator itr(input); itr != fs::directory_iterator();
+          ++itr) {
+          if (fs::is_regular(itr->path())) {
+          if (itr->path().extension() == string(".gz"))
+          isCompressed = true;
+          }
+          }*/
         return isCompressed;
     } else {
-        return fs::path(input).extension() == string(".gz");
+        return Utils::extension(input) == string(".gz");
     }
 }
 

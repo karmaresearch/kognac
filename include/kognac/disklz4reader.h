@@ -3,8 +3,6 @@
 
 #include <kognac/lz4io.h>
 
-#include <boost/chrono.hpp>
-
 #include <fstream>
 #include <list>
 #include <vector>
@@ -59,12 +57,12 @@ protected:
     //Larger buffers to read from disk. They are proportional to SIZE_SEG
     std::vector<char*> diskbufferpool;
     std::condition_variable cond_diskbufferpool;
-    boost::chrono::duration<double> time_diskbufferpool;
-    boost::chrono::duration<double> time_rawreading;
+    std::chrono::duration<double> time_diskbufferpool;
+    std::chrono::duration<double> time_rawreading;
 
     std::mutex *m_files;
     std::condition_variable *cond_files;
-    boost::chrono::duration<double> *time_files;
+    std::chrono::duration<double> *time_files;
 
 public:
     DiskLZ4Reader(string inputfile, int npartitions, int nbuffersPerFile);

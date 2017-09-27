@@ -15,9 +15,9 @@ DiskLZ4Writer::DiskLZ4Writer(int npartitions, int nbuffersPerFile) : npartitions
     blocksToWrite = new std::list<BlockToWrite>[npartitions];
     addedBlocksToWrite = 0;
     currentWriteFileID = 0;
-    time_rawwriting = boost::chrono::duration<double>::zero();
-    time_waitingwriting = boost::chrono::duration<double>::zero();
-    time_waitingbuffer = boost::chrono::duration<double>::zero();
+    time_rawwriting = std::chrono::duration<double>::zero();
+    time_waitingwriting = std::chrono::duration<double>::zero();
+    time_waitingbuffer = std::chrono::duration<double>::zero();
     processStarted = false;
 }
 
@@ -182,10 +182,10 @@ void DiskLZ4Writer::compressAndQueue(const int id) {
         }
 
         //Get a new buffer
-        auto start = boost::chrono::system_clock::now();
+        auto start = std::chrono::system_clock::now();
         std::unique_lock<std::mutex> lk(mutexAvailableBuffer);
         cvAvailableBuffer.wait(lk, std::bind(&DiskLZ4Writer::areAvailableBuffers, this));
-        auto sec = boost::chrono::system_clock::now() - start;
+        auto sec = std::chrono::system_clock::now() - start;
         time_waitingbuffer += sec;
 
         assert(buffers.size() > 0);
@@ -216,7 +216,7 @@ void DiskLZ4Writer::compressAndQueue(const int id) {
     const int compressedSize = LZ4_compress(file.buffer, buffer + 21, file.sizebuffer);
 #endif
     if (compressedSize == 0 || compressedSize > SIZE_COMPRESSED_SEG - 21) {
-        BOOST_LOG_TRIVIAL(error) << "I could not compress in the given buffer";
+        LOG(ERROR) << "I could not compress in the given buffer";
         throw 10;
     }
     Utils::encode_intLE(buffer, 9, compressedSize);
@@ -235,10 +235,10 @@ void DiskLZ4Writer::run() {
     while (true) {
         std::list<BlockToWrite> blocks;
 
-        auto start = boost::chrono::system_clock::now();
+        auto start = std::chrono::system_clock::now();
         std::unique_lock<std::mutex> lk(mutexBlockToWrite);
         cvBlockToWrite.wait(lk, std::bind(&DiskLZ4Writer::areBlocksToWrite, this));
-        time_waitingwriting += boost::chrono::system_clock::now() - start;
+        time_waitingwriting += std::chrono::system_clock::now() - start;
 
         if (addedBlocksToWrite > 0) {
             //Search the first non-empty file to write
@@ -256,7 +256,7 @@ void DiskLZ4Writer::run() {
             break;
         }
 
-        start = boost::chrono::system_clock::now();
+        start = std::chrono::system_clock::now();
         auto it = blocks.begin();
         while (it != blocks.end()) {
             startpositions[it->idpart].push_back(stream.tellp());
@@ -268,9 +268,9 @@ void DiskLZ4Writer::run() {
             stream.write(it->buffer, it->sizebuffer);
             it++;
         }
-        time_rawwriting += boost::chrono::system_clock::now() - start;
+        time_rawwriting += std::chrono::system_clock::now() - start;
 
-        //BOOST_LOG_TRIVIAL(debug) << "WRITING TIME " << time_rawwriting.count() << "ec. Waitingwriting " << time_waitingwriting.count() << "sec." << " Waiting buffer " << time_waitingbuffer.count() << "sec.";
+        //LOG(DEBUG) << "WRITING TIME " << time_rawwriting.count() << "ec. Waitingwriting " << time_waitingwriting.count() << "sec." << " Waiting buffer " << time_waitingbuffer.count() << "sec.";
 
         //Return the buffer so that it can be reused
         unique_lock<std::mutex> lk2(mutexAvailableBuffer);
@@ -285,13 +285,12 @@ void DiskLZ4Writer::run() {
     stream.close();
 
     //write down the beginning of the blocks for each file
-    //auto start = boost::chrono::system_clock::now();
     stream.open(inputfile + string(".idx"));
     char buffer[8];
     Utils::encode_long(buffer, startpositions.size());
     stream.write(buffer, 8);
     for (int i = 0; i < startpositions.size(); ++i) {
-        //BOOST_LOG_TRIVIAL(debug) << "The number of blocks in partition "
+        //LOG(DEBUG) << "The number of blocks in partition "
         //                         << i
         //                         << " is " << startpositions[i].size();
         Utils::encode_long(buffer, startpositions[i].size());
@@ -302,9 +301,6 @@ void DiskLZ4Writer::run() {
         }
     }
     stream.close();
-    //boost::chrono::duration<double> timeidx =
-    //    boost::chrono::system_clock::now() - start;
-    //BOOST_LOG_TRIVIAL(debug) << "Time writing the idx file is " << timeidx.count() << "sec.";
 }
 
 DiskLZ4Writer::~DiskLZ4Writer() {
@@ -312,7 +308,7 @@ DiskLZ4Writer::~DiskLZ4Writer() {
         currentthread.join();
     processStarted = false;
 
-    BOOST_LOG_TRIVIAL(debug) << "Time writing all data from disk " << time_rawwriting.count()  << "sec. Time waiting writing " << time_waitingwriting.count() << "sec. Time waiting buffer " << time_waitingbuffer.count() << "sec.";
+    LOG(DEBUG) << "Time writing all data from disk " << time_rawwriting.count()  << "sec. Time waiting writing " << time_waitingwriting.count() << "sec. Time waiting buffer " << time_waitingbuffer.count() << "sec.";
 
     for (int i = 0; i < parentbuffers.size(); ++i)
         delete[] parentbuffers[i];

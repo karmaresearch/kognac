@@ -23,7 +23,6 @@
 #define LRUSET_H_
 
 #include <iostream>
-#include <boost/log/trivial.hpp>
 
 class LRUSet {
 private:

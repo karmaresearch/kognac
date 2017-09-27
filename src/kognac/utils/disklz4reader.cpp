@@ -1,11 +1,8 @@
 #include <kognac/disklz4reader.h>
 #include <kognac/consts.h>
-#include <boost/filesystem.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 
 #include <fstream>
-
-namespace fs = boost::filesystem;
+#include <assert.h>
 
 DiskLZ4Reader::DiskLZ4Reader(int npartitions, int nbuffersPerFile) : nbuffersPerFile(nbuffersPerFile) {
     //Init data structures
@@ -27,11 +24,11 @@ DiskLZ4Reader::DiskLZ4Reader(int npartitions, int nbuffersPerFile) : nbuffersPer
 
     m_files = new std::mutex[files.size()];
     cond_files = new std::condition_variable[files.size()];
-    time_files = new boost::chrono::duration<double>[files.size()];
-    time_diskbufferpool = boost::chrono::duration<double>::zero();
-    time_rawreading = boost::chrono::duration<double>::zero();
+    time_files = new std::chrono::duration<double>[files.size()];
+    time_diskbufferpool = std::chrono::duration<double>::zero();
+    time_rawreading = std::chrono::duration<double>::zero();
     for (int i = 0; i < files.size(); ++i) {
-        time_files[i] = boost::chrono::duration<double>::zero();
+        time_files[i] = std::chrono::duration<double>::zero();
     }
 }
 
@@ -58,11 +55,11 @@ DiskLZ4Reader::DiskLZ4Reader(string inputfile,
 
     m_files = new std::mutex[files.size()];
     cond_files = new std::condition_variable[files.size()];
-    time_files = new boost::chrono::duration<double>[files.size()];
-    time_diskbufferpool = boost::chrono::duration<double>::zero();
-    time_rawreading = boost::chrono::duration<double>::zero();
+    time_files = new std::chrono::duration<double>[files.size()];
+    time_diskbufferpool = std::chrono::duration<double>::zero();
+    time_rawreading = std::chrono::duration<double>::zero();
     for (int i = 0; i < files.size(); ++i) {
-        time_files[i] = boost::chrono::duration<double>::zero();
+        time_files[i] = std::chrono::duration<double>::zero();
     }
 
     //Open the input file
@@ -72,12 +69,11 @@ DiskLZ4Reader::DiskLZ4Reader(string inputfile,
     readBlocks.resize(npartitions);
     //Read the index file
     string idxfile = inputfile + ".idx";
-    if (!fs::exists(idxfile)) {
-        BOOST_LOG_TRIVIAL(error) << "The file " << idxfile << " does not exist";
+    if (!Utils::exists(idxfile)) {
+        LOG(ERROR) << "The file " << idxfile << " does not exist";
         throw 10;
     }
 
-    //auto start = boost::chrono::system_clock::now();
     ifstream idxreader;
     idxreader.open(idxfile);
     char buffer[8];
@@ -95,9 +91,6 @@ DiskLZ4Reader::DiskLZ4Reader(string inputfile,
         }
     }
     idxreader.close();
-    //boost::chrono::duration<double> timeidx =
-    //    boost::chrono::system_clock::now() - start;
-    //BOOST_LOG_TRIVIAL(debug) << "Time reading the idx file is " << timeidx.count() << "sec.";
 
     //Launch reading thread
     currentthread = std::thread(std::bind(&DiskLZ4Reader::run, this));
@@ -120,17 +113,17 @@ void DiskLZ4Reader::run() {
 
     while (true) {
         //Get a disk buffer
-        boost::chrono::system_clock::time_point start = boost::chrono::system_clock::now();
+        std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
         std::unique_lock<std::mutex> l(m_diskbufferpool);
         cond_diskbufferpool.wait(l, std::bind(&DiskLZ4Reader::availableDiskBuffer, this));
-        time_diskbufferpool += boost::chrono::system_clock::now() - start;
+        time_diskbufferpool += std::chrono::system_clock::now() - start;
 
         char *buffer = diskbufferpool.back();
         diskbufferpool.pop_back();
         l.unlock();
 
         //Read the file and put the content in the disk buffer
-        start = boost::chrono::system_clock::now();
+        start = std::chrono::system_clock::now();
 
 
 
@@ -164,12 +157,12 @@ void DiskLZ4Reader::run() {
             }
         }
         if (skipped == files.size()) {
-            BOOST_LOG_TRIVIAL(debug) << "Exiting ...";
+            LOG(DEBUG) << "Exiting ...";
             diskbufferpool.push_back(buffer);
             break;
         } else if (!found) {
             if (firstPotentialPart == -1) {
-                BOOST_LOG_TRIVIAL(error) << "FirstPotentialPer == -1";
+                LOG(ERROR) << "FirstPotentialPer == -1";
                 throw 10;
             }
             currentFileIdx = firstPotentialPart;
@@ -178,7 +171,7 @@ void DiskLZ4Reader::run() {
         long blocknumber = readBlocks[currentFileIdx];
         assert(blocknumber < beginningBlocks[currentFileIdx].size());
         long position = beginningBlocks[currentFileIdx][blocknumber];
-        //BOOST_LOG_TRIVIAL(debug) << "Read block " << blocknumber << " for file " << currentFileIdx << " at position " << position;
+        //LOG(DEBUG) << "Read block " << blocknumber << " for file " << currentFileIdx << " at position " << position;
 
         reader.seekg(position);
         reader.read(tmpbuffer, 4);
@@ -191,13 +184,13 @@ void DiskLZ4Reader::run() {
         totalsize += sizeToBeRead + 8;
         reader.read(buffer, sizeToBeRead);
 
-        time_rawreading += boost::chrono::system_clock::now() - start;
+        time_rawreading += std::chrono::system_clock::now() - start;
 
         //Put the content of the disk buffer in the blockToRead container
         assert(sizeToBeRead > 0);
-        start = boost::chrono::system_clock::now();
+        start = std::chrono::system_clock::now();
         std::unique_lock<std::mutex> lk2(m_files[currentFileIdx]);
-        time_files[currentFileIdx] += boost::chrono::system_clock::now() - start;
+        time_files[currentFileIdx] += std::chrono::system_clock::now() - start;
 
         BlockToRead b;
         b.buffer = buffer;
@@ -216,11 +209,11 @@ void DiskLZ4Reader::run() {
         //reader.read(tmpbuffer, 4);
         //currentFileIdx = Utils::decode_int(tmpbuffer);
 
-        //BOOST_LOG_TRIVIAL(debug) << "READING TIME all data from disk " << time_rawreading.count()  << "sec. Last buffer size = " << sizeToBeRead << " Time diskbufferpool " << time_diskbufferpool.count() << "sec.";
+        //LOG(DEBUG) << "READING TIME all data from disk " << time_rawreading.count()  << "sec. Last buffer size = " << sizeToBeRead << " Time diskbufferpool " << time_diskbufferpool.count() << "sec.";
     }
 
     reader.close();
-    //BOOST_LOG_TRIVIAL(debug) << "Finished reading the input file";
+    //LOG(DEBUG) << "Finished reading the input file";
 
     //Notify all attached files that might be waiting that there is nothing else to read
     for (int i = 0; i < files.size(); ++i)
@@ -235,9 +228,9 @@ bool DiskLZ4Reader::getNewCompressedBuffer(std::unique_lock<std::mutex> &lk,
         compressedbuffers[id].pop_front();
         sCompressedbuffers[id]--;
 
-        boost::chrono::system_clock::time_point start = boost::chrono::system_clock::now();
+        std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
         std::unique_lock<std::mutex> lk2(m_diskbufferpool);
-        time_diskbufferpool += boost::chrono::system_clock::now() - start;
+        time_diskbufferpool += std::chrono::system_clock::now() - start;
 
         diskbufferpool.push_back(b.buffer);
         lk2.unlock();
@@ -251,11 +244,11 @@ bool DiskLZ4Reader::getNewCompressedBuffer(std::unique_lock<std::mutex> &lk,
 
 bool DiskLZ4Reader::uncompressBuffer(const int id) {
     //Get a lock
-    boost::chrono::system_clock::time_point start = boost::chrono::system_clock::now();
+    std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
     std::unique_lock<std::mutex> lk(m_files[id]);
     //Make sure you wait until there is a new block
     cond_files[id].wait(lk, std::bind(&DiskLZ4Reader::areNewBuffers, this, id));
-    time_files[id] += boost::chrono::system_clock::now() - start;
+    time_files[id] += std::chrono::system_clock::now() - start;
 
     if (compressedbuffers[id].empty()) {
         return false;
@@ -343,7 +336,7 @@ bool DiskLZ4Reader::uncompressBuffer(const int id) {
             break;
         case 32:
             if (!LZ4_decompress_fast(startb, f.buffer, uncompressedLen)) {
-                BOOST_LOG_TRIVIAL(error) << "Error in the decompression.";
+                LOG(ERROR) << "Error in the decompression.";
                 throw 10;
             }
             break;
@@ -436,7 +429,7 @@ DiskLZ4Reader::~DiskLZ4Reader() {
         avg += time_files[i].count();
     }
 
-    BOOST_LOG_TRIVIAL(debug) << "Time reading all data from disk " <<
+    LOG(DEBUG) << "Time reading all data from disk " <<
         time_rawreading.count()  << "sec. Time waiting lock m_diskbufferpool " <<
         time_diskbufferpool.count() << "sec. Time (avg) waiting locks files " <<
         avg / files.size() << "sec.";

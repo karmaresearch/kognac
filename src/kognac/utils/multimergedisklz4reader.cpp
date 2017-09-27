@@ -1,4 +1,5 @@
 #include <kognac/multimergedisklz4reader.h>
+#include <assert.h>
 
 MultiMergeDiskLZ4Reader::MultiMergeDiskLZ4Reader(int maxNPartitions,
         int nbuffersPerPartition,
@@ -88,9 +89,9 @@ void MultiMergeDiskLZ4Reader::run() {
 
         //Get a disk buffer
         l.lock();
-        boost::chrono::system_clock::time_point start = boost::chrono::system_clock::now();
+        std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
         cond_diskbufferpool.wait(l, std::bind(&DiskLZ4Reader::availableDiskBuffer, this));
-        time_diskbufferpool += boost::chrono::system_clock::now() - start;
+        time_diskbufferpool += std::chrono::system_clock::now() - start;
         char *buffer = diskbufferpool.back();
         diskbufferpool.pop_back();
         l.unlock();

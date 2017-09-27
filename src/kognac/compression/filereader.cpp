@@ -21,19 +21,17 @@
 
 #include <kognac/filereader.h>
 #include <kognac/consts.h>
+#include <kognac/logs.h>
+#include <kognac/utils.h>
 
 #include <fstream>
 #include <iostream>
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/log/trivial.hpp>
 #include <climits>
+#include <chrono>
 
 namespace io = boost::iostreams;
-namespace fs = boost::filesystem;
-namespace timens = boost::chrono;
 
 string GZIP_EXTENSION = string(".gz");
 
@@ -42,14 +40,10 @@ FileReader::FileReader(char *buffer, size_t sizebuffer, bool gzipped) :
     sizeByteArray(sizebuffer), compressed(gzipped) {
     if (compressed) {
         //Decompress the stream
-        //timens::system_clock::time_point start = timens::system_clock::now();
         io::filtering_ostream os;
         os.push(io::gzip_decompressor());
         os.push(io::back_inserter(uncompressedByteArray));
         io::write(os, buffer, sizebuffer);
-        //boost::chrono::duration<double> sec = boost::chrono::system_clock::now()
-        //                                      - start;
-        //BOOST_LOG_TRIVIAL(debug) << "Time decompressing " << sizebuffer << " bytes is " << sec.count() * 1000 << "ms.";
     }
     currentIdx = 0;
 }
@@ -58,8 +52,7 @@ FileReader::FileReader(FileInfo sFile) :
     byteArray(false), compressed(!sFile.splittable), rawFile(sFile.path,
             ios_base::in | ios_base::binary) {
     //First check the extension to identify what kind of file it is.
-    fs::path p(sFile.path);
-    if (p.has_extension() && p.extension() == GZIP_EXTENSION) {
+    if (Utils::hasExtension(sFile.path) && Utils::extension(sFile.path) == GZIP_EXTENSION) {
         compressedFile.push(io::gzip_decompressor());
         compressedFile.push(rawFile);
     }
@@ -217,12 +210,12 @@ bool FileReader::parseLine(const char *line, const int sizeLine) {
                 && lengthO < (MAX_TERM_SIZE - 1)) {
             return true;
         } else {
-            //BOOST_LOG_TRIVIAL(error) << "The triple was not parsed correctly: " << lengthS << " " << lengthP << " " << lengthO;
+            //LOG(ERROR) << "The triple was not parsed correctly: " << lengthS << " " << lengthP << " " << lengthO;
             return false;
         }
 
     } catch (std::exception &e) {
-        BOOST_LOG_TRIVIAL(error) << "Failed parsing line: " + string(line, sizeLine);
+        LOG(ERROR) << "Failed parsing line: " + string(line, sizeLine);
     }
     return false;
 }

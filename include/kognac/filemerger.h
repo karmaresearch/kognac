@@ -24,16 +24,13 @@
 
 #include <kognac/lz4io.h>
 #include <kognac/triple.h>
-
-#include <boost/log/trivial.hpp>
-#include <boost/filesystem.hpp>
+#include <kognac/utils.h>
 
 #include <string>
 #include <queue>
 #include <vector>
 
 using namespace std;
-namespace fs = boost::filesystem;
 
 template<class K>
 struct QueueEl {
@@ -67,7 +64,7 @@ class FileMerger {
         //Changes LZ4Reader **files
         int loadFileWithExtension(string prefix, int part, int ext) {
             string filename = prefix + "." + to_string(ext);
-            if (fs::exists(filename)) {
+            if (Utils::exists(filename)) {
                 files[part] = new LZ4Reader(filename);
                 return ext;
             } else {
@@ -135,7 +132,7 @@ class FileMerger {
                         delete files[el.fileIdx];
                         if (deletePreviousExt) {
                             string filename = input[el.fileIdx] + "." + to_string(currentExt);
-                            fs::remove(filename);
+                            Utils::remove(filename);
                         }
                         const int nextExt = loadFileWithExtension(input[el.fileIdx], el.fileIdx, currentExt + 1);
                         if (nextExt == -1) {
@@ -165,7 +162,7 @@ class FileMerger {
                     delete files[i];
                     if (deletePreviousExt) {
                         string filename = input[i] + "." + to_string(extensions[i]);
-                        fs::remove(filename);
+                        Utils::remove(filename);
                     }
                 }
             }

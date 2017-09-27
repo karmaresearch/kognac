@@ -1,4 +1,6 @@
 #include <kognac/diskreader.h>
+#include <kognac/logs.h>
+#include <kognac/utils.h>
 
 DiskReader::DiskReader(int nbuffers, std::vector<FileInfo> *files) {
     this->files = files;
@@ -11,12 +13,12 @@ DiskReader::DiskReader(int nbuffers, std::vector<FileInfo> *files) {
     }
     maxsize += 32 * 1024 + maxsize * 0.1; //min size + add a 10%
 
-    BOOST_LOG_TRIVIAL(debug) << "Max size=" << maxsize;
+    LOG(DEBUG) << "Max size=" << maxsize;
     for (int i = 0; i < nbuffers; ++i) {
         availablebuffers.push_back(new char[maxsize]);
         memset(availablebuffers.back(), 0, sizeof(char) * maxsize);
     }
-    waitingTime = boost::chrono::duration<double>::zero();
+    waitingTime = std::chrono::duration<double>::zero();
 }
 
 bool DiskReader::isReady() {
@@ -68,10 +70,10 @@ void DiskReader::run() {
         //Is there an available buffer that I can use?
         char *buffer = NULL;
         {
-            boost::chrono::system_clock::time_point start = boost::chrono::system_clock::now();
+            std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
             std::unique_lock<std::mutex> lk(mutex2);
             cv2.wait(lk, std::bind(&DiskReader::isAvailable, this));
-            waitingTime += boost::chrono::system_clock::now() - start;
+            waitingTime += std::chrono::system_clock::now() - start;
             buffer = availablebuffers.back();
             availablebuffers.pop_back();
             lk.unlock();
@@ -100,7 +102,7 @@ void DiskReader::run() {
                     break; //magic value
                 }
                 if (readSize > maxsize) {
-                    BOOST_LOG_TRIVIAL(error) << "Buffers are too small. Must fix this";
+                    LOG(ERROR) << "Buffers are too small. Must fix this";
                     throw 10;
                 }
                 buffer[readSize++] = b;
@@ -115,8 +117,7 @@ void DiskReader::run() {
             Buffer newbuffer;
             newbuffer.b = buffer;
             newbuffer.size = readSize;
-            fs::path p(itr->path);
-            if (p.has_extension() && p.extension() == string(".gz")) {
+            if (Utils::hasExtension(itr->path) && Utils::extension(itr->path) == string(".gz")) {
                 newbuffer.gzipped = true;
             } else {
                 newbuffer.gzipped = false;

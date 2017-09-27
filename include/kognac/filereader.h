@@ -28,7 +28,6 @@
 #include <exception>
 #include <vector>
 #include <boost/iostreams/filtering_stream.hpp>
-#include <boost/chrono.hpp>
 
 using namespace std;
 

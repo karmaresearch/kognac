@@ -23,8 +23,7 @@
 #include <kognac/utils.h>
 #include <kognac/stringscol.h>
 #include <kognac/hashfunctions.h>
-
-#include <boost/algorithm/string/predicate.hpp>
+#include <kognac/logs.h>
 
 #include <fstream>
 #include <string>
@@ -433,7 +432,7 @@ void SchemaExtractor::processClasses(SchemaMap &map, NumericNPSchemaMap &omap) {
     //There should be only one root: <Class>. If there are more then issue a
     //warning
     if (roots.size() > 1) {
-        BOOST_LOG_TRIVIAL(error) << "There should be only one root! Found (" << roots.size() << ")";
+        LOG(ERROR) << "There should be only one root! Found (" << roots.size() << ")";
         throw 10;
     }
 
@@ -456,7 +455,7 @@ void SchemaExtractor::processClasses(SchemaMap &map, NumericNPSchemaMap &omap) {
         std::sort(itr->second.begin(), itr->second.end());
     }
 
-    BOOST_LOG_TRIVIAL(debug) << "Members of " << omap.size() <<
+    LOG(DEBUG) << "Members of " << omap.size() <<
                              " classes have a clustering ID";
 }
 
@@ -476,7 +475,7 @@ void SchemaExtractor::prepare() {
 
     //Print some stats
     //printTree(0, root);
-    BOOST_LOG_TRIVIAL(debug) << "There are " << outputSubclasses.size() << " subclasses to cluster the terms";
+    LOG(DEBUG) << "There are " << outputSubclasses.size() << " subclasses to cluster the terms";
 }
 
 void SchemaExtractor::retrieveInstances(const long term, const vector<long> **output) const {
@@ -615,7 +614,7 @@ void rearrangeChildrenWithPatterns(ExtNode *node,
                     }
                     nodeToFix->sibling = NULL;
                 } else {
-                    BOOST_LOG_TRIVIAL(debug) << "I was"
+                    LOG(DEBUG) << "I was"
                                              "unable to rearrange a list of " <<
                                              (childrenToRearrange.size() +
                                               rearrangedChildren.size()) <<
@@ -753,7 +752,7 @@ void SchemaExtractor::serializeNodeBeginRange(boost::iostreams::filtering_ostrea
 void SchemaExtractor::serialize(string outputFile) {
     std::ofstream fout(outputFile, ios_base::binary);
     boost::iostreams::filtering_ostream out;
-    if (boost::algorithm::ends_with(outputFile, ".gz")) {
+    if (Utils::ends_with(outputFile, ".gz")) {
         out.push(boost::iostreams::gzip_compressor());
     }
     out.push(fout);

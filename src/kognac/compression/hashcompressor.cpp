@@ -26,12 +26,11 @@
 #include <kognac/hashfunctions.h>
 #include <kognac/triplewriters.h>
 #include <kognac/filemerger.h>
+#include <kognac/logs.h>
 
 #include <string>
-#include <boost/filesystem.hpp>
 
 using namespace std;
-namespace fs = boost::filesystem;
 
 long HashCompressor::compress(string inputDir, string tmpDir, string *permDirs,
                               int nperms, int signaturePerms,
@@ -48,7 +47,7 @@ long HashCompressor::compress(string inputDir, string tmpDir, string *permDirs,
     }
 
     /***** Compress the triples and extract (in parallel) all the terms from the input *****/
-    boost::thread *threads = new boost::thread[maxThreads - 1];
+    std::thread *threads = new std::thread[maxThreads - 1];
     int chunksToProcess = 0;
     long *outputs = new long[maxThreads];
     for (int i = 0; i < maxThreads; ++i)
@@ -58,8 +57,8 @@ long HashCompressor::compress(string inputDir, string tmpDir, string *permDirs,
         for (int i = 1; i < readThreads && (chunksToProcess + i) < maxThreads;
                 ++i) {
             /***** Compress the triples *****/
-            threads[i - 1] = boost::thread(
-                                 boost::bind(&HashCompressor::compressAndExtractDictionaries,
+            threads[i - 1] = std::thread(
+                                 std::bind(&HashCompressor::compressAndExtractDictionaries,
                                              this, chunksToProcess + i,
                                              chunks[chunksToProcess + i],
                                              tmpDictFiles[chunksToProcess + i],
@@ -84,9 +83,9 @@ long HashCompressor::compress(string inputDir, string tmpDir, string *permDirs,
 
     /***** Then I merge the dictionaries entries looking for conflicts *****/
     long maxMemAllocate = max((long) (BLOCK_SUPPORT_BUFFER_COMPR * 2), (long) (Utils::getSystemMemory() * 0.70 / ndicts));
-    threads = new boost::thread[ndicts - 1];
+    threads = new std::thread[ndicts - 1];
     for (int i = 1; i < ndicts; ++i) {
-        threads[i - 1] = boost::thread(boost::bind(&HashCompressor::mergeDictionaries, this, tmpDir, tmpDictFiles, i, maxThreads, nameDicts[i], maxMemAllocate));
+        threads[i - 1] = std::thread(std::bind(&HashCompressor::mergeDictionaries, this, tmpDir, tmpDictFiles, i, maxThreads, nameDicts[i], maxMemAllocate));
     }
     mergeDictionaries(tmpDir, tmpDictFiles, 0, maxThreads, nameDicts[0], maxMemAllocate);
     for (int i = 1; i < ndicts; ++i) {
@@ -96,7 +95,7 @@ long HashCompressor::compress(string inputDir, string tmpDir, string *permDirs,
     delete[] threads;
     for (int i = 0; i < maxThreads; ++i) {
         for (int j = 0; j < ndicts; ++j)
-            fs::remove(fs::path(tmpDictFiles[i][j]));
+            Utils::remove(tmpDictFiles[i][j]);
         delete[] tmpDictFiles[i];
     }
     delete[] tmpDictFiles;
@@ -108,7 +107,7 @@ long HashCompressor::compress(string inputDir, string tmpDir, string *permDirs,
 void HashCompressor::mergeDictionaries(string tmpDir, string **files, int dictID, int nfiles, string outputFile, long maxSizeToSort) {
     //First create a temporary directory
     string dir = tmpDir + string("/tmp-sorting-pool-") + to_string(dictID);
-    fs::create_directories(fs::path(dir));
+    Utils::create_directories(dir);
 
     //Do an immemory sort first
     int nsortedFiles = 0;
@@ -118,7 +117,7 @@ void HashCompressor::mergeDictionaries(string tmpDir, string **files, int dictID
     //Do a merge sort
     mergeFiles(tmpPrefixFile, nsortedFiles, outputFile);
 
-    fs::remove_all(fs::path(dir));
+    Utils::remove_all(dir);
 }
 
 void HashCompressor::mergeFiles(string tmpPrefixFile, int nInputFiles, string outputFile) {
@@ -148,7 +147,7 @@ void HashCompressor::mergeFiles(string tmpPrefixFile, int nInputFiles, string ou
             int sTerm = Utils::decode_short(t.value);
             if (sTerm == sPreviousTerm && memcmp(t.value + 2, previousTerm + 2, sPreviousTerm - 2) != 0) {
                 //Conflict!
-                BOOST_LOG_TRIVIAL(warning) << "There is a conflict! This case is not implemented because it should be extremely rare. If it happens, we block the computation and return ERROR";
+                LOG(WARN) << "There is a conflict! This case is not implemented because it should be extremely rare. If it happens, we block the computation and return ERROR";
                 exit(1);
             }
         }
@@ -167,7 +166,7 @@ void HashCompressor::inmemorysort(string **inputFiles, int dictID, int nFiles, s
         //Read the file
         string fileName = inputFiles[i][dictID];
         //Process the file
-        if (fs::exists(fs::path(fileName))) {
+        if (Utils::exists(fileName)) {
             LZ4Reader *fis = new LZ4Reader(fileName);
             while (!fis->isEof()) {
                 long key = fis->parseLong();
@@ -188,7 +187,7 @@ void HashCompressor::inmemorysort(string **inputFiles, int dictID, int nFiles, s
                 bytesAllocated += lenStr;
             }
             delete fis;
-            fs::remove(fileName);
+            Utils::remove(fileName);
         }
     }
 
@@ -322,5 +321,5 @@ void HashCompressor::compressAndExtractDictionaries(int partitionId, vector<File
 
     delete[] supportTerm;
     *output = count;
-    BOOST_LOG_TRIVIAL(debug) << "Compressed triples: " << count << " not valid: " << countNotValid;
+    LOG(DEBUG) << "Compressed triples: " << count << " not valid: " << countNotValid;
 }

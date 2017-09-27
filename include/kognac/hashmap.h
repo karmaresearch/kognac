@@ -30,7 +30,6 @@
 #include <sparsehash/sparse_hash_map>
 #include <sparsehash/dense_hash_map>
 #include <sparsehash/dense_hash_set>
-#include <boost/log/trivial.hpp>
 #include <list>
 #include <string>
 #include <cstring>

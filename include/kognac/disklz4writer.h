@@ -12,8 +12,6 @@
 #include <mutex>
 #include <condition_variable>
 
-#include <boost/chrono.hpp>
-
 using namespace std;
 
 class DiskLZ4Writer {
@@ -48,9 +46,9 @@ protected:
 
     std::mutex mutexBlockToWrite;
     std::condition_variable cvBlockToWrite;
-    boost::chrono::duration<double> time_waitingwriting;
-    boost::chrono::duration<double> time_rawwriting;
-    boost::chrono::duration<double> time_waitingbuffer;
+    std::chrono::duration<double> time_waitingwriting;
+    std::chrono::duration<double> time_rawwriting;
+    std::chrono::duration<double> time_waitingbuffer;
     size_t addedBlocksToWrite;
     int currentWriteFileID;
     std::list<BlockToWrite> *blocksToWrite;
