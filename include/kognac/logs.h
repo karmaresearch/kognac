@@ -20,7 +20,10 @@ class Logger {
         const bool silent;
         const int level;
 
-        Logger(bool silent, int level) : silent(silent), level(level) {
+        std::string toprint;
+        bool first;
+
+        Logger(bool silent, int level) : silent(silent), level(level), first(true) {
         }
 
     public:
@@ -30,31 +33,34 @@ class Logger {
 
         Logger& operator << (const char *msg) {
             if (!silent) {
-                auto t = std::time(NULL);
-                auto tm = *std::localtime(&t);
-                //std::time_t tt = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-                std::stringstream ss;
-                ss << "[0x" << std::hex << std::hash<std::thread::id>()(std::this_thread::get_id()) << " ";
-                //ss << ctime(&tt) << "] ";
-                ss << std::put_time(&tm, "%Y-%m-%d %H:%M:%S") << "] ";
-                switch (level) {
-                    case TRACE:
-                        ss << "TRACE ";
-                        break;
-                    case DEBUG:
-                        ss << "DEBUG ";
-                        break;
-                    case INFO:
-                        ss << "INFO ";
-                        break;
-                    case WARN:
-                        ss << "WARN ";
-                        break;
-                    case ERROR:
-                        ss << "ERROR ";
-                        break;
-                };
-                std::cerr << ss.str() << msg << std::endl;
+                if (first) {
+                    auto t = std::time(NULL);
+                    auto tm = *std::localtime(&t);
+                    std::stringstream ss;
+                    ss << "[0x" << std::hex << std::hash<std::thread::id>()(std::this_thread::get_id()) << " ";
+                    ss << std::put_time(&tm, "%Y-%m-%d %H:%M:%S") << "] ";
+                    switch (level) {
+                        case TRACE:
+                            ss << "TRACE ";
+                            break;
+                        case DEBUG:
+                            ss << "DEBUG ";
+                            break;
+                        case INFO:
+                            ss << "INFO ";
+                            break;
+                        case WARN:
+                            ss << "WARN ";
+                            break;
+                        case ERROR:
+                            ss << "ERROR ";
+                            break;
+                    };
+                    first = false;
+                    toprint = ss.str() + " " + std::string(msg);
+                } else {
+                    toprint += std::string(msg);
+                }
             }
             return *this;
         }
@@ -66,6 +72,11 @@ class Logger {
 
         Logger& operator << (std::string s) {
             return *this << s.c_str();
+        }
+
+        ~Logger() {
+            if (!silent)
+                std::cerr << toprint << std::endl;
         }
 };
 

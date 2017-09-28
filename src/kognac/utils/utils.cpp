@@ -217,7 +217,7 @@ string Utils::parentDir(string path) {
 string Utils::filename(string path) {
     auto pos = path.rfind('/');
     if (pos != std::string::npos) {
-        return path.substr(pos, path.size() - pos);
+        return path.substr(pos + 1, path.size() - pos);
     } else {
         return path;
     }
