@@ -45,6 +45,8 @@
 #error "I don't know which OS it is being used. Cannot optimize the code..."
 #endif
 
+#include <sys/stat.h>
+
 #include <kognac/lz4io.h>
 #include <kognac/logs.h>
 
@@ -54,6 +56,7 @@
 #include <dirent.h>
 #include <set>
 #include <assert.h>
+#include <stdio.h>
 
 using namespace std;
 
@@ -66,7 +69,7 @@ vector<string> Utils::getFilesWithPrefix(string dirname, string prefix) {
     if (d) {
         while ((dir = readdir(d)) != NULL) {
             if (dir->d_name[0] != '.' && Utils::starts_with(string(dir->d_name), prefix))
-                files.push_back(string(dir->d_name));
+                files.push_back(dirname + "/" + string(dir->d_name));
         }
         closedir(d);
     }
@@ -80,7 +83,7 @@ vector<string> Utils::getSubdirs(string dirname) {
     if (d) {
         while ((dir = readdir(d)) != NULL) {
             if (dir->d_type == DT_DIR && dir->d_name[0] != '.') {
-                files.push_back(string(dir->d_name));
+                files.push_back(dirname + "/" + string(dir->d_name));
             }
         }
         closedir(d);
@@ -98,7 +101,7 @@ vector<string> Utils::getFiles(string dirname, bool ignoreExtension) {
                 if (ignoreExtension) {
                     sfiles.insert(Utils::removeExtension(string(dir->d_name)));
                 } else {
-                    sfiles.insert(string(dir->d_name));
+                    sfiles.insert(dirname + "/" + string(dir->d_name));
                 }
             }
         }
@@ -109,53 +112,132 @@ vector<string> Utils::getFiles(string dirname, bool ignoreExtension) {
         files.push_back(s);
     return files;
 }
-vector<string> Utils::getFilesWithSuffix(string dir, string suffix) {
-    //TODO
+vector<string> Utils::getFilesWithSuffix(string dirname, string suffix) {
+    vector<string> files;
+    DIR *d = opendir(dirname.c_str());
+    struct dirent *dir;
+    if (d) {
+        while ((dir = readdir(d)) != NULL) {
+            if (dir->d_name[0] != '.' && Utils::ends_with(string(dir->d_name), suffix))
+                files.push_back(dirname + "/" + string(dir->d_name));
+        }
+        closedir(d);
+    }
+    return files;
 }
 bool Utils::hasExtension(const string &file){
-    //TODO
+    string fn = filename(file);
+    return (fn.find('.') != std::string::npos);
 }
 string Utils::extension(const string &file) {
-    //TODO
-    //return ".gz"
+    string fn = filename(file);
+    auto pos = fn.find('.');
+    return fn.substr(pos, fn.size() - pos); //must return also '.'
 }
 string Utils::removeExtension(string file) {
-    //TODO
+    string fn = filename(file);
+    auto pos = fn.find('.');
+    if (pos != std::string::npos) {
+        return fn.substr(0, pos);
+    } else {
+        return fn;
+    }
 }
 bool Utils::isDirectory(string dirname) {
-    //TODO
+    struct stat st;
+    if(stat(dirname.c_str(), &st) == 0)
+        if((st.st_mode & S_IFDIR) != 0)
+            return true;
+    return false;
 }
 uint64_t Utils::fileSize(string file) {
-    //TODO
+    struct stat stat_buf;
+    int rc = stat(file.c_str(), &stat_buf);
+    if (rc == 0) {
+        return stat_buf.st_size;
+    } else {
+        throw 10;
+    }
 }
 void Utils::create_directories(string newdir) {
-    //TODO
+    string pd = parentDir(newdir);
+    if (!exists(pd)) {
+        create_directories(pd);
+    }
+    if (mkdir(newdir.c_str(), 0777) != 0) {
+        LOG(ERROR) << "Error creating dir " << newdir;
+        throw 10;
+    }
 }
 void Utils::remove(string file) {
-    //TODO
+    if (isDirectory(file)) {
+        if (rmdir(file.c_str()) != 0)
+            LOG(ERROR) << "Error removing dir " << file;
+    } else {
+        if (std::remove(file.c_str()) != 0 )
+            LOG(ERROR) << "Error deleting file " << file;
+    }
 }
 void Utils::remove_all(string path) {
-    //TODO
+    if (isDirectory(path)) {
+        DIR *d = opendir(path.c_str());
+        struct dirent *dir;
+        if (d) {
+            while ((dir = readdir(d)) != NULL) {
+                if (dir->d_type == DT_REG) {
+                    remove(path);
+                } else if (dir->d_type == DT_DIR) {
+                    remove_all(path + "/" + dir->d_name);
+                } else {
+                    throw 10;
+                }
+            }
+            closedir(d);
+            remove(path);
+        } else {
+            LOG(ERROR) << "Dir " << path << " Not existing";
+            throw 10;
+        }
+    } else {
+        remove(path);
+    }
 }
 void Utils::rename(string oldfile, string newfile) {
-    //TODO
+    if(std::rename(oldfile.c_str(), newfile.c_str()) != 0 )
+        LOG(ERROR) << "Error renaming file " << oldfile;
 }
-string Utils::parentDir(string file) {
-    //TODO
+string Utils::parentDir(string path) {
+    auto pos = path.rfind('/');
+    if (pos != std::string::npos) {
+        return path.substr(0, pos);
+    } else {
+        return path;
+    }
 }
 string Utils::filename(string path) {
-    //TODO
+    auto pos = path.rfind('/');
+    if (pos != std::string::npos) {
+        return path.substr(pos, path.size() - pos);
+    } else {
+        return path;
+    }
 }
 bool Utils::exists(std::string file) {
-    //TODO
+    struct stat buffer;
+    return (stat(file.c_str(), &buffer) == 0);
 }
 /**** END FILE UTILS ****/
 /**** START STRING UTILS ****/
 bool Utils::starts_with(const string s, const string prefix) {
+    int m = min(s.size(), prefix.size());
+    return strncmp(s.c_str(), prefix.c_str(), m) == 0;
 }
 bool Utils::ends_with(const string s, const string suffix) {
+    return s.size() >= suffix.size() &&
+        s.compare(s.size() - suffix.size(), suffix.size(), suffix) == 0;
 }
 bool Utils::contains(const string s, const string substr) {
+    return s.find(substr) != string::npos;
 }
 /**** END STRING UTILS ****/
 
