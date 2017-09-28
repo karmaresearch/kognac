@@ -20,8 +20,6 @@
 **/
 
 #include <boost/program_options.hpp>
-#include <boost/iostreams/filtering_stream.hpp>
-#include <boost/iostreams/filter/gzip.hpp>
 
 #include <kognac/kognac.h>
 #include <kognac/compressor.h>

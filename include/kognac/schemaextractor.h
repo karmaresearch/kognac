@@ -27,8 +27,6 @@
 #include <kognac/hashmap.h>
 #include <kognac/fpgrowth.h>
 
-#include <boost/iostreams/filtering_stream.hpp>
-#include <boost/iostreams/filter/gzip.hpp>
 #include <sparsehash/dense_hash_map>
 #include <sparsehash/dense_hash_set>
 #include <string>
@@ -91,10 +89,10 @@ private:
 
     void printTree(int padding, ExtNode *root);
 
-    void serializeNode(boost::iostreams::filtering_ostream &out,
+    void serializeNode(std::ostream &out,
                        ExtNode *node);
 
-    void serializeNodeBeginRange(boost::iostreams::filtering_ostream &out,
+    void serializeNodeBeginRange(std::ostream &out,
                                  ExtNode *node);
 
 protected:

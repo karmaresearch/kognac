@@ -24,6 +24,7 @@
 #include <kognac/stringscol.h>
 #include <kognac/hashfunctions.h>
 #include <kognac/logs.h>
+#include <zstr/zstr.hpp>
 
 #include <fstream>
 #include <string>
@@ -709,7 +710,7 @@ string _getText(map<long, string> &map, long hash) {
     return out;
 }
 
-void SchemaExtractor::serializeNode(boost::iostreams::filtering_ostream &out,
+void SchemaExtractor::serializeNode(std::ostream &out,
                                     ExtNode *node) {
     string sk = _getText(hashMappings, node->key);
     if (node->parent != NULL) {
@@ -728,7 +729,7 @@ void SchemaExtractor::serializeNode(boost::iostreams::filtering_ostream &out,
     }
 }
 
-void SchemaExtractor::serializeNodeBeginRange(boost::iostreams::filtering_ostream &out,
+void SchemaExtractor::serializeNodeBeginRange(std::ostream &out,
         ExtNode *node) {
     string sk = _getText(hashMappings, node->key);
     const long classID = node->assignedID;
@@ -750,21 +751,30 @@ void SchemaExtractor::serializeNodeBeginRange(boost::iostreams::filtering_ostrea
 }
 
 void SchemaExtractor::serialize(string outputFile) {
-    std::ofstream fout(outputFile, ios_base::binary);
-    boost::iostreams::filtering_ostream out;
+    std::ostream *out;
+    std::ofstream fout;
+    zstr::ofstream *zout;
+    bool compress = false;
     if (Utils::ends_with(outputFile, ".gz")) {
-        out.push(boost::iostreams::gzip_compressor());
+	zout = new zstr::ofstream(outputFile);
+	out = zout;
+	compress = true;
+    } else {
+	fout.open(outputFile, ios_base::binary);
+	out = &fout;
     }
-    out.push(fout);
 
-    out << "#Ranges#" << endl;
-    serializeNodeBeginRange(out, root);
+    *out << "#Ranges#" << endl;
+    serializeNodeBeginRange(*out, root);
 
-    out << "#Taxonomy#" << endl;
-    serializeNode(out, root);
+    *out << "#Taxonomy#" << endl;
+    serializeNode(*out, root);
 
-    out.reset();
-    fout.close();
+    if (compress) {
+	delete zout;
+    } else {
+	fout.close();
+    }
 }
 
 void SchemaExtractor::addClassesBeginEndRange(const long classId,

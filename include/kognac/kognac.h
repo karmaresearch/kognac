@@ -24,9 +24,6 @@
 #include <mutex>
 #include <list>
 
-#include <boost/iostreams/filtering_stream.hpp>
-#include <boost/iostreams/filter/gzip.hpp>
-
 #include <kognac/schemaextractor.h>
 #include <kognac/lz4io.h>
 #include <kognac/hashmap.h>
@@ -252,7 +249,7 @@ private:
     void assignIdsToMostPopularTerms(StringCollection &col,
                                      ByteArrayToNumberMap &map,
                                      long &counter,
-                                     boost::iostreams::filtering_ostream &out);
+                                     std::ostream &out);
 
     void extractAllTermsWithClassIDs(const int nthreads,
                                      const int nReadingThreads,
@@ -299,9 +296,9 @@ private:
     void sortTermsByClassId(string inputdir, string outputdir);
 
     void assignIdsToAllTerms(string inputdir, long &counter,
-                             boost::iostreams::filtering_ostream &out);
+                             std::ostream &out);
 
-    void loadDictionaryMap(boost::iostreams::filtering_istream &in,
+    void loadDictionaryMap(std::istream &in,
                            CompressedByteArrayToNumberMap &map,
                            StringCollection &supportDictionaryMap);
 

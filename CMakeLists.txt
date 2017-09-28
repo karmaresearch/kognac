@@ -55,6 +55,10 @@ set(COMPILE_FLAGS "-c -fPIC -std=c++11 -Wall -Wno-sign-compare")
 set_target_properties(kognac PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS}")
 set_target_properties(kognac_exec PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS}")
 
+#ZLIB
+find_package(ZLIB REQUIRED)
+target_link_libraries(kognac_exec "${ZLIB_LIBRARIES}")
+
 #PTHREADS
 find_package(Threads REQUIRED)
 if (THREADS_HAVE_PTHREAD_ARG)

@@ -23,15 +23,12 @@
 #include <kognac/consts.h>
 #include <kognac/logs.h>
 #include <kognac/utils.h>
+#include <zstr/zstr.hpp>
 
 #include <fstream>
 #include <iostream>
-#include <boost/iostreams/filtering_stream.hpp>
-#include <boost/iostreams/filter/gzip.hpp>
 #include <climits>
 #include <chrono>
-
-namespace io = boost::iostreams;
 
 string GZIP_EXTENSION = string(".gz");
 
@@ -40,21 +37,21 @@ FileReader::FileReader(char *buffer, size_t sizebuffer, bool gzipped) :
     sizeByteArray(sizebuffer), compressed(gzipped) {
     if (compressed) {
         //Decompress the stream
-        io::filtering_ostream os;
-        os.push(io::gzip_decompressor());
-        os.push(io::back_inserter(uncompressedByteArray));
-        io::write(os, buffer, sizebuffer);
+	std::string b(buffer, buffer + sizebuffer);
+	std::istringstream stream(b);
+	std::vector<char> contents((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
+	uncompressedByteArray.swap(contents);
     }
     currentIdx = 0;
 }
 
 FileReader::FileReader(FileInfo sFile) :
-    byteArray(false), compressed(!sFile.splittable), rawFile(sFile.path,
-            ios_base::in | ios_base::binary) {
+    byteArray(false), compressed(!sFile.splittable) {
     //First check the extension to identify what kind of file it is.
     if (Utils::hasExtension(sFile.path) && Utils::extension(sFile.path) == GZIP_EXTENSION) {
-        compressedFile.push(io::gzip_decompressor());
-        compressedFile.push(rawFile);
+	rawFile = new zstr::ifstream(sFile.path);
+    } else {
+	rawFile = new std::ifstream(sFile.path, ios_base::in | ios_base::binary);
     }
 
     if (sFile.splittable) {
@@ -65,12 +62,12 @@ FileReader::FileReader(FileInfo sFile) :
 
     //If start != 0 then move to first '\n'
     if (sFile.start > 0) {
-        rawFile.seekg(sFile.start);
+        rawFile->seekg(sFile.start);
 //Seek to the first '\n'
-        while (!rawFile.eof() && rawFile.get() != '\n') {
+        while (!rawFile->eof() && rawFile->get() != '\n') {
         };
     }
-    countBytes = rawFile.tellg();
+    countBytes = rawFile->tellg();
     tripleValid = false;
 
     startS = startP = startO = NULL;
@@ -120,11 +117,11 @@ bool FileReader::parseTriple() {
         }
     } else {
         if (compressed) {
-            ok = (bool) std::getline(compressedFile, currentLine);
+	    ok = (bool) std::getline(*rawFile, currentLine);
         } else {
-            ok = countBytes <= end && std::getline(rawFile, currentLine);
+            ok = countBytes <= end && std::getline(*rawFile, currentLine);
             if (ok) {
-                countBytes = rawFile.tellg();
+                countBytes = rawFile->tellg();
             }
         }
 

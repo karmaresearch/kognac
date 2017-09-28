@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <kognac/diskreader.h>
 #include <kognac/logs.h>
 #include <kognac/utils.h>

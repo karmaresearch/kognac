@@ -27,7 +27,7 @@
 #include <string>
 #include <exception>
 #include <vector>
-#include <boost/iostreams/filtering_stream.hpp>
+#include <zlib.h>
 
 using namespace std;
 
@@ -55,8 +55,7 @@ private:
     size_t currentIdx;
 
     const bool compressed;
-    ifstream rawFile;
-    boost::iostreams::filtering_istream compressedFile;
+    istream *rawFile;
     string currentLine;
     bool tripleValid;
     long end;
@@ -88,6 +87,12 @@ public:
     const char *getCurrentP(int &length);
 
     const char *getCurrentO(int &length);
+
+    ~FileReader() {
+	if (rawFile != NULL) {
+	    delete rawFile;
+	}
+    }
 };
 
 #endif /* FILEREADER_H_ */
