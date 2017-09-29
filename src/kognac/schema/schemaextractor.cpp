@@ -715,9 +715,9 @@ void SchemaExtractor::serializeNode(std::ostream &out,
     string sk = _getText(hashMappings, node->key);
     if (node->parent != NULL) {
         string spk = _getText(hashMappings, node->parent->key);
-        out << sk << "\t" << spk << endl;
+        out << sk << "\t" << spk << '\n';
     } else {
-        out << sk << "\tNULL" << endl;
+        out << sk << "\tNULL" << '\n';
     }
 
     ExtNode *s = node->sibling;
@@ -735,9 +735,9 @@ void SchemaExtractor::serializeNodeBeginRange(std::ostream &out,
     const long classID = node->assignedID;
     if (classesRanges.count(classID)) {
         auto det = classesRanges.find(classID);
-        out << sk << "\t" << node->assignedID << "\t" << det->second.first << "\t" << det->second.second << endl;
+        out << sk << "\t" << node->assignedID << "\t" << det->second.first << "\t" << det->second.second << '\n';
     } else {
-        out << sk << "\t" << node->assignedID << endl;
+        out << sk << "\t" << node->assignedID << '\n';
     }
 
     ExtNode *s = node->sibling;
@@ -764,10 +764,10 @@ void SchemaExtractor::serialize(string outputFile) {
 	out = &fout;
     }
 
-    *out << "#Ranges#" << endl;
+    *out << "#Ranges#" << '\n';
     serializeNodeBeginRange(*out, root);
 
-    *out << "#Taxonomy#" << endl;
+    *out << "#Taxonomy#" << '\n';
     serializeNode(*out, root);
 
     if (compress) {

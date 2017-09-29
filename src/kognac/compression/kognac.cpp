@@ -529,7 +529,7 @@ void Kognac::sortCompressedGraph(string inputDir, string outputFile, int v) {
 		Triple t = merger.get();
 		if (t.s != prevs || t.p != prevp || t.o != prevo) {
 		    sprintf(tmpString, "%ld %ld %ld", t.s, t.p, t.o);
-		    out << tmpString << endl;
+		    out << tmpString << '\n';
 		    countTriples++;
 		}
 		prevs = t.s;
@@ -547,7 +547,7 @@ void Kognac::sortCompressedGraph(string inputDir, string outputFile, int v) {
 		    itr != inmemorytriples.end(); ++itr) {
 		if (itr->s != prevs || itr->p != prevp || itr->o != prevo) {
 		    sprintf(tmpString, "%ld %ld %ld", itr->s, itr->p, itr->o);
-		    out << tmpString << endl;
+		    out << tmpString << '\n';
 		    countTriples++;
 		}
 		prevs = itr->s;
@@ -667,7 +667,7 @@ void Kognac::assignIdsToAllTerms(string inputdir, long & counter,
 	assert(el.classID >= classId);
 	out << to_string(counter) << " " << to_string(el.size) << " ";
 	out.write(el.term, el.size);
-	out << endl;
+	out << '\n';
 	counter++;
     }
 }
@@ -955,7 +955,7 @@ void Kognac::assignIdsToMostPopularTerms(StringCollection & col,
 	    ++itr) {
 	out << to_string(counter) << " " << to_string(itr->first.size()) << " ";
 	out << itr->first;
-	out << endl;
+	out << '\n';
 
 	//Copy it in the hashmap
 	memcpy(tmpBuffer + 2, itr->first.c_str(), itr->first.size());
