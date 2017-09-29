@@ -35,10 +35,12 @@ string GZIP_EXTENSION = string(".gz");
 FileReader::FileReader(char *buffer, size_t sizebuffer, bool gzipped) :
     byteArray(true), rawByteArray(buffer),
     sizeByteArray(sizebuffer), compressed(gzipped) {
+    rawFile = NULL;
     if (compressed) {
         //Decompress the stream
 	std::string b(buffer, buffer + sizebuffer);
-	std::istringstream stream(b);
+	std::istringstream bytestream(b);
+	zstr::istream stream(bytestream);
 	std::vector<char> contents((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
 	uncompressedByteArray.swap(contents);
     }
@@ -213,6 +215,7 @@ bool FileReader::parseLine(const char *line, const int sizeLine) {
 
     } catch (std::exception &e) {
         LOG(ERROR) << "Failed parsing line: " + string(line, sizeLine);
+	abort();
     }
     return false;
 }

@@ -67,6 +67,11 @@ void DiskReader::run() {
     ifstream ifs;
     size_t count = 0;
     while (itr != files->end()) {
+	bool gzipped = false;
+	if (Utils::hasExtension(itr->path) && Utils::extension(itr->path) == string(".gz")) {
+	    gzipped = true;
+	}
+	LOG(DEBUG) << "Path is " << itr->path << ", gzipped = " << gzipped;
 
         //Is there an available buffer that I can use?
         char *buffer = NULL;
@@ -83,34 +88,38 @@ void DiskReader::run() {
         //Read a file and copy it in buffer
         ifs.open(itr->path);
         long readSize = itr->size;
-        if (itr->start > 0) {
-            ifs.seekg(itr->start);
-            while (!ifs.eof() && ifs.get() != '\n') {
-                readSize--;
-            };
-            readSize--;
-        }
-        if (readSize <= 0) {
-            //No line was found within the allocated chunk
-            readSize = 0;
-        } else {
-            ifs.read(buffer, readSize);
-            assert(ifs);
-            //Keep reading until the final '\n'
-            while (!ifs.eof()) {
-                char b = ifs.get();
-                if (b == -1) {
-                    break; //magic value
-                }
-                if (readSize > maxsize) {
-                    LOG(ERROR) << "Buffers are too small. Must fix this";
-                    throw 10;
-                }
-                buffer[readSize++] = b;
-                if (b == '\n')
-                    break;
-            };
-        }
+	if (! gzipped) {
+	    if (itr->start > 0) {
+		ifs.seekg(itr->start);
+		while (!ifs.eof() && ifs.get() != '\n') {
+		    readSize--;
+		};
+		readSize--;
+	    }
+	    if (readSize <= 0) {
+		//No line was found within the allocated chunk
+		readSize = 0;
+	    } else {
+		ifs.read(buffer, readSize);
+		assert(ifs);
+		//Keep reading until the final '\n'
+		while (!ifs.eof()) {
+		    char b = ifs.get();
+		    if (b == -1) {
+			break; //magic value
+		    }
+		    if (readSize > maxsize) {
+			LOG(ERROR) << "Buffers are too small. Must fix this";
+			throw 10;
+		    }
+		    buffer[readSize++] = b;
+		    if (b == '\n')
+			break;
+		};
+	    }
+	} else {
+	    ifs.read(buffer, readSize);
+	}
         ifs.close();
         count++;
         {
@@ -118,11 +127,7 @@ void DiskReader::run() {
             Buffer newbuffer;
             newbuffer.b = buffer;
             newbuffer.size = readSize;
-            if (Utils::hasExtension(itr->path) && Utils::extension(itr->path) == string(".gz")) {
-                newbuffer.gzipped = true;
-            } else {
-                newbuffer.gzipped = false;
-            }
+	    newbuffer.gzipped = gzipped;
             readybuffers.push_back(newbuffer);
         }
 

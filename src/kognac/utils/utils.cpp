@@ -131,7 +131,7 @@ bool Utils::hasExtension(const string &file){
 }
 string Utils::extension(const string &file) {
     string fn = filename(file);
-    auto pos = fn.find('.');
+    auto pos = fn.find_last_of('.');
     return fn.substr(pos, fn.size() - pos); //must return also '.'
 }
 string Utils::removeExtension(string file) {
@@ -161,7 +161,7 @@ uint64_t Utils::fileSize(string file) {
 }
 void Utils::create_directories(string newdir) {
     string pd = parentDir(newdir);
-    if (!exists(pd)) {
+    if (pd != newdir && !exists(pd)) {
         create_directories(pd);
     }
     if (mkdir(newdir.c_str(), 0777) != 0) {
@@ -171,8 +171,10 @@ void Utils::create_directories(string newdir) {
 }
 void Utils::remove(string file) {
     if (isDirectory(file)) {
-        if (rmdir(file.c_str()) != 0)
+        if (rmdir(file.c_str()) != 0) {
             LOG(ERROR) << "Error removing dir " << file;
+	    abort();
+	}
     } else {
         if (std::remove(file.c_str()) != 0 )
             LOG(ERROR) << "Error deleting file " << file;
@@ -185,11 +187,11 @@ void Utils::remove_all(string path) {
         if (d) {
             while ((dir = readdir(d)) != NULL) {
                 if (dir->d_type == DT_REG) {
-                    remove(path);
-                } else if (dir->d_type == DT_DIR) {
+                    remove(path + "/" + dir->d_name);
+                } else if (dir->d_type == DT_DIR && strcmp(dir->d_name, ".") != 0 && strcmp(dir->d_name, "..") != 0) {
                     remove_all(path + "/" + dir->d_name);
                 } else {
-                    throw 10;
+                    // throw 10;
                 }
             }
             closedir(d);

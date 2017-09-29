@@ -1481,6 +1481,10 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
             threads[i - 1].join();
     }
     for (int i = 0; i < maxReadingThreads; ++i) {
+        if (threadReaders[i].joinable())
+            threadReaders[i].join();
+    }
+    for (int i = 0; i < maxReadingThreads; ++i) {
         delete readers[i];
         delete writers[i];
     }
