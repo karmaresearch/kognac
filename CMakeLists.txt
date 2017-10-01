@@ -112,16 +112,7 @@ ELSE()
     
 ENDIF()
 
-#Boost
-set(Boost_USE_STATIC_LIBS OFF) 
-set(Boost_USE_MULTITHREADED ON)  
-set(Boost_USE_STATIC_RUNTIME OFF)
-FIND_PACKAGE(Boost COMPONENTS program_options REQUIRED)
-IF (Boost_FOUND)
-    INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
-ENDIF()
-
 #standard include
 include_directories(include/)
-TARGET_LINK_LIBRARIES(kognac lz4 ${Boost_LIBRARIES})
+TARGET_LINK_LIBRARIES(kognac lz4)
 TARGET_LINK_LIBRARIES(kognac_exec kognac)

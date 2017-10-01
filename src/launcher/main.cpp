@@ -17,77 +17,66 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
-**/
-
-#include <boost/program_options.hpp>
+ **/
 
 #include <kognac/kognac.h>
 #include <kognac/compressor.h>
 #include <kognac/logs.h>
-
-namespace po = boost::program_options;
+#include <kognac/progargs.h>
 
 using namespace std;
 
-void printHelp(const char *programName, po::options_description & desc) {
-    cout << "Usage: " << programName << " [parameters]" << endl << endl;
-    cout << desc << endl;
+void printHelp(const char *programName, ProgramArgs &desc) {
+    cout << "Usage: " << programName << " [options]" << endl << endl;
+    string s = desc.tostring();
+    cout << s << endl;
 }
 
-void initParams(int argc, const char** argv, po::variables_map &vm,
-                po::options_description &cmdline_options) {
+void initParams(int argc, const char** argv, ProgramArgs &vm) {
+    ProgramArgs::GroupArgs& g = *vm.newGroup("Options");
 
-    cmdline_options.add_options()
-    //("logLevel,l", TRACE, "Set the log level (accepted values: trace, debug, info, warning, error, fatal). Default is info.")
-    ("input,i", po::value<string>(), "input. REQUIRED")
-    ("help,h", "print help message")
-    ("fp,f", po::value<bool>()->default_value(false), "Use FPTree to mine classes. Default is 'false'")
-    ("minSupport,s", po::value<int>()->default_value(1000), "Sets the minimum support necessary to indentify class patterns. Default is '1000'")
-    ("maxPatternLength,p", po::value<int>()->default_value(3), "Sets the maximum length of class patterns. Default is '3'")
-    ("maxThreads", po::value<int>()->default_value(8), "Sets the maximum number of threads to use during the compression. Default is '8'")
-    ("maxConcThreads", po::value<int>()->default_value(2), "Sets the number of concurrent threads that reads the raw input. Default is '2'")
-    ("output,o", po::value<string>(), "output. REQUIRED")
-    ("serializeTax", "Should I also serialize the content of the classes' taxonomy on a file?")
-    ("compressGraph,c", "Should I also compress the graph. If set, I create a compressed version of the triples.")
-    ("sampleArg1", po::value<int>(), "Argument for the method to identify the popular terms. If the method is sample, then it represents the top k elements to extract. If it is hash or mgcs, then it indicates the number o  popular terms. REQUIRED.")
-    ("sampleMethod", po::value<std::string>()->default_value("cm"), "Method to use to identify the popular terms. Can be either 'sample', 'cm', 'mgcs', 'cm_mgcs'. Default is 'cm'")
-    ("sampleArg2", po::value<int>()->default_value(500), "This argument is used during the sampling procedure. It determines the sampling rate (x/10000). Default is 5%");
+    g.add<string>("i","input", "", "input directory", true)
+        .add("l", "logLevel", INFO, "Set the log level (accepted values: trace, debug, info, warning, error, fatal)", false)
+        .add<string>("h","help", "", "print help message", false)
+        .add<bool>("f","fp", false, "Use FPTree to mine classes", false)
+        .add<int>("s","minSupport", 1000, "Sets the minimum support necessary to indentify class patterns", false)
+        .add<int>("p","maxPatternLength", 3, "Sets the maximum length of class patterns", false)
+        .add<int>("", "maxThreads", 8, "Sets the maximum number of threads to use during the compression", false)
+        .add<int>("", "maxConcThreads", 2, "Sets the number of concurrent threads that reads the raw input", false)
+        .add<string>("o","output", "", "output directory", true)
+        .add<bool>("", "serializeTax", false, "Should I also serialize the content of the classes' taxonomy on a file?", false)
+        .add<bool>("c","compressGraph", false, "Should I also compress the graph. If set, I create a compressed version of the triples.", false)
+        .add<int>("", "sampleArg1", 0, "Argument for the method to identify the popular terms. If the method is sample, then it represents the top k elements to extract. If it is hash or mgcs, then it indicates the number o  popular terms", true)
+        .add<string>("", "sampleMethod", "cm", "Method to use to identify the popular terms. Can be either 'sample', 'cm', 'mgcs', 'cm_mgcs'", false)
+        .add<int>("", "sampleArg2", 500, "This argument is used during the sampling procedure. It determines the sampling rate (x/10000)", false);
 
-    po::store(po::command_line_parser(argc, argv)
-              .options(cmdline_options).run(), vm);
-    po::notify(vm);
+    vm.parse(argc, argv);
 }
 
 int main(int argc, const char **argv) {
-    po::variables_map vm;
-    po::options_description desc("Parameters");
-    initParams(argc, argv, vm, desc);
-
-    //Init logging
-    /*logging::trivial::severity_level level =
-        vm.count("logLevel") ?
-        vm["logLevel"].as<logging::trivial::severity_level>() :
-        logging::trivial::info;
-    initLogging(level);*/
+    ProgramArgs vm;
+    initParams(argc, argv, vm);
 
     if (argc == 1 || vm.count("help") || !vm.count("input")
             || !vm.count("output") || !vm.count("sampleArg1")) {
-        printHelp(argv[0], desc);
+        printHelp(argv[0], vm);
         return 0;
     }
+    vm.check();
 
     // Get parameters from command line
+    Logger::setMinLevel(vm["logLevel"].as<int>());
     const string input = vm["input"].as<string>();
     const string output = vm["output"].as<std::string>();
     const int parallelThreads = vm["maxThreads"].as<int>();
     const int maxConcurrentThreads = vm["maxConcThreads"].as<int>();
     const int sampleArg = vm["sampleArg1"].as<int>();
     const int sampleArg2 = vm["sampleArg2"].as<int>();
-    const bool compressGraph = !vm["compressGraph"].empty();
+    const bool compressGraph = vm["compressGraph"].as<bool>();
     const int maxPatternLength = vm["maxPatternLength"].as<int>();
     const int minSupport = vm["minSupport"].as<int>();
     const bool useFP = vm["fp"].as<bool>();
-    const bool serializeTaxonomy = !vm["serializeTax"].empty();
+    const bool serializeTaxonomy = vm["serializeTax"].as<bool>();
     int sampleMethod = PARSE_COUNTMIN;
     if (vm["sampleMethod"].as<string>() == string("sample")) {
         sampleMethod = PARSE_SAMPLE;
@@ -100,9 +89,8 @@ int main(int argc, const char **argv) {
 
     Kognac kognac(input, output, maxPatternLength);
     LOG(INFO) << "Sampling the graph ...";
-    //LOG(INFO) << "Sampling the graph ...";
     kognac.sample(sampleMethod, sampleArg, sampleArg2, parallelThreads,
-                  maxConcurrentThreads);
+            maxConcurrentThreads);
     LOG(INFO) << "Creating the dictionary mapping ...";
     kognac.compress(parallelThreads, maxConcurrentThreads, useFP, minSupport,
             serializeTaxonomy);

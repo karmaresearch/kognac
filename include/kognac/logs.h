@@ -31,6 +31,10 @@ class Logger {
             return Logger(level < minLevel, level);
         }
 
+        static void setMinLevel(int level) {
+            Logger::minLevel = level;
+        }
+
         Logger& operator << (const char *msg) {
             if (!silent) {
                 if (first) {

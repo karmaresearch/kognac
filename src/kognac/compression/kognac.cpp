@@ -452,7 +452,7 @@ void Kognac::sortCompressedGraph(string inputDir, string outputFile, int v) {
     string diroutput = Utils::parentDir(outputFile);
     char tmpString[1024];
     {
-	std::ofstream out(outputFile, ios_base::binary);
+    zstr::ofstream out(outputFile, ios_base::binary);
 
 	//Sort and remove the duplicates
 	long maxTriplesPerSegment = (long)Utils::getSystemMemory() * 0.50 / sizeof(Triple);
