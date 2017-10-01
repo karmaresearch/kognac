@@ -25,6 +25,7 @@
 #include <kognac/murmurhash3.h>
 
 #include <cstring>
+#include <functional>
 
 using namespace std;
 

@@ -317,8 +317,6 @@ private:
                            long *countCompressedTriples,
                            LZ4Writer *finalWriter);
 
-    static void sortCompressedGraph(string inputFile, string outputFile, int v = 0);
-
 public:
     Kognac(string input, string output, const int maxPatternLength);
 
@@ -333,6 +331,8 @@ public:
                   const bool serializeTaxonomy);
 
     void compressGraph(const int nthreads, const int nReadingThreads);
+
+    static void sortCompressedGraph(string inputFile, string outputFile, int v = 0);
 
     ~Kognac();
 };
