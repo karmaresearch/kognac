@@ -99,7 +99,7 @@ vector<string> Utils::getFiles(string dirname, bool ignoreExtension) {
         while ((dir = readdir(d)) != NULL) {
             if (dir->d_type == DT_REG && dir->d_name[0] != '.') {
                 if (ignoreExtension) {
-                    sfiles.insert(Utils::removeExtension(string(dir->d_name)));
+                    sfiles.insert(dirname + "/" + Utils::removeExtension(string(dir->d_name)));
                 } else {
                     sfiles.insert(dirname + "/" + string(dir->d_name));
                 }
