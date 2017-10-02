@@ -173,8 +173,8 @@ void Utils::remove(string file) {
     if (isDirectory(file)) {
         if (rmdir(file.c_str()) != 0) {
             LOG(ERROR) << "Error removing dir " << file;
-	    abort();
-	}
+            abort();
+        }
     } else {
         if (std::remove(file.c_str()) != 0 )
             LOG(ERROR) << "Error deleting file " << file;
@@ -227,6 +227,13 @@ string Utils::filename(string path) {
 bool Utils::exists(std::string file) {
     struct stat buffer;
     return (stat(file.c_str(), &buffer) == 0);
+}
+bool Utils::isEmpty(string dir) {
+    if (!Utils::isDirectory(dir)) {
+        LOG(ERROR) << dir << " is not a directory!";
+        throw 10;
+    }
+    return Utils::getFiles(dir).empty() && Utils::getSubdirs(dir).empty();
 }
 /**** END FILE UTILS ****/
 /**** START STRING UTILS ****/

@@ -61,6 +61,7 @@ public:
     static void rename(string oldfile, string newfile);
     static string parentDir(string file);
     static string filename(string path);
+    static bool isEmpty(string dir);
     //End file utils
 
     static int numberOfLeadingZeros(unsigned int number) {
