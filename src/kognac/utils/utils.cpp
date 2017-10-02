@@ -235,6 +235,16 @@ bool Utils::isEmpty(string dir) {
     }
     return Utils::getFiles(dir).empty() && Utils::getSubdirs(dir).empty();
 }
+void Utils::resizeFile(string file, uint64_t newsize) {
+    if (!Utils::exists(file)) {
+        LOG(ERROR) << file << " does not exist";
+        throw 10;
+    }
+    uint64_t oldsize = Utils::fileSize(file);
+    if (oldsize != newsize) {
+        truncate(file.c_str(), newsize);
+    }
+}
 /**** END FILE UTILS ****/
 /**** START STRING UTILS ****/
 bool Utils::starts_with(const string s, const string prefix) {

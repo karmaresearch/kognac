@@ -62,6 +62,7 @@ public:
     static string parentDir(string file);
     static string filename(string path);
     static bool isEmpty(string dir);
+    static void resizeFile(string file, uint64_t newsize);
     //End file utils
 
     static int numberOfLeadingZeros(unsigned int number) {
