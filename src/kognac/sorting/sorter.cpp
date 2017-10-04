@@ -34,7 +34,7 @@ void Sorter::sortUnsortedFiles(vector<string> &inputFiles, string dir,
     SortedTripleWriter writer(dir, prefixOutputFiles, fileSize);
     for (vector<string>::iterator itr = inputFiles.begin();
          itr != inputFiles.end(); ++itr) {
-        LOG(DEBUG) << "Started reading " << *itr;
+        LOG(DEBUGL) << "Started reading " << *itr;
         LZ4Reader reader(*itr);
         const bool quad = reader.parseByte() != 0;
         while (!reader.isEof()) {
@@ -48,7 +48,7 @@ void Sorter::sortUnsortedFiles(vector<string> &inputFiles, string dir,
                 writer.write(t1, t2, t3);
             }
         }
-        LOG(DEBUG) << "Finished reading " << *itr;
+        LOG(DEBUGL) << "Finished reading " << *itr;
         Utils::remove(*itr);
     }
 }
@@ -108,7 +108,7 @@ void Sorter::mergeSort(string inputDir, int nThreads, bool initialSorting,
                        long fileSize, int filesPerMerge) {
     int filesInDir = 0;
     int iteration = 0;
-    LOG(DEBUG) << "nthreads=" << nThreads;
+    LOG(DEBUGL) << "nthreads=" << nThreads;
     
     /*** SORT THE ORIGINAL FILES IN BLOCKS OF N RECORDS ***/
     if (initialSorting) {
@@ -140,7 +140,7 @@ void Sorter::mergeSort(string inputDir, int nThreads, bool initialSorting,
     }
     
     /*** MERGE SORT ***/
-    LOG(DEBUG) << "Start merge sorting procedure";
+    LOG(DEBUGL) << "Start merge sorting procedure";
     do {
         //Read all the files and store them in a vector
         vector<string> files = Utils::getFiles(inputDir);
@@ -149,7 +149,7 @@ void Sorter::mergeSort(string inputDir, int nThreads, bool initialSorting,
             return; //No need to do sorting
         }
         
-        LOG(DEBUG) << "(Sorted) files to merge: " << files.size() << " maxLimit: " << nThreads;
+        LOG(DEBUGL) << "(Sorted) files to merge: " << files.size() << " maxLimit: " << nThreads;
         
         //Split the files in nThreads splits
         vector<string> *splits = new vector<string> [nThreads];

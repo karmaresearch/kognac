@@ -44,7 +44,7 @@ void LZ4Writer::compressAndWriteBuffer() {
                                       uncompressedBufferLen);
 #endif
     if (compressedSize == 0 || compressedSize > SIZE_COMPRESSED_SEG - 21) {
-        LOG(ERROR) << "I could not compress in the given buffer";
+        LOG(ERRORL) << "I could not compress in the given buffer";
         throw 10;
     }
     Utils::encode_intLE(compressedBuffer, 9, compressedSize);
@@ -52,7 +52,7 @@ void LZ4Writer::compressAndWriteBuffer() {
     os.write(compressedBuffer, compressedSize + 21);
 
     if (!os.good()) {
-        LOG(ERROR) << "Problems with writing the file " << path <<
+        LOG(ERRORL) << "Problems with writing the file " << path <<
                                  "good=" << os.good() << " eof=" << os.eof() << " fail=" << os.fail() << " bad=" << os.bad();
         throw 10;
     }
@@ -163,7 +163,7 @@ LZ4Writer::~LZ4Writer() {
     os.flush();
 
     if (!os.good()) {
-        LOG(ERROR) << "Problems in closing the file " << path;
+        LOG(ERRORL) << "Problems in closing the file " << path;
     }
 
     os.close();

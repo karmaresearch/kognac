@@ -70,7 +70,7 @@ DiskLZ4Reader::DiskLZ4Reader(string inputfile,
     //Read the index file
     string idxfile = inputfile + ".idx";
     if (!Utils::exists(idxfile)) {
-        LOG(ERROR) << "The file " << idxfile << " does not exist";
+        LOG(ERRORL) << "The file " << idxfile << " does not exist";
         throw 10;
     }
 
@@ -157,12 +157,12 @@ void DiskLZ4Reader::run() {
             }
         }
         if (skipped == files.size()) {
-            LOG(DEBUG) << "Exiting ...";
+            LOG(DEBUGL) << "Exiting ...";
             diskbufferpool.push_back(buffer);
             break;
         } else if (!found) {
             if (firstPotentialPart == -1) {
-                LOG(ERROR) << "FirstPotentialPer == -1";
+                LOG(ERRORL) << "FirstPotentialPer == -1";
                 throw 10;
             }
             currentFileIdx = firstPotentialPart;
@@ -171,7 +171,7 @@ void DiskLZ4Reader::run() {
         long blocknumber = readBlocks[currentFileIdx];
         assert(blocknumber < beginningBlocks[currentFileIdx].size());
         long position = beginningBlocks[currentFileIdx][blocknumber];
-        //LOG(DEBUG) << "Read block " << blocknumber << " for file " << currentFileIdx << " at position " << position;
+        //LOG(DEBUGL) << "Read block " << blocknumber << " for file " << currentFileIdx << " at position " << position;
 
         reader.seekg(position);
         reader.read(tmpbuffer, 4);
@@ -209,11 +209,11 @@ void DiskLZ4Reader::run() {
         //reader.read(tmpbuffer, 4);
         //currentFileIdx = Utils::decode_int(tmpbuffer);
 
-        //LOG(DEBUG) << "READING TIME all data from disk " << time_rawreading.count()  << "sec. Last buffer size = " << sizeToBeRead << " Time diskbufferpool " << time_diskbufferpool.count() << "sec.";
+        //LOG(DEBUGL) << "READING TIME all data from disk " << time_rawreading.count()  << "sec. Last buffer size = " << sizeToBeRead << " Time diskbufferpool " << time_diskbufferpool.count() << "sec.";
     }
 
     reader.close();
-    //LOG(DEBUG) << "Finished reading the input file";
+    //LOG(DEBUGL) << "Finished reading the input file";
 
     //Notify all attached files that might be waiting that there is nothing else to read
     for (int i = 0; i < files.size(); ++i)
@@ -336,7 +336,7 @@ bool DiskLZ4Reader::uncompressBuffer(const int id) {
             break;
         case 32:
             if (!LZ4_decompress_fast(startb, f.buffer, uncompressedLen)) {
-                LOG(ERROR) << "Error in the decompression.";
+                LOG(ERRORL) << "Error in the decompression.";
                 throw 10;
             }
             break;
@@ -429,7 +429,7 @@ DiskLZ4Reader::~DiskLZ4Reader() {
         avg += time_files[i].count();
     }
 
-    LOG(DEBUG) << "Time reading all data from disk " <<
+    LOG(DEBUGL) << "Time reading all data from disk " <<
         time_rawreading.count()  << "sec. Time waiting lock m_diskbufferpool " <<
         time_diskbufferpool.count() << "sec. Time (avg) waiting locks files " <<
         avg / files.size() << "sec.";

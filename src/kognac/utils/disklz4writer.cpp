@@ -216,7 +216,7 @@ void DiskLZ4Writer::compressAndQueue(const int id) {
     const int compressedSize = LZ4_compress(file.buffer, buffer + 21, file.sizebuffer);
 #endif
     if (compressedSize == 0 || compressedSize > SIZE_COMPRESSED_SEG - 21) {
-        LOG(ERROR) << "I could not compress in the given buffer";
+        LOG(ERRORL) << "I could not compress in the given buffer";
         throw 10;
     }
     Utils::encode_intLE(buffer, 9, compressedSize);
@@ -270,7 +270,7 @@ void DiskLZ4Writer::run() {
         }
         time_rawwriting += std::chrono::system_clock::now() - start;
 
-        //LOG(DEBUG) << "WRITING TIME " << time_rawwriting.count() << "ec. Waitingwriting " << time_waitingwriting.count() << "sec." << " Waiting buffer " << time_waitingbuffer.count() << "sec.";
+        //LOG(DEBUGL) << "WRITING TIME " << time_rawwriting.count() << "ec. Waitingwriting " << time_waitingwriting.count() << "sec." << " Waiting buffer " << time_waitingbuffer.count() << "sec.";
 
         //Return the buffer so that it can be reused
         unique_lock<std::mutex> lk2(mutexAvailableBuffer);
@@ -290,7 +290,7 @@ void DiskLZ4Writer::run() {
     Utils::encode_long(buffer, startpositions.size());
     stream.write(buffer, 8);
     for (int i = 0; i < startpositions.size(); ++i) {
-        //LOG(DEBUG) << "The number of blocks in partition "
+        //LOG(DEBUGL) << "The number of blocks in partition "
         //                         << i
         //                         << " is " << startpositions[i].size();
         Utils::encode_long(buffer, startpositions[i].size());
@@ -308,7 +308,7 @@ DiskLZ4Writer::~DiskLZ4Writer() {
         currentthread.join();
     processStarted = false;
 
-    LOG(DEBUG) << "Time writing all data from disk " << time_rawwriting.count()  << "sec. Time waiting writing " << time_waitingwriting.count() << "sec. Time waiting buffer " << time_waitingbuffer.count() << "sec.";
+    LOG(DEBUGL) << "Time writing all data from disk " << time_rawwriting.count()  << "sec. Time waiting writing " << time_waitingwriting.count() << "sec. Time waiting buffer " << time_waitingbuffer.count() << "sec.";
 
     for (int i = 0; i < parentbuffers.size(); ++i)
         delete[] parentbuffers[i];

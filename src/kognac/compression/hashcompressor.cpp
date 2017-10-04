@@ -147,7 +147,7 @@ void HashCompressor::mergeFiles(string tmpPrefixFile, int nInputFiles, string ou
             int sTerm = Utils::decode_short(t.value);
             if (sTerm == sPreviousTerm && memcmp(t.value + 2, previousTerm + 2, sPreviousTerm - 2) != 0) {
                 //Conflict!
-                LOG(WARN) << "There is a conflict! This case is not implemented because it should be extremely rare. If it happens, we block the computation and return ERROR";
+                LOG(WARNL) << "There is a conflict! This case is not implemented because it should be extremely rare. If it happens, we block the computation and return ERROR";
                 exit(1);
             }
         }
@@ -321,5 +321,5 @@ void HashCompressor::compressAndExtractDictionaries(int partitionId, vector<File
 
     delete[] supportTerm;
     *output = count;
-    LOG(DEBUG) << "Compressed triples: " << count << " not valid: " << countNotValid;
+    LOG(DEBUGL) << "Compressed triples: " << count << " not valid: " << countNotValid;
 }

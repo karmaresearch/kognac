@@ -97,11 +97,11 @@ class ProgramArgs {
                     }
                     void set(string value) {
                         if (isSet()) {
-                            LOG(ERROR) << "Param '" << getName() << "' cannot be set more than once";
+                            LOG(ERRORL) << "Param '" << getName() << "' cannot be set more than once";
                             throw 10;
                         }
                         if (!check<K>(value)) {
-                            LOG(ERROR) << "Value for the param '" << getName() << "' cannot be converted to the appropriate value";
+                            LOG(ERRORL) << "Value for the param '" << getName() << "' cannot be converted to the appropriate value";
                             throw 10;
                         }
                         convert<K>(value, this->value);
@@ -148,14 +148,14 @@ class ProgramArgs {
                         if (!shortnames.count(sn)) {
                             shortnames.insert(make_pair(sn, arg));
                         } else {
-                            LOG(ERROR) << "Parameter " << sn << " already defined";
+                            LOG(ERRORL) << "Parameter " << sn << " already defined";
                             throw 10;
                         }
                     }
                     if (!names.count(n)) {
                         names.insert(make_pair(n, arg));
                     } else {
-                        LOG(ERROR) << "Parameter " << n << " already defined";
+                        LOG(ERRORL) << "Parameter " << n << " already defined";
                         throw 10;
                     }
                 }
@@ -202,26 +202,26 @@ class ProgramArgs {
                     string nameParam = string(argv[i]).substr(2);
                     if (names.count(nameParam)) {
                         if (i == argc - 1) {
-                            LOG(ERROR) << "Miss value of the param";
+                            LOG(ERRORL) << "Miss value of the param";
                             throw 10;
                         }
                         string value = argv[++i];
                         names[nameParam]->set(value);
                     } else {
-                        LOG(ERROR) << "Param " << nameParam << " not found";
+                        LOG(ERRORL) << "Param " << nameParam << " not found";
                         throw 10;
                     }
                 } else if (argv[i][0] == '-') {
                     string nameParam = string(argv[i]).substr(1);
                     if (shortnames.count(nameParam)) {
                         if (i == argc - 1) {
-                            LOG(ERROR) << "Miss value of the param";
+                            LOG(ERRORL) << "Miss value of the param";
                             throw 10;
                         }
                         string value = argv[++i];
                         shortnames[nameParam]->set(value);
                     } else {
-                        LOG(ERROR) << "Param " << nameParam << " not found";
+                        LOG(ERRORL) << "Param " << nameParam << " not found";
                         throw 10;
                     }
                 } else {
@@ -232,14 +232,14 @@ class ProgramArgs {
         void check() {
             for(auto pair : names) {
                 if (pair.second->isRequired() && !pair.second->isSet()) {
-                    LOG(ERROR) << "Param " << pair.second->getName() << " is required but no set";
+                    LOG(ERRORL) << "Param " << pair.second->getName() << " is required but no set";
                     throw 10;
                 }
             }
         }
         OutVar operator [](string n) {
             if (!names.count(n)) {
-                LOG(ERROR) << "Param " << n << " not found";
+                LOG(ERRORL) << "Param " << n << " not found";
                 throw 10;
             }
             return OutVar(names.find(n)->second);

@@ -7,11 +7,11 @@
 #include <iomanip>
 #include <iostream>
 
-#define TRACE 0
-#define DEBUG 1
-#define INFO 2
-#define WARN 3
-#define ERROR 4
+#define TRACEL 0
+#define DEBUGL 1
+#define INFOL 2
+#define WARNL 3
+#define ERRORL 4
 
 class Logger {
     private:
@@ -44,19 +44,19 @@ class Logger {
                     ss << "[0x" << std::hex << std::hash<std::thread::id>()(std::this_thread::get_id()) << " ";
                     ss << std::put_time(&tm, "%Y-%m-%d %H:%M:%S") << "] ";
                     switch (level) {
-                        case TRACE:
+                        case TRACEL:
                             ss << "TRACE ";
                             break;
-                        case DEBUG:
+                        case DEBUGL:
                             ss << "DEBUG ";
                             break;
-                        case INFO:
+                        case INFOL:
                             ss << "INFO ";
                             break;
-                        case WARN:
+                        case WARNL:
                             ss << "WARN ";
                             break;
-                        case ERROR:
+                        case ERRORL:
                             ss << "ERROR ";
                             break;
                     };

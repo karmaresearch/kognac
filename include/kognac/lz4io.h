@@ -51,7 +51,7 @@ public:
         os(file) {
         this->path = file;
         if (!os.good()) {
-            LOG(ERROR) << "Failed to open the file " << file;
+            LOG(ERRORL) << "Failed to open the file " << file;
         }
 
         uncompressedBufferLen = 0;
@@ -98,7 +98,7 @@ private:
         }
 
         if (!is.good() || is.gcount() != 21) {
-            LOG(ERROR) << "Problems reading from the file. Only " << is.gcount() << " out of 21 were being read";
+            LOG(ERRORL) << "Problems reading from the file. Only " << is.gcount() << " out of 21 were being read";
         }
 
         int token = header[8] & 0xFF;
@@ -111,22 +111,22 @@ private:
         case 16:
             is.read(uncompressedBuffer, uncompressedLen);
             if (!is.good()) {
-                LOG(ERROR) << "Problems reading from the file. Only " << is.gcount() << " out of " << uncompressedLen << " were being read";
+                LOG(ERRORL) << "Problems reading from the file. Only " << is.gcount() << " out of " << uncompressedLen << " were being read";
             }
             break;
         case 32:
             is.read(compressedBuffer, compressedLen);
             if (!is.good()) {
-                LOG(ERROR) << "Problems reading from the file. Only " << is.gcount() << " out of " << compressedLen << " were being read";
+                LOG(ERRORL) << "Problems reading from the file. Only " << is.gcount() << " out of " << compressedLen << " were being read";
             }
 
             if (!LZ4_decompress_fast(compressedBuffer, uncompressedBuffer,
                                      uncompressedLen)) {
-                LOG(ERROR) << "Error in the decompression.";
+                LOG(ERRORL) << "Error in the decompression.";
             }
             break;
         default:
-            LOG(ERROR) << "Unrecognized block format. This should not happen. File " << file << " is broken.";
+            LOG(ERRORL) << "Unrecognized block format. This should not happen. File " << file << " is broken.";
             exit(1);
         }
         currentOffset = 0;
@@ -138,7 +138,7 @@ public:
         is(file) {
 
         if (!is.good()) {
-            LOG(ERROR) << "Failed to open the file " << file;
+            LOG(ERRORL) << "Failed to open the file " << file;
         }
 
         uncompressedBufferLen = 0;

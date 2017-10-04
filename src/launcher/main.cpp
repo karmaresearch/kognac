@@ -36,7 +36,7 @@ void initParams(int argc, const char** argv, ProgramArgs &vm) {
     ProgramArgs::GroupArgs& g = *vm.newGroup("Options");
 
     g.add<string>("i","input", "", "input directory", true)
-        .add("l", "logLevel", INFO, "Set the log level (accepted values: trace, debug, info, warning, error, fatal)", false)
+        .add("l", "logLevel", INFOL, "Set the log level (accepted values: trace, debug, info, warning, error, fatal)", false)
         .add<string>("h","help", "", "print help message", false)
         .add<bool>("f","fp", false, "Use FPTree to mine classes", false)
         .add<int>("s","minSupport", 1000, "Sets the minimum support necessary to indentify class patterns", false)
@@ -88,18 +88,18 @@ int main(int argc, const char **argv) {
     }
 
     Kognac kognac(input, output, maxPatternLength);
-    LOG(INFO) << "Sampling the graph ...";
+    LOG(INFOL) << "Sampling the graph ...";
     kognac.sample(sampleMethod, sampleArg, sampleArg2, parallelThreads,
             maxConcurrentThreads);
-    LOG(INFO) << "Creating the dictionary mapping ...";
+    LOG(INFOL) << "Creating the dictionary mapping ...";
     kognac.compress(parallelThreads, maxConcurrentThreads, useFP, minSupport,
             serializeTaxonomy);
 
     if (compressGraph) {
-        LOG(INFO) << "Compressing the triples ...";
+        LOG(INFOL) << "Compressing the triples ...";
         kognac.compressGraph(parallelThreads, maxConcurrentThreads);
     }
-    LOG(INFO) << "Done.";
+    LOG(INFOL) << "Done.";
 
 
     return 0;

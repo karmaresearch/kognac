@@ -72,11 +72,11 @@ void MultiDiskLZ4Writer::run() {
                 openedstreams[filetoremove] = false;
                 nopenedstreams--;
             }
-            //LOG(DEBUG) << "Open file " << files[idFile];
+            //LOG(DEBUGL) << "Open file " << files[idFile];
             string path = files[idFile].filestowrite[currentfileidx];
             streams[idFile].open(path, ios_base::ate | ios_base::app);
             if (!streams[idFile].good()) {
-                LOG(ERROR) << "Problems opening file " << idFile;
+                LOG(ERRORL) << "Problems opening file " << idFile;
             }
             openedstreams[idFile] = true;
             historyopenedfiles.push_back(idFile);
@@ -91,20 +91,20 @@ void MultiDiskLZ4Writer::run() {
                 streams[idFile].close();
                 streams[idFile].open(path, ios_base::ate | ios_base::app);
                 if (!streams[idFile].good()) {
-                    LOG(ERROR) << "Problems opening file " << idFile;
+                    LOG(ERRORL) << "Problems opening file " << idFile;
                 }
             }
             //Write and check the writing was successful
             streams[idFile].write(it->buffer, it->sizebuffer);
             if (!streams[idFile].good()) {
-                LOG(ERROR) << "Problems writing the file " << idFile;
+                LOG(ERRORL) << "Problems writing the file " << idFile;
             }
 
             it++;
         }
         time_rawwriting += std::chrono::system_clock::now() - start;
 
-        //LOG(DEBUG) << "WRITING TIME " << time_rawwriting.count()
+        //LOG(DEBUGL) << "WRITING TIME " << time_rawwriting.count()
         //                         << "ec. Waitingwriting " << time_waitingwriting.count()
         //                         << "sec." << " Waiting buffer "
         //                         << time_waitingbuffer.count() << "sec.";

@@ -236,7 +236,7 @@ void Compressor::uncompressTriples(ParamsUncompressTriples params) {
         delete heap;
     }
 
-    LOG(DEBUG) << "Parsed triples: " << count << " not valid: " << countNotValid;
+    LOG(DEBUGL) << "Parsed triples: " << count << " not valid: " << countNotValid;
 }
 
 void Compressor::sampleTerm(const char *term, int sizeTerm, int sampleArg,
@@ -373,7 +373,7 @@ void Compressor :: uncompressTriplesForMGCS (vector<FileInfo> &files, MG *heap, 
         delete[] supportBuffers[2];
     }
 
-    LOG(DEBUG) << "Parsed triples: " << count << " not valid: " << countNotValid;
+    LOG(DEBUGL) << "Parsed triples: " << count << " not valid: " << countNotValid;
 }
 
 void Compressor :: extractTermsForMGCS (ParamsExtractCommonTermProcedure params, const set<string>& freq, const CountSketch *cs) {
@@ -450,7 +450,7 @@ void Compressor :: extractTermsForMGCS (ParamsExtractCommonTermProcedure params,
         }
     }
 
-    LOG(DEBUG) << "Hashtable size after extraction " << map->size() << ". Frequent terms " << countFrequent << " infrequent " << countInfrequent;
+    LOG(DEBUGL) << "Hashtable size after extraction " << map->size() << ". Frequent terms " << countFrequent << " infrequent " << countInfrequent;
 
     if (copyHashes) {
         delete[] prevEntries[0];
@@ -596,7 +596,7 @@ void Compressor::uncompressAndSampleTriples(vector<FileInfo> &files,
     }
 
     delete[] supportBuffer2;
-    LOG(DEBUG) << "Parsed triples: " << count << " not valid: " << countNotValid;
+    LOG(DEBUGL) << "Parsed triples: " << count << " not valid: " << countNotValid;
 }
 
 void Compressor::extractUncommonTerm(const char *term, const int sizeTerm,
@@ -727,7 +727,7 @@ void Compressor::extractUncommonTerms(const int dictPartitions,
         int sizeTerm = 0;
         int flag = reader->readByte(inputFileId); //Ignore it. Should always be 0
         if (flag != 0) {
-            LOG(ERROR) << "Flag should always be zero!";
+            LOG(ERRORL) << "Flag should always be zero!";
             throw 10;
         }
 
@@ -827,7 +827,7 @@ void Compressor::extractCommonTerms(ParamsExtractCommonTermProcedure params) {
         pos = (pos + 1) % 3;
     }
 
-    LOG(DEBUG) << "Hashtable size after extraction " << map->size() << ". Frequent terms " << countFrequent;
+    LOG(DEBUGL) << "Hashtable size after extraction " << map->size() << ". Frequent terms " << countFrequent;
 
 }
 
@@ -937,7 +937,7 @@ void Compressor::newCompressTriples(ParamsNewCompressProcedure params) {
         nextPos = tripleId & 0x3;
         nextTerm = uncommonTermsReader->readLong(idReader);
     } else {
-        LOG(DEBUG) << "No uncommon file is provided";
+        LOG(DEBUGL) << "No uncommon file is provided";
     }
 
     long currentTripleId = params.part;
@@ -977,7 +977,7 @@ void Compressor::newCompressTriples(ParamsNewCompressProcedure params) {
                     bool ok = false;
                     if (ignorePredicates && i == 1) {
                         if (size != 2) {
-                            LOG(ERROR) << "Strange. This term should be empty ...";
+                            LOG(ERRORL) << "Strange. This term should be empty ...";
                             throw 10;
                         }
                         triple[i] = 0; //Give the ID 0 to all predicates
@@ -1053,13 +1053,13 @@ void Compressor::newCompressTriples(ParamsNewCompressProcedure params) {
 
     if (uncommonTermsReader != NULL) {
         if (!(uncommonTermsReader->isEOF(idReader))) {
-            LOG(ERROR) << "There are still elements to read in the uncommon file";
+            LOG(ERRORL) << "There are still elements to read in the uncommon file";
             throw 10;
         }
     }
     delete[] tTriple;
 
-    LOG(DEBUG) << "Compressed triples " << compressedTriples << " compressed terms " << compressedTerms << " uncompressed terms " << uncompressedTerms;
+    LOG(DEBUGL) << "Compressed triples " << compressedTriples << " compressed terms " << compressedTerms << " uncompressed terms " << uncompressedTerms;
 }
 
 bool Compressor::isSplittable(string path) {
@@ -1098,7 +1098,7 @@ vector<FileInfo> *Compressor::splitInputInChunks(const string &input, int nchunk
         infoAllFiles.push_back(i);
     }
 
-    LOG(INFO) << "Going to parse " << infoAllFiles.size() << " files. Total size in bytes: " << totalSize << " bytes";
+    LOG(INFOL) << "Going to parse " << infoAllFiles.size() << " files. Total size in bytes: " << totalSize << " bytes";
 
     /*** Sort the input files by size, and split the files through the multiple processors ***/
     std::sort(infoAllFiles.begin(), infoAllFiles.end(), cmpInfoFiles);
@@ -1154,7 +1154,7 @@ vector<FileInfo> *Compressor::splitInputInChunks(const string &input, int nchunk
                 itr < files[i].end(); ++itr) {
             totalSize += itr->size;
         }
-        LOG(DEBUG) << "Files in split " << i << ": " << files[i].size() << " size " << totalSize;
+        LOG(DEBUGL) << "Files in split " << i << ": " << files[i].size() << " size " << totalSize;
     }
     return files;
 }
@@ -1205,12 +1205,12 @@ void Compressor::parse(int dictPartitions, int sampleMethod, int sampleArg,
                 maxReadingThreads, copyHashes,
                 extractors, files, commonTermsMaps, true, ignorePredicates);
     } else if (sampleMethod == PARSE_MGCS) {
-        LOG(ERROR) << "No longer supported";
+        LOG(ERRORL) << "No longer supported";
         throw 10;
         do_mcgs();
     } else { //PARSE_SAMPLE
         if (ignorePredicates) {
-            LOG(ERROR) << "The option ignorePredicates is not implemented in combination with sampling";
+            LOG(ERRORL) << "The option ignorePredicates is not implemented in combination with sampling";
             throw 10;
         }
         do_sample(dictPartitions, sampleArg, sampleArg2, maxReadingThreads,
@@ -1219,25 +1219,25 @@ void Compressor::parse(int dictPartitions, int sampleMethod, int sampleArg,
     }
 
     std::chrono::duration<double> sec = std::chrono::system_clock::now() - start;
-    LOG(DEBUG) << "Time heavy hitters detection = " << sec.count() * 1000 << " ms";
+    LOG(DEBUGL) << "Time heavy hitters detection = " << sec.count() * 1000 << " ms";
 
     /*** Merge the schema extractors ***/
     if (copyHashes) {
-        LOG(DEBUG) << "Merge the extracted schema";
+        LOG(DEBUGL) << "Merge the extracted schema";
         for (int i = 0; i < parallelProcesses; ++i) {
             schemaExtrator->merge(extractors[i]);
         }
         if (!onlySample) {
-            LOG(DEBUG) << "Prepare the schema...";
+            LOG(DEBUGL) << "Prepare the schema...";
             schemaExtrator->prepare();
-            LOG(DEBUG) << "... done";
+            LOG(DEBUGL) << "... done";
         }
     }
     delete[] extractors;
 
     if (!onlySample) {
         /*** Extract the uncommon terms ***/
-        LOG(DEBUG) << "Extract the uncommon terms";
+        LOG(DEBUGL) << "Extract the uncommon terms";
         DiskLZ4Reader **readers = new DiskLZ4Reader*[maxReadingThreads];
         DiskLZ4Writer **writers = new DiskLZ4Writer*[maxReadingThreads];
         for (int i = 0; i < maxReadingThreads; ++i) {
@@ -1273,7 +1273,7 @@ void Compressor::parse(int dictPartitions, int sampleMethod, int sampleArg,
         delete[] readers;
         delete[] writers;
 
-        LOG(DEBUG) << "Finished the extraction of the uncommon terms";
+        LOG(DEBUGL) << "Finished the extraction of the uncommon terms";
         delete[] threads;
     }
     delete[] commonTermsMaps;
@@ -1292,7 +1292,7 @@ unsigned int Compressor::getThresholdForUncommon(
     for (int i = 0; i < parallelProcesses; ++i) {
         nTerms = max(nTerms, distinctValues[i]);
     }
-    LOG(DEBUG) << "Estimated number of terms per partition: " << nTerms;
+    LOG(DEBUGL) << "Estimated number of terms per partition: " << nTerms;
     long termsPerBlock = max((long)1, (long)(nTerms / sizeHashTable)); //Terms per block
     long tu1 = max((long) 1, tables1[0]->getThreshold(sizeHashTable - sampleArg));
     long tu2 = max((long) 1, tables2[0]->getThreshold(sizeHashTable - sampleArg));
@@ -1319,7 +1319,7 @@ void Compressor::do_countmin_secondpass(const int dictPartitions,
             parallelProcesses, sizeHashTable,
             sampleArg, distinctValues,
             tables1, tables2, tables3);
-    LOG(DEBUG) << "Threshold to mark elements as uncommon: " <<
+    LOG(DEBUGL) << "Threshold to mark elements as uncommon: " <<
         thresholdForUncommon;
 
     /*** Extract the common URIs ***/
@@ -1344,7 +1344,7 @@ void Compressor::do_countmin_secondpass(const int dictPartitions,
                 parallelProcesses / maxReadingThreads, 3);
     }
 
-    LOG(DEBUG) << "Extract the common terms";
+    LOG(DEBUGL) << "Extract the common terms";
     for (int i = 1; i < parallelProcesses; ++i) {
         params.reader = readers[i % maxReadingThreads];
         params.idReader = i / maxReadingThreads;
@@ -1400,7 +1400,7 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
     }
     // Fixed: maxSize for very small inputs
     maxSize = std::max((long)sampleArg, maxSize);
-    LOG(DEBUG) << "Size Input: " << nBytesInput <<
+    LOG(DEBUGL) << "Size Input: " << nBytesInput <<
         " bytes. Max table size=" << maxSize;
     long memForHashTables = (long)(Utils::getSystemMemory() * 0.5)
         / (1 + parallelProcesses) / 3;
@@ -1409,10 +1409,10 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
             (long)std::max((unsigned int)1000000,
                 (unsigned int)(memForHashTables / sizeof(long))));
 
-    LOG(DEBUG) << "Size hash table " << sizeHashTable;
+    LOG(DEBUGL) << "Size hash table " << sizeHashTable;
 
     if (parallelProcesses % maxReadingThreads != 0) {
-        LOG(ERROR) << "The maximum number of threads must be a multiplier of the reading threads";
+        LOG(ERRORL) << "The maximum number of threads must be a multiplier of the reading threads";
         throw 10;
     }
 
@@ -1493,11 +1493,11 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
     delete[] threadReaders;
 
     //Merging the tables
-    LOG(DEBUG) << "Merging the tables...";
+    LOG(DEBUGL) << "Merging the tables...";
 
     for (int i = 0; i < parallelProcesses; ++i) {
         if (i != 0) {
-            LOG(DEBUG) << "Merge table " << (i);
+            LOG(DEBUGL) << "Merge table " << (i);
             tables1[0]->merge(tables1[i]);
             tables2[0]->merge(tables2[i]);
             tables3[0]->merge(tables3[i]);
@@ -1522,7 +1522,7 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
                 parallelProcesses, sizeHashTable,
                 sampleArg, distinctValues,
                 tables1, tables2, tables3);
-        LOG(DEBUG) << "The minimum frequency required is " << minFreq;
+        LOG(DEBUGL) << "The minimum frequency required is " << minFreq;
 
         /*** Then go through all elements and take the frequency from the
          * count_min tables ***/
@@ -1541,7 +1541,7 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
         }
 
         /*** Sort the list and keep the highest n ***/
-        LOG(DEBUG) << "There are " << listFrequentTerms.size() << " potential frequent terms";
+        LOG(DEBUGL) << "There are " << listFrequentTerms.size() << " potential frequent terms";
         std::sort(listFrequentTerms.begin(), listFrequentTerms.end(),
                 lessTermFrequenciesDesc);
 
@@ -1565,7 +1565,7 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
     }
 
     /*** Delete the hashtables ***/
-    LOG(DEBUG) << "Delete some datastructures";
+    LOG(DEBUGL) << "Delete some datastructures";
     table1 = std::shared_ptr<Hashtable>(tables1[0]);
     table2 = std::shared_ptr<Hashtable>(tables2[0]);
     table3 = std::shared_ptr<Hashtable>(tables3[0]);
@@ -1578,10 +1578,10 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
     if (!usemisgra) {
         finalMap->set_empty_key(EMPTY_KEY);
         finalMap->set_deleted_key(DELETED_KEY);
-        LOG(DEBUG) << "Merge the local common term maps";
+        LOG(DEBUGL) << "Merge the local common term maps";
         mergeCommonTermsMaps(finalMap, commonTermsMaps, parallelProcesses);
     }
-    LOG(DEBUG) << "Size hashtable with common terms " << finalMap->size();
+    LOG(DEBUGL) << "Size hashtable with common terms " << finalMap->size();
 
     delete[] threads;
 }
@@ -1644,11 +1644,11 @@ void Compressor::do_sample(const int dictPartitions, const int sampleArg,
     }
 
     /*** Sort all the pairs by term ***/
-    LOG(DEBUG) << "Sorting the sample of " << sampledTerms.size();
+    LOG(DEBUGL) << "Sorting the sample of " << sampledTerms.size();
     std::sort(sampledTerms.begin(), sampledTerms.end(), &sampledTermsSorter1);
 
     /*** Merge sample ***/
-    LOG(DEBUG) << "Merging sorted results";
+    LOG(DEBUGL) << "Merging sorted results";
     std::vector<std::pair<string, size_t>> sampledTermsUniq;
     size_t i = 0;
     for (std::vector<std::pair<string, size_t>>::iterator
@@ -1668,7 +1668,7 @@ void Compressor::do_sample(const int dictPartitions, const int sampleArg,
             &sampledTermsSorter2);
 
     /*** Pick the top n and copy them in finalMap ***/
-    LOG(DEBUG) << "Copy in the hashmap the top k. The sorted sample contains " << sampledTermsUniq.size();
+    LOG(DEBUGL) << "Copy in the hashmap the top k. The sorted sample contains " << sampledTermsUniq.size();
     finalMap->set_empty_key(EMPTY_KEY);
     finalMap->set_deleted_key(DELETED_KEY);
     char supportTerm[MAX_TERM_SIZE];
@@ -1681,7 +1681,7 @@ void Compressor::do_sample(const int dictPartitions, const int sampleArg,
         finalMap->insert(make_pair(newkey, sampledTermsUniq[i].second));
     }
 
-    LOG(DEBUG) << "Size hashtable with common terms " << finalMap->size();
+    LOG(DEBUGL) << "Size hashtable with common terms " << finalMap->size();
 }
 
 bool Compressor::areFilesToCompress(int parallelProcesses, string *tmpFileNames) {
@@ -1942,7 +1942,7 @@ std::vector<string> Compressor::getPartitionBoundaries(const string kbdir,
 
     std::vector<string> output;
     size_t sizePartition = sample.size() / partitions;
-    LOG(DEBUG) << "sample.size()=" << sample.size()
+    LOG(DEBUGL) << "sample.size()=" << sample.size()
         << " sizePartition=" << sizePartition
         << " remainder=" << (sample.size() % partitions);
     for (size_t i = 0; i < sample.size(); ++i) {
@@ -2021,7 +2021,7 @@ void Compressor::sortRangePartitionedTuples(DiskLZ4Reader *reader,
         counter++;
         countFile--;
     }
-    LOG(DEBUG) << "Partitioned " << counter << " terms.";
+    LOG(DEBUGL) << "Partitioned " << counter << " terms.";
     delete output;
 }
 
@@ -2128,7 +2128,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
                     (sizeof(SimplifiedAnnotatedTerm) * tuples.size()))
                 >= maxMem) {
             //if (bytesAllocated > 800000) {
-            LOG(DEBUG) << "Dumping file " << idx << " with "
+            LOG(DEBUGL) << "Dumping file " << idx << " with "
                 << tuples.size() << " tuples ...";
             string ofile = outputFile + string(".") + to_string(idx);
             idx++;
@@ -2176,11 +2176,11 @@ void Compressor::sortPartition(ParamsSortPartition params) {
         for (auto file : filesToSort) {
             Utils::remove(file);
         }
-        LOG(DEBUG) << "Number of prefixes " << prefixset.size();
+        LOG(DEBUGL) << "Number of prefixes " << prefixset.size();
 
         if (idx == 0) {
             //All data fit in main memory. Do not need to write it down
-            LOG(DEBUG) << "All terms (" << tuples.size() << ") fit in main memory";
+            LOG(DEBUGL) << "All terms (" << tuples.size() << ") fit in main memory";
             std::sort(tuples.begin(), tuples.end(), SimplifiedAnnotatedTerm::sless);
 
             //The following code is replicated below.
@@ -2228,7 +2228,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
             }
 
             *counter = counterTerms + 1;
-            LOG(DEBUG) << "Partition " << part << " contains " <<
+            LOG(DEBUGL) << "Partition " << part << " contains " <<
                 counterPairs << " tuples " <<
                 (counterTerms + 1) << " terms";
             for (auto f : sortedFiles) {
@@ -2241,7 +2241,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
                 sortedFiles.push_back(ofile);
             }
 
-            LOG(DEBUG) << "Merge " << sortedFiles.size()
+            LOG(DEBUGL) << "Merge " << sortedFiles.size()
                 << " files in order to sort the partition";
 
             while (sortedFiles.size() >= 4) {
@@ -2285,7 +2285,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
                     sortedFiles.erase(sortedFiles.begin());
                 }
             }
-            LOG(DEBUG) << "Final merge";
+            LOG(DEBUGL) << "Final merge";
 
             //Create a file
             //std::unique_ptr<LZ4Writer> dictWriter(new LZ4Writer(dictfile));
@@ -2344,7 +2344,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
 
             delete[] previousTerm;
             *counter = counterTerms + 1;
-            LOG(DEBUG) << "Partition " << part << " contains "
+            LOG(DEBUGL) << "Partition " << part << " contains "
                 << counterPairs << " tuples "
                 << (counterTerms + 1) << " terms";
 
@@ -2357,7 +2357,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
     }
 
     void Compressor::concatenateFiles_seq(string prefix, int part) {
-        LOG(DEBUG) << "Concatenating files in partition " << part;
+        LOG(DEBUGL) << "Concatenating files in partition " << part;
         std::vector<string> filestoconcat;
 
         string parentDir = Utils::parentDir(prefix);
@@ -2422,7 +2422,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
         std::vector<uint64_t> counters(partitions);
         long maxMem = max((long) 128 * 1024 * 1024,
                 (long) (Utils::getSystemMemory() * 0.7)) / partitions;
-        LOG(DEBUG) << "Max memory per thread " << maxMem;
+        LOG(DEBUGL) << "Max memory per thread " << maxMem;
 
         DiskLZ4Writer **writers = new DiskLZ4Writer*[maxReadingThreads];
         MultiDiskLZ4Writer **dictwriters = new MultiDiskLZ4Writer*[maxReadingThreads];
@@ -2471,13 +2471,13 @@ void Compressor::sortPartition(ParamsSortPartition params) {
         }
 
         for (int i = 0; i < maxReadingThreads; ++i) {
-            LOG(DEBUG) << "Delete writer " << i;
+            LOG(DEBUGL) << "Delete writer " << i;
             delete writers[i];
-            LOG(DEBUG) << "Delete dict writer " << i;
+            LOG(DEBUGL) << "Delete dict writer " << i;
             delete dictwriters[i];
-            LOG(DEBUG) << "Delete multidisk reader " << i;
+            LOG(DEBUGL) << "Delete multidisk reader " << i;
             delete mreaders[i];
-            LOG(DEBUG) << "Delete multidisk merge reader " << i;
+            LOG(DEBUGL) << "Delete multidisk merge reader " << i;
             mergereaders[i]->stop();
             delete mergereaders[i];
         }
@@ -2485,7 +2485,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
         delete[] dictwriters;
         delete[] mreaders;
         delete[] mergereaders;
-        LOG(DEBUG) << "Finished sorting partitions. Now shuffling by triple ID";
+        LOG(DEBUGL) << "Finished sorting partitions. Now shuffling by triple ID";
 
         //Re-read the sorted tuples and write by tripleID
         DiskLZ4Reader **readers = new DiskLZ4Reader*[maxReadingThreads];
@@ -2660,12 +2660,12 @@ void Compressor::sortPartition(ParamsSortPartition params) {
         assert(boundaries.size() <= parallelProcesses - 1);
 
         //Range-partitions all the files in the input collection
-        LOG(DEBUG) << "Range-partitions the files...";
+        LOG(DEBUGL) << "Range-partitions the files...";
         rangePartitionFiles(maxReadingThreads, parallelProcesses, prefixInputFile,
                 boundaries);
 
         //Collect all ranged-partitions files by partition and globally sort them.
-        LOG(DEBUG) << "Sort and assign the counters to the files...";
+        LOG(DEBUGL) << "Sort and assign the counters to the files...";
         sortPartitionsAndAssignCounters(prefixInputFile,
                 dictOutput,
                 outputFile2,
@@ -2700,11 +2700,11 @@ void Compressor::sortPartition(ParamsSortPartition params) {
 
             count++;
             if (count % 100000000 == 0)
-                LOG(DEBUG) << "Loaded " << count << " Memory so far " << Utils::getUsedMemory();
+                LOG(DEBUGL) << "Loaded " << count << " Memory so far " << Utils::getUsedMemory();
         }
 
         if (filesToMerge.empty()) {
-            LOG(DEBUG) << "Sorting and dumping all triples";
+            LOG(DEBUGL) << "Sorting and dumping all triples";
             //Sort them
             std::sort(pairs.begin(), pairs.end(), TriplePair::sLess);
             //Dump them inmmediately
@@ -2714,7 +2714,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
                 writer->writeLong(idWriter, tp.term);
             }
         } else {
-            LOG(DEBUG) << "Start merging the fragments";
+            LOG(DEBUGL) << "Start merging the fragments";
             if (pairs.size() > 0) {
                 string file = tmpfileprefix + string(".") + to_string(idx++);
                 sortAndDumpToFile2(pairs, file);
@@ -2749,11 +2749,11 @@ void Compressor::sortPartition(ParamsSortPartition params) {
             ByteArrayToNumberMap * finalMap,
             const bool ignorePredicates) {
 
-        LOG(DEBUG) << "Start compression threads... ";
+        LOG(DEBUGL) << "Start compression threads... ";
         /*** Compress the triples ***/
         int iter = 0;
         while (areFilesToCompress(parallelProcesses, tmpFileNames)) {
-            LOG(DEBUG) << "Start iteration " << iter;
+            LOG(DEBUGL) << "Start iteration " << iter;
             string prefixOutputFile = "input-" + to_string(iter);
 
             DiskLZ4Reader **readers = new DiskLZ4Reader*[maxReadingThreads];
@@ -2828,7 +2828,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
             //New iteration!
             finalMap->clear();
             iter++;
-            LOG(DEBUG) << "Finish iteration";
+            LOG(DEBUGL) << "Finish iteration";
         }
     }
 
@@ -2838,7 +2838,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
             const int ndicts, vector<string> uncommonFiles,
             vector<string> &outputFiles) {
 
-        LOG(DEBUG) << "Memory used so far: " << Utils::getUsedMemory();
+        LOG(DEBUGL) << "Memory used so far: " << Utils::getUsedMemory();
 
         /*** Sort the files which contain the triple source ***/
         vector<vector<string>> inputFinalSorting(parallelProcesses);
@@ -2874,7 +2874,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
             }
         }
 
-        LOG(DEBUG) << "Start threads ...";
+        LOG(DEBUGL) << "Start threads ...";
 
         std::thread *threads = new std::thread[parallelProcesses - 1];
         const long maxMem = max((long) MIN_MEM_SORT_TRIPLES,
@@ -2919,7 +2919,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
             bool sample) {
         long maxMemAllocate = max((long) (BLOCK_SUPPORT_BUFFER_COMPR * 2),
                 (long) (Utils::getSystemMemory() * 0.70 / ndicts));
-        LOG(DEBUG) << "Max memory to use to sort inmemory a number of terms: " << maxMemAllocate << " bytes";
+        LOG(DEBUGL) << "Max memory to use to sort inmemory a number of terms: " << maxMemAllocate << " bytes";
         immemorysort(input, maxReadingThreads, parallelProcesses, prefixOutputFiles[0],
                 filterDuplicates, maxMemAllocate, sample);
     }
@@ -2932,7 +2932,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
             const bool ignorePredicates) {
 
         /*** Sort the infrequent terms ***/
-        LOG(DEBUG) << "Sorting uncommon dictionary entries for partitions";
+        LOG(DEBUGL) << "Sorting uncommon dictionary entries for partitions";
         string *uncommonDictionaries = new string[ndicts];
         for (int i = 0; i < ndicts; ++i) {
             uncommonDictionaries[i] = dictionaries[i] + string("-u");
@@ -2945,7 +2945,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
                 NULL,
                 false,
                 true);
-        LOG(DEBUG) << "...done";
+        LOG(DEBUGL) << "...done";
 
         /*** Deallocate the dictionary files ***/
         for (int i = 0; i < maxReadingThreads; ++i) {
@@ -2972,22 +2972,22 @@ void Compressor::sortPartition(ParamsSortPartition params) {
         }
 
         /*** Assign a number to the popular entries ***/
-        LOG(DEBUG) << "Assign a number to " << finalMap->size() <<
+        LOG(DEBUGL) << "Assign a number to " << finalMap->size() <<
             " popular terms in the dictionary";
         assignNumbersToCommonTermsMap(finalMap, counters, writers, NULL, ndicts, true);
 
         /*** Assign a number to the other entries. Split them into two files.
          * The ones that must be loaded into the hashmap, and the ones used for
          * the merge join ***/
-        LOG(DEBUG) << "Merge (and assign counters) of dictionary entries";
+        LOG(DEBUGL) << "Merge (and assign counters) of dictionary entries";
         if (ndicts > 1) {
-            LOG(ERROR) << "The current version of the code supports only one dictionary partition";
+            LOG(ERRORL) << "The current version of the code supports only one dictionary partition";
             throw 10;
         }
         mergeNotPopularEntries(uncommonDictionaries[0], dictionaries[0],
                 uncommonFiles[0], &counters[0], ndicts,
                 parallelProcesses, maxReadingThreads);
-        LOG(DEBUG) << "... done";
+        LOG(DEBUGL) << "... done";
 
         /*** Remove unused data structures ***/
         for (int i = 0; i < ndicts; ++i) {
@@ -2997,18 +2997,18 @@ void Compressor::sortPartition(ParamsSortPartition params) {
         delete[] writers;
 
         /*** Sort files by triple source ***/
-        LOG(DEBUG) << "Sort uncommon triples by triple id";
+        LOG(DEBUGL) << "Sort uncommon triples by triple id";
         vector<string> sortedFiles;
         sortFilesByTripleSource(kbPath, maxReadingThreads, parallelProcesses,
                 ndicts, uncommonFiles, sortedFiles);
-        LOG(DEBUG) << "... done";
+        LOG(DEBUGL) << "... done";
 
         /*** Compress the triples ***/
         compressTriples(maxReadingThreads, parallelProcesses, ndicts,
                 permDirs, nperms, signaturePerms,
                 notSoUncommonFiles, sortedFiles, tmpFileNames,
                 poolForMap, finalMap, ignorePredicates);
-        LOG(DEBUG) << "... done";
+        LOG(DEBUGL) << "... done";
 
         /*** Clean up remaining datastructures ***/
         delete[] counters;
@@ -3021,7 +3021,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
         delete finalMap;
         poolForMap = NULL;
         finalMap = NULL;
-        LOG(DEBUG) << "Compression is finished";
+        LOG(DEBUGL) << "Compression is finished";
     }
 
     bool stringComparator(string stringA, string stringB) {

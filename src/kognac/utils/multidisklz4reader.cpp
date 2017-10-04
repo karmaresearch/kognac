@@ -141,12 +141,12 @@ void MultiDiskLZ4Reader::run() {
             }
         }
         if (skipped == partitions.size()) {
-            LOG(DEBUG) << "Exiting ...";
+            LOG(DEBUGL) << "Exiting ...";
             diskbufferpool.push_back(buffer);
             break;
         } else if (!found) {
             if (firstPotentialPart == -1) {
-                LOG(ERROR) << "FirstPotentialPer == -1";
+                LOG(ERRORL) << "FirstPotentialPer == -1";
                 throw 10;
             }
             partitionToRead = firstPotentialPart;

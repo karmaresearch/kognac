@@ -209,12 +209,12 @@ bool FileReader::parseLine(const char *line, const int sizeLine) {
                 && lengthO < (MAX_TERM_SIZE - 1)) {
             return true;
         } else {
-            //LOG(ERROR) << "The triple was not parsed correctly: " << lengthS << " " << lengthP << " " << lengthO;
+            //LOG(ERRORL) << "The triple was not parsed correctly: " << lengthS << " " << lengthP << " " << lengthO;
             return false;
         }
 
     } catch (std::exception &e) {
-        LOG(ERROR) << "Failed parsing line: " + string(line, sizeLine);
+        LOG(ERRORL) << "Failed parsing line: " + string(line, sizeLine);
 	abort();
     }
     return false;

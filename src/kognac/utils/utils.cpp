@@ -165,19 +165,19 @@ void Utils::create_directories(string newdir) {
         create_directories(pd);
     }
     if (mkdir(newdir.c_str(), 0777) != 0) {
-        LOG(ERROR) << "Error creating dir " << newdir;
+        LOG(ERRORL) << "Error creating dir " << newdir;
         throw 10;
     }
 }
 void Utils::remove(string file) {
     if (isDirectory(file)) {
         if (rmdir(file.c_str()) != 0) {
-            LOG(ERROR) << "Error removing dir " << file;
+            LOG(ERRORL) << "Error removing dir " << file;
             abort();
         }
     } else {
         if (std::remove(file.c_str()) != 0 )
-            LOG(ERROR) << "Error deleting file " << file;
+            LOG(ERRORL) << "Error deleting file " << file;
     }
 }
 void Utils::remove_all(string path) {
@@ -197,7 +197,7 @@ void Utils::remove_all(string path) {
             closedir(d);
             remove(path);
         } else {
-            LOG(ERROR) << "Dir " << path << " Not existing";
+            LOG(ERRORL) << "Dir " << path << " Not existing";
             throw 10;
         }
     } else {
@@ -206,7 +206,7 @@ void Utils::remove_all(string path) {
 }
 void Utils::rename(string oldfile, string newfile) {
     if(std::rename(oldfile.c_str(), newfile.c_str()) != 0 )
-        LOG(ERROR) << "Error renaming file " << oldfile;
+        LOG(ERRORL) << "Error renaming file " << oldfile;
 }
 string Utils::parentDir(string path) {
     auto pos = path.rfind('/');
@@ -230,14 +230,14 @@ bool Utils::exists(std::string file) {
 }
 bool Utils::isEmpty(string dir) {
     if (!Utils::isDirectory(dir)) {
-        LOG(ERROR) << dir << " is not a directory!";
+        LOG(ERRORL) << dir << " is not a directory!";
         throw 10;
     }
     return Utils::getFiles(dir).empty() && Utils::getSubdirs(dir).empty();
 }
 void Utils::resizeFile(string file, uint64_t newsize) {
     if (!Utils::exists(file)) {
-        LOG(ERROR) << file << " does not exist";
+        LOG(ERRORL) << file << " does not exist";
         throw 10;
     }
     uint64_t oldsize = Utils::fileSize(file);
@@ -263,7 +263,7 @@ bool Utils::contains(const string s, const string substr) {
 int Utils::numBytes(long number) {
     long max = 32;
     if (number < 0) {
-        LOG(ERROR) << "Negative number " << number;
+        LOG(ERRORL) << "Negative number " << number;
     }
     for (int i = 1; i <= 8; i++) {
         if (number < max) {
@@ -271,7 +271,7 @@ int Utils::numBytes(long number) {
         }
         max *= 256;
     }
-    LOG(ERROR) << "Number is too large: " << number;
+    LOG(ERRORL) << "Number is too large: " << number;
     return -1;
 }
 
@@ -520,7 +520,7 @@ long Utils::decode_longWithHeader(char* buffer) {
 void Utils::encode_longWithHeader0(char* buffer, long n) {
 
     if (n < 0) {
-        LOG(ERROR) << "Number is negative";
+        LOG(ERRORL) << "Number is negative";
         exit(1);
     }
 
@@ -537,7 +537,7 @@ void Utils::encode_longWithHeader0(char* buffer, long n) {
 void Utils::encode_longWithHeader1(char* buffer, long n) {
 
     if (n < 0) {
-        LOG(ERROR) << "Number is negative";
+        LOG(ERRORL) << "Number is negative";
         exit(1);
     }
 
@@ -705,7 +705,7 @@ int Utils::decode_vint2(char* buffer, int *offset) {
 
 int Utils::encode_vlong2(char* buffer, int offset, long n) {
     if (n < 0) {
-        LOG(ERROR) << "Number is negative. This is not allowed with vlong2";
+        LOG(ERRORL) << "Number is negative. This is not allowed with vlong2";
         throw 10;
     }
 
@@ -726,7 +726,7 @@ int Utils::encode_vlong2(char* buffer, int offset, long n) {
 
 uint16_t Utils::encode_vlong2(char* buffer, long n) {
     if (n < 0) {
-        LOG(ERROR) << "Number is negative. This is not allowed with vlong2";
+        LOG(ERRORL) << "Number is negative. This is not allowed with vlong2";
         throw 10;
     }
 
@@ -832,7 +832,7 @@ long Utils::decode_vlongWithHeader1(char* buffer, const int end, int *p) {
 
 int Utils::encode_vlongWithHeader0(char* buffer, long n) {
     if (n < 0) {
-        LOG(ERROR) << "Number is negative";
+        LOG(ERRORL) << "Number is negative";
         return -1;
     }
 
@@ -846,7 +846,7 @@ int Utils::encode_vlongWithHeader0(char* buffer, long n) {
 
 int Utils::encode_vlongWithHeader1(char* buffer, long n) {
     if (n < 0) {
-        LOG(ERROR) << "Number is negative";
+        LOG(ERRORL) << "Number is negative";
         return -1;
     }
 

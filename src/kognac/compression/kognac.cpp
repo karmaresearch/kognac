@@ -56,7 +56,7 @@ void Kognac::sample(const int sampleMethod, const int sampleArg1,
 		    make_pair(string(itr->first + 2, sizeString), itr->second));
 	}
     }
-    LOG(INFO) << "Detected " << mostFrequentTerms.size() <<
+    LOG(INFOL) << "Detected " << mostFrequentTerms.size() <<
 	" frequent terms";
 
     //3- Get the temporary files if they exists
@@ -94,7 +94,7 @@ void Kognac::compress(const int nthreads,
 	const int minSupport,
 	const bool serializeTaxonomy) {
 
-    LOG(DEBUG) << "Used memory at this moment " <<
+    LOG(DEBUGL) << "Used memory at this moment " <<
 	Utils::getUsedMemory();
 
     // Create the output
@@ -103,7 +103,7 @@ void Kognac::compress(const int nthreads,
     {
 	//Assign the number to the popular terms and copy them in a fast
 	//hashmap
-	LOG(INFO) << "Assign an ID to all popular terms ...";
+	LOG(INFOL) << "Assign an ID to all popular terms ...";
 	StringCollection stringPoolForMap(10 * 1024 * 1024);
 	ByteArrayToNumberMap frequentTermsMap;
 	sort(mostFrequentTerms.begin(), mostFrequentTerms.end(),
@@ -112,7 +112,7 @@ void Kognac::compress(const int nthreads,
 		counter, out);
 
 	//Calculate the taxonomy
-	LOG(INFO) << "Create a taxonomy of classes ...";
+	LOG(INFOL) << "Create a taxonomy of classes ...";
 	extractor.prepare();
 	std::set<string> allClasses = extractor.getAllClasses();
 	std::vector<unsigned long> hashedTerms;
@@ -131,7 +131,7 @@ void Kognac::compress(const int nthreads,
 	}
 
 	//Annotate each term with a class ID
-	LOG(INFO) << "Annotate the terms with class info ...[threads = "
+	LOG(INFOL) << "Annotate the terms with class info ...[threads = "
 	    << nthreads << "]";
 	string tmpDir = outputPath + string("/extractedTerms");
 	Utils::create_directories(tmpDir);
@@ -139,7 +139,7 @@ void Kognac::compress(const int nthreads,
 		useFP, tmpDir, frequentTermsMap,
 		classesWithFrequency);
 
-	LOG(INFO) << "Sort and merge the terms by text ... [threads = "
+	LOG(INFOL) << "Sort and merge the terms by text ... [threads = "
 	    << nthreads << "]";
 
 	if (useFP) {
@@ -171,7 +171,7 @@ void Kognac::compress(const int nthreads,
 	    }
 	    }
 
-	    LOG(INFO) << "Rearranging tree ...";
+	    LOG(INFOL) << "Rearranging tree ...";
 	    auto classes = frequentPatterns->getClassesSupport();
 	    extractor.rearrangeWithPatterns(classes, patterns);*/
 	    //extractor.printTree();
@@ -180,24 +180,24 @@ void Kognac::compress(const int nthreads,
     }
 
     //For each term, pick the smallest class ID
-    LOG(INFO) << "Pick smallest class IDs ... [threads = " << nthreads << "]";
+    LOG(INFOL) << "Pick smallest class IDs ... [threads = " << nthreads << "]";
     pickSmallestClassID(nthreads, tmpDir, useFP);
 
     //Re-sort the terms by class ID
-    LOG(INFO) << "Sort and merge the terms by class ID...";
+    LOG(INFOL) << "Sort and merge the terms by class ID...";
     string tmpDir2 = outputPath + string("/sortedByClass");
     Utils::create_directories(tmpDir2);
     sortTermsByClassId(tmpDir, tmpDir2);
     Utils::remove_all(tmpDir);
 
     //Assign IDs
-    LOG(INFO) << "Assign an ID to all terms ...";
+    LOG(INFOL) << "Assign an ID to all terms ...";
     assignIdsToAllTerms(tmpDir2, counter, out);
     Utils::remove_all(tmpDir2);
 }
 
 if (serializeTaxonomy) {
-    LOG(INFO) << "Serializing the taxonomy ...";
+    LOG(INFOL) << "Serializing the taxonomy ...";
     string path = outputPath + string("/taxonomy.gz");
     extractor.serialize(path);
 }
@@ -210,7 +210,7 @@ void Kognac::loadDictionaryMap(std::istream &in,
 	StringCollection &supportDictionaryMap) {
 
     const unsigned long maxMem = Utils::getSystemMemory() * 0.8;
-    LOG(DEBUG) << "Max memory to use during the loading: " <<
+    LOG(DEBUGL) << "Max memory to use during the loading: " <<
 	maxMem;
     char supportTerm[MAX_TERM_SIZE];
     long counter = 0;
@@ -230,7 +230,7 @@ void Kognac::loadDictionaryMap(std::istream &in,
 	long memEstimate = supportDictionaryMap.occupiedBytes() +
 	    map.size() * 20;
 	if (counter++ % 1000000 == 0) {
-	    LOG(DEBUG) << "Added " << (counter - 1) <<
+	    LOG(DEBUGL) << "Added " << (counter - 1) <<
 		" records. Memory so far " <<
 		Utils::getUsedMemory() <<
 		" my estimate is " << memEstimate ;
@@ -240,7 +240,7 @@ void Kognac::loadDictionaryMap(std::istream &in,
 	    break;
 	}
     }
-    LOG(DEBUG) << "The hashmap contains " <<
+    LOG(DEBUGL) << "The hashmap contains " <<
 	map.size() << " terms";
 }
 
@@ -318,7 +318,7 @@ void Kognac::compressGraph_seq(DiskLZ4Reader *reader, const int idReader,
 	    }
 
 	    if ((++counter % 1000000) == 0) {
-		LOG(DEBUG) << "Passed " <<
+		LOG(DEBUGL) << "Passed " <<
 		    (counter) << " triples";
 	    }
 	}
@@ -331,7 +331,7 @@ void Kognac::compressGraph_seq(DiskLZ4Reader *reader, const int idReader,
 
 void Kognac::compressGraph(const int nthreads, const int nReadingThreads) {
 
-    LOG(DEBUG) << "Used memory at this moment " <<
+    LOG(DEBUGL) << "Used memory at this moment " <<
 	Utils::getUsedMemory();
 
     //The dictionary
@@ -378,12 +378,12 @@ void Kognac::compressGraph(const int nthreads, const int nReadingThreads) {
 	    }
 
 	    if (filesToProcess.size() > nthreads) {
-		LOG(INFO) << "There should not be more files than available threads";
+		LOG(INFOL) << "There should not be more files than available threads";
 		throw 10;
 	    } else if (filesToProcess.size() == 0) {
 		break;
 	    } else if (filesToProcess.size() != nReadingThreads) {
-		LOG(ERROR) << "The number of files should be equal to the number of reading threads";
+		LOG(ERRORL) << "The number of files should be equal to the number of reading threads";
 		throw 10;
 	    }
 
@@ -430,7 +430,7 @@ void Kognac::compressGraph(const int nthreads, const int nReadingThreads) {
 	    delete finalWriters[i];
 	    countCompressedTriples += counters[i];
 	}
-	LOG(DEBUG) << "Compressed triples so far " <<
+	LOG(DEBUGL) << "Compressed triples so far " <<
 	    countCompressedTriples;
 	map.clear();
 	col.clear();
@@ -438,7 +438,7 @@ void Kognac::compressGraph(const int nthreads, const int nReadingThreads) {
     }
 
     //Sort and remove the duplicates
-    LOG(DEBUG) << "Used memory at this moment " <<
+    LOG(DEBUGL) << "Used memory at this moment " <<
 	Utils::getUsedMemory();
     sortCompressedGraph(workingDir, outputPath + string("/triples.gz"));
 
@@ -448,7 +448,7 @@ void Kognac::compressGraph(const int nthreads, const int nReadingThreads) {
 
 void Kognac::sortCompressedGraph(string inputDir, string outputFile, int v) {
     //The output, compressed file
-    LOG(INFO) << "Sorting and removing duplicates ...";
+    LOG(INFOL) << "Sorting and removing duplicates ...";
     string diroutput = Utils::parentDir(outputFile);
     char tmpString[1024];
     {
@@ -479,7 +479,7 @@ void Kognac::sortCompressedGraph(string inputDir, string outputFile, int v) {
 		}
 
 		if (inmemorytriples.size() >= maxTriplesPerSegment) {
-		    LOG(DEBUG) << "Writing tmp file " <<
+		    LOG(DEBUGL) << "Writing tmp file " <<
 			to_string(id);
 		    cmp c;
 		    std::sort(inmemorytriples.begin(), inmemorytriples.end(), c);
@@ -520,7 +520,7 @@ void Kognac::sortCompressedGraph(string inputDir, string outputFile, int v) {
 	    }
 
 	    //Merge sort
-	    LOG(DEBUG) << "Merging all segments ... ";
+	    LOG(DEBUGL) << "Merging all segments ... ";
 	    FileMerger<Triple> merger(outputFiles);
 	    long prevs = -1;
 	    long prevp = -1;
@@ -539,7 +539,7 @@ void Kognac::sortCompressedGraph(string inputDir, string outputFile, int v) {
 	} else {
 	    cmp c;
 	    std::sort(inmemorytriples.begin(), inmemorytriples.end(), c);
-	    LOG(DEBUG) << "inmemorytriples = " << inmemorytriples.size();
+	    LOG(DEBUGL) << "inmemorytriples = " << inmemorytriples.size();
 	    long prevs = -1;
 	    long prevp = -1;
 	    long prevo = -1;
@@ -556,7 +556,7 @@ void Kognac::sortCompressedGraph(string inputDir, string outputFile, int v) {
 	    }
 
 	}
-	LOG(INFO) << "Wrote " << countTriples << " triples";
+	LOG(INFOL) << "Wrote " << countTriples << " triples";
     }
 }
 
@@ -655,7 +655,7 @@ void Kognac::assignIdsToAllTerms(string inputdir, long & counter,
 	Kognac_TextClassID el;
 	el.readFrom(&reader);
 	if (el.classID != classId) {
-	    LOG(DEBUG) << "ClassID: " << el.classID <<
+	    LOG(DEBUGL) << "ClassID: " << el.classID <<
 		" first count " << counter;
 	    //Update an internal data structure
 	    if (classId != -1) {
@@ -1076,19 +1076,19 @@ void Kognac::extractAllTermsWithClassIDs_int(const long maxMem,
 	//Read the three fields
 	int sizeTerm;
 	if (reader->readByte(idReader) != 0) {
-	    LOG(ERROR) << "Flag should always be zero!";
+	    LOG(ERRORL) << "Flag should always be zero!";
 	    throw 10;
 	}
 	const char *term = reader->readString(idReader, sizeTerm);
 	memcpy(tmpS, term, sizeTerm);
 	if (reader->readByte(idReader) != 0) {
-	    LOG(ERROR) << "Flag should always be zero!";
+	    LOG(ERRORL) << "Flag should always be zero!";
 	    throw 10;
 	}
 	term = reader->readString(idReader, sizeTerm);
 	memcpy(tmpP, term, sizeTerm);
 	if (reader->readByte(idReader) != 0) {
-	    LOG(ERROR) << "Flag should always be zero!";
+	    LOG(ERRORL) << "Flag should always be zero!";
 	    throw 10;
 	}
 	term = reader->readString(idReader, sizeTerm);
@@ -1129,19 +1129,19 @@ void Kognac::extractAllTermsWithClassIDsNOFP_int(const long maxMem,
 	//Read the three fields
 	int sizeTerm;
 	if (reader->readByte(idReader) != 0) {
-	    LOG(ERROR) << "Flag should always be zero!";
+	    LOG(ERRORL) << "Flag should always be zero!";
 	    throw 10;
 	}
 	const char *term = reader->readString(idReader, sizeTerm);
 	memcpy(tmpS, term, sizeTerm);
 	if (reader->readByte(idReader) != 0) {
-	    LOG(ERROR) << "Flag should always be zero!";
+	    LOG(ERRORL) << "Flag should always be zero!";
 	    throw 10;
 	}
 	term = reader->readString(idReader, sizeTerm);
 	memcpy(tmpP, term, sizeTerm);
 	if (reader->readByte(idReader) != 0) {
-	    LOG(ERROR) << "Flag should always be zero!";
+	    LOG(ERRORL) << "Flag should always be zero!";
 	    throw 10;
 	}
 	term = reader->readString(idReader, sizeTerm);
@@ -1300,7 +1300,7 @@ Kognac_TermBufferWriter::Kognac_TermBufferWriter(const long maxMem,
 	//memReservedForCache = maxMem / 2;
 	//maxMemoryPerBuffer = (maxMem - memReservedForCache) / npartitions;
 	maxMemoryPerBuffer = (maxMem) / npartitions;
-	LOG(DEBUG) << "Memory per buffer is " << maxMemoryPerBuffer;
+	LOG(DEBUGL) << "Memory per buffer is " << maxMemoryPerBuffer;
 	count = 0;
 	countWritten = 0;
     }
@@ -1368,7 +1368,7 @@ void Kognac_TermBufferWriter::flush() {
 
 Kognac_TermBufferWriter::~Kognac_TermBufferWriter() {
     flush();
-    LOG(DEBUG) << "Inserted " << count << " tuples. Written " << countWritten << " tuples.";
+    LOG(DEBUGL) << "Inserted " << count << " tuples. Written " << countWritten << " tuples.";
 }
 
 void Kognac_TermBufferWriter::insertInCache(const long key,
@@ -1377,7 +1377,7 @@ void Kognac_TermBufferWriter::insertInCache(const long key,
 
     //24: size entry in the list, 28 size entry in the map
     if (!cacheClassAssignments.count(key)) {
-	//LOG(DEBUG) << "Write  to cache " << &cacheClassAssignments;
+	//LOG(DEBUGL) << "Write  to cache " << &cacheClassAssignments;
 	//
 	//J: Before we were trying to store everything in the cache. Now we store only the last 100 elements
 	//const long estimatedConsumption = cacheClassAssignments.size() * (24 + 28);

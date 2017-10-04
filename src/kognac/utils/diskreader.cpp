@@ -14,7 +14,7 @@ DiskReader::DiskReader(int nbuffers, std::vector<FileInfo> *files) {
     }
     maxsize += 32 * 1024 + maxsize * 0.1; //min size + add a 10%
 
-    LOG(DEBUG) << "Max size=" << maxsize;
+    LOG(DEBUGL) << "Max size=" << maxsize;
     for (int i = 0; i < nbuffers; ++i) {
         availablebuffers.push_back(new char[maxsize]);
         memset(availablebuffers.back(), 0, sizeof(char) * maxsize);
@@ -71,7 +71,7 @@ void DiskReader::run() {
 	if (Utils::hasExtension(itr->path) && Utils::extension(itr->path) == string(".gz")) {
 	    gzipped = true;
 	}
-	LOG(DEBUG) << "Path is " << itr->path << ", gzipped = " << gzipped;
+	LOG(DEBUGL) << "Path is " << itr->path << ", gzipped = " << gzipped;
 
         //Is there an available buffer that I can use?
         char *buffer = NULL;
@@ -109,7 +109,7 @@ void DiskReader::run() {
 			break; //magic value
 		    }
 		    if (readSize > maxsize) {
-			LOG(ERROR) << "Buffers are too small. Must fix this";
+			LOG(ERRORL) << "Buffers are too small. Must fix this";
 			throw 10;
 		    }
 		    buffer[readSize++] = b;

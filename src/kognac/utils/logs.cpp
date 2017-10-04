@@ -1,3 +1,3 @@
 #include <kognac/logs.h>
 
-int Logger::minLevel = TRACE;
+int Logger::minLevel = TRACEL;
