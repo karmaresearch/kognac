@@ -47,6 +47,7 @@ public:
     static string extension(const string &file);
     static string removeExtension(string file);
     static bool isDirectory(string dirname);
+    static bool isFile(string dirname);
     static vector<string> getFilesWithPrefix(string dir, string prefix);
     static vector<string> getFilesWithSuffix(string dir, string suffix);
     static vector<string> getFiles(string dir, bool ignoreExtension = false);

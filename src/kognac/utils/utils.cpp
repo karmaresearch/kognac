@@ -82,8 +82,9 @@ vector<string> Utils::getSubdirs(string dirname) {
     struct dirent *dir;
     if (d) {
         while ((dir = readdir(d)) != NULL) {
-            if (dir->d_type == DT_DIR && dir->d_name[0] != '.') {
-                files.push_back(dirname + "/" + string(dir->d_name));
+	    string path = dirname + "/" + string(dir->d_name);
+            if (isDirectory(path) && dir->d_name[0] != '.') {
+                files.push_back(path);
             }
         }
         closedir(d);
@@ -97,19 +98,23 @@ vector<string> Utils::getFiles(string dirname, bool ignoreExtension) {
     struct dirent *dir;
     if (d) {
         while ((dir = readdir(d)) != NULL) {
-            if (dir->d_type == DT_REG && dir->d_name[0] != '.') {
+	    string path = dirname + "/" + string(dir->d_name);
+            if (isFile(path) && dir->d_name[0] != '.') {
                 if (ignoreExtension) {
                     sfiles.insert(dirname + "/" + Utils::removeExtension(string(dir->d_name)));
                 } else {
-                    sfiles.insert(dirname + "/" + string(dir->d_name));
+                    sfiles.insert(path);
                 }
             }
         }
         closedir(d);
+    } else {
+	LOG(DEBUGL) << "getFiles: could not open";
     }
     std::vector<string> files;
-    for(auto s : sfiles)
+    for(auto s : sfiles) {
         files.push_back(s);
+    }
     return files;
 }
 vector<string> Utils::getFilesWithSuffix(string dirname, string suffix) {
@@ -150,6 +155,13 @@ bool Utils::isDirectory(string dirname) {
             return true;
     return false;
 }
+bool Utils::isFile(string dirname) {
+    struct stat st;
+    if(stat(dirname.c_str(), &st) == 0)
+        if((st.st_mode & S_IFREG) != 0)
+            return true;
+    return false;
+}
 uint64_t Utils::fileSize(string file) {
     struct stat stat_buf;
     int rc = stat(file.c_str(), &stat_buf);
@@ -186,12 +198,13 @@ void Utils::remove_all(string path) {
         struct dirent *dir;
         if (d) {
             while ((dir = readdir(d)) != NULL) {
-                if (dir->d_type == DT_REG) {
-                    remove(path + "/" + dir->d_name);
-                } else if (dir->d_type == DT_DIR && strcmp(dir->d_name, ".") != 0 && strcmp(dir->d_name, "..") != 0) {
-                    remove_all(path + "/" + dir->d_name);
-                } else {
-                    // throw 10;
+		string f = path + "/" + dir->d_name;
+                if (isDirectory(f)) {
+		    if (strcmp(dir->d_name, ".") != 0 && strcmp(dir->d_name, "..") != 0) {
+			remove_all(f);
+		    }
+		} else {
+                    remove(f);
                 }
             }
             closedir(d);
@@ -1058,8 +1071,9 @@ long Utils::getNBytes(std::string input) {
         struct dirent *dir;
         if (d) {
             while ((dir = readdir(d)) != NULL) {
-                if (dir->d_type == DT_REG) {
-                    size += Utils::fileSize(input + "/" + string(dir->d_name));
+		string fn = input + "/" + string(dir->d_name);
+                if (isFile(fn)) {
+                    size += Utils::fileSize(fn);
                 }
             }
             closedir(d);
@@ -1083,8 +1097,8 @@ bool Utils::isCompressed(std::string input) {
         struct dirent *dir;
         if (d) {
             while ((dir = readdir(d)) != NULL) {
-                if (dir->d_type == DT_REG) {
-                    string path = input + "/" + string(dir->d_name);
+		string path = input + "/" + string(dir->d_name);
+                if (isFile(path)) {
                     if (Utils::extension(path) == string(".gz")) {
                         isCompressed = true;
                     }
