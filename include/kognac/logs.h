@@ -42,7 +42,7 @@ class Logger {
                     auto tm = *std::localtime(&t);
                     std::stringstream ss;
 		    char tmpbuf[128];
-		    if(0 < strftime(tmpbuf, sizeof(tmpbuf), "[%T%z %F] ", &tm)) {
+		    if(0 < strftime(tmpbuf, sizeof(tmpbuf), "%Y-%m-%d %H:%M:%S", &tm)) {
 			ss << "[0x" << std::hex << std::hash<std::thread::id>()(std::this_thread::get_id()) << " ";
 			ss << tmpbuf << "] ";;
 		    }
