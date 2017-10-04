@@ -753,7 +753,7 @@ void SchemaExtractor::serializeNodeBeginRange(std::ostream &out,
 void SchemaExtractor::serialize(string outputFile) {
     std::ostream *out;
     std::ofstream fout;
-    zstr::ofstream *zout;
+    zstr::ofstream *zout = NULL;
     bool compress = false;
     if (Utils::ends_with(outputFile, ".gz")) {
 	zout = new zstr::ofstream(outputFile);

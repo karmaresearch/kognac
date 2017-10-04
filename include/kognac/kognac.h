@@ -23,6 +23,7 @@
 #include <vector>
 #include <mutex>
 #include <list>
+#include <climits>
 
 #include <kognac/schemaextractor.h>
 #include <kognac/lz4io.h>

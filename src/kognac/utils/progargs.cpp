@@ -1,5 +1,7 @@
 #include <kognac/progargs.h>
 
+#include <algorithm>
+
 template<>
 bool ProgramArgs::AbsArg::check<string>(string s) {
     return true;
