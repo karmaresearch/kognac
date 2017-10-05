@@ -2845,7 +2845,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
 
         assert(uncommonFiles.size() == 1);
         string pdir = Utils::parentDir(uncommonFiles[0]);
-        string nameFile = Utils::filename(pdir);
+        string nameFile = Utils::filename(uncommonFiles[0]);
         std::vector<string> children = Utils::getFilesWithPrefix(pdir, nameFile);
         for(auto child : children) {
             if (Utils::hasExtension(child)) {
