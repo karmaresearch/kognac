@@ -31,6 +31,10 @@ class Logger {
             return Logger(level < minLevel, level);
         }
 
+        static int getMinLevel() {
+            return Logger::minLevel;
+        }
+
         static void setMinLevel(int level) {
             Logger::minLevel = level;
         }
