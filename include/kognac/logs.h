@@ -45,11 +45,15 @@ class Logger {
                     auto t = std::time(NULL);
                     auto tm = *std::localtime(&t);
                     std::stringstream ss;
-		    char tmpbuf[128];
-		    if(0 < strftime(tmpbuf, sizeof(tmpbuf), "%Y-%m-%d %H:%M:%S", &tm)) {
-			ss << "[0x" << std::hex << std::hash<std::thread::id>()(std::this_thread::get_id()) << " ";
-			ss << tmpbuf << "] ";;
-		    }
+                    char tmpbuf[128];
+                    if(0 < strftime(tmpbuf, sizeof(tmpbuf), "%Y-%m-%d %H:%M:%S", &tm)) {
+                        string sthread = std::hex << std::hash<std::thread::id>()(std::this_thread::get_id());
+                        while (sthread.size() < 16) {
+                            sthread = sthread + " ";
+                        }
+                        ss << "[0x" <<  << " ";
+                        ss << tmpbuf << "] ";;
+                    }
                     switch (level) {
                         case TRACEL:
                             ss << "TRACE ";
