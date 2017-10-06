@@ -188,8 +188,10 @@ void Utils::remove(string file) {
             abort();
         }
     } else {
-        if (std::remove(file.c_str()) != 0 )
+        if (std::remove(file.c_str()) != 0 ) {
             LOG(ERRORL) << "Error deleting file " << file;
+            abort();
+        }
     }
 }
 void Utils::remove_all(string path) {

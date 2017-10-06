@@ -2348,9 +2348,9 @@ void Compressor::sortPartition(ParamsSortPartition params) {
                 << counterPairs << " tuples "
                 << (counterTerms + 1) << " terms";
 
-            for (auto f : sortedFiles) {
-                Utils::remove(f);
-            }
+            //for (auto f : sortedFiles) {
+            //    Utils::remove(f);
+            //}
         }
         writer->setTerminated(idWriter);
         dictWriter->setTerminated(idDictWriter);
