@@ -6,6 +6,7 @@
 #include <sstream>
 #include <iomanip>
 #include <iostream>
+#include <mutex>
 
 #define TRACEL 0
 #define DEBUGL 1
@@ -15,66 +16,91 @@
 
 class Logger {
     private:
-        static int minLevel;
+        class FileLogger {
+            private:
+                std::ofstream ofs;
 
-        const bool silent;
+            public:
+                FileLogger(std::string file) {
+                    ofs.open(file);
+                }
+
+                void write(std::string &s) {
+                    ofs << s << std::endl;
+                }
+
+                ~FileLogger() {
+                    ofs.close();
+                }
+        };
+
+        static int minLevel;
+        static std::mutex mutex;
+        static std::unique_ptr<FileLogger> file;
+
         const int level;
 
         std::string toprint;
         bool first;
 
-        Logger(bool silent, int level) : silent(silent), level(level), first(true) {
+        Logger(int level) : level(level), first(true) {
         }
 
     public:
         static Logger log(int level) {
-            return Logger(level < minLevel, level);
+            return Logger(level);
         }
 
         static int getMinLevel() {
             return Logger::minLevel;
         }
 
+        static bool check(int level) {
+            return level >= Logger::minLevel;
+        }
+
         static void setMinLevel(int level) {
             Logger::minLevel = level;
         }
 
+        static void logToFile(std::string filepath) {
+            Logger::file = std::unique_ptr<FileLogger>(new FileLogger(filepath));
+        }
+
         Logger& operator << (const char *msg) {
-            if (!silent) {
-                if (first) {
-                    auto t = std::time(NULL);
-                    auto tm = *std::localtime(&t);
-                    std::stringstream ss;
-                    char tmpbuf[128];
-                    if(0 < strftime(tmpbuf, sizeof(tmpbuf), "%Y-%m-%d %H:%M:%S", &tm)) {
-                        ss << "[0x" << std::hex << std::hash<std::thread::id>()(std::this_thread::get_id());
-                        while (ss.tellp() < 20) {
-                            ss << " ";
-                        }
-                        ss << tmpbuf << "] ";;
+            if (first) {
+                auto t = std::time(NULL);
+                auto tm = *std::localtime(&t);
+                std::stringstream ss;
+                char tmpbuf[128];
+                if(0 < strftime(tmpbuf, sizeof(tmpbuf), "%Y-%m-%d %H:%M:%S", &tm)) {
+                    ss << "[0x" << std::hex << std::hash<std::thread::id>()(std::this_thread::get_id());
+                    while (ss.tellp() < 20) {
+                        ss << " ";
                     }
-                    switch (level) {
-                        case TRACEL:
-                            ss << "TRACE ";
-                            break;
-                        case DEBUGL:
-                            ss << "DEBUG ";
-                            break;
-                        case INFOL:
-                            ss << "INFO ";
-                            break;
-                        case WARNL:
-                            ss << "WARN ";
-                            break;
-                        case ERRORL:
-                            ss << "ERROR ";
-                            break;
-                    };
-                    first = false;
-                    toprint = ss.str() + " " + std::string(msg);
-                } else {
-                    toprint += std::string(msg);
+                    ss << tmpbuf << "] ";;
                 }
+                switch (level) {
+                    case TRACEL:
+                        ss << "TRACE ";
+                        break;
+                    case DEBUGL:
+                        ss << "DEBUG ";
+                        break;
+                    case INFOL:
+                        ss << "INFO ";
+                        break;
+                    case WARNL:
+                        ss << "WARN ";
+                        break;
+                    case ERRORL:
+                        ss << "ERROR ";
+                        break;
+                };
+                first = false;
+                toprint = ss.str() + " " + std::string(msg);
+            } else {
+                toprint += std::string(msg);
             }
             return *this;
         }
@@ -89,11 +115,14 @@ class Logger {
         }
 
         ~Logger() {
-            if (!silent)
-                std::cerr << toprint << std::endl;
+            std::lock_guard<std::mutex> lock(Logger::mutex);
+            std::cerr << toprint << std::endl;
+            if (Logger::file) {
+                Logger::file->write(toprint);
+            }
         }
 };
 
-#define LOG(X) Logger::log(X)
+#define LOG(X) if (Logger::check(X)) Logger::log(X)
 
 #endif
