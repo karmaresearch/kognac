@@ -463,7 +463,11 @@ void Kognac::sortCompressedGraph(string inputDir, string outputFile, int v) {
 	DIR *d = opendir(inputDir.c_str());
 	struct dirent *dir;
 	while ((dir = readdir(d)) != NULL) {
-	    LZ4Reader reader(string(inputDir + "/" + string(dir->d_name)).c_str());
+	    string fn = string(inputDir + "/" + string(dir->d_name));
+	    if (! Utils::isFile(fn)) {
+		continue;
+	    }
+	    LZ4Reader reader(fn.c_str());
 	    if (v == 1)
 		reader.parseByte(); //ignore it is a quad
 	    while (!reader.isEof()) {
