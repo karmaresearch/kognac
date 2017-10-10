@@ -82,7 +82,7 @@ vector<string> Utils::getSubdirs(string dirname) {
     struct dirent *dir;
     if (d) {
         while ((dir = readdir(d)) != NULL) {
-	    string path = dirname + "/" + string(dir->d_name);
+            string path = dirname + "/" + string(dir->d_name);
             if (isDirectory(path) && dir->d_name[0] != '.') {
                 files.push_back(path);
             }
@@ -98,7 +98,7 @@ vector<string> Utils::getFiles(string dirname, bool ignoreExtension) {
     struct dirent *dir;
     if (d) {
         while ((dir = readdir(d)) != NULL) {
-	    string path = dirname + "/" + string(dir->d_name);
+            string path = dirname + "/" + string(dir->d_name);
             if (isFile(path) && dir->d_name[0] != '.') {
                 if (ignoreExtension) {
                     sfiles.insert(dirname + "/" + Utils::removeExtension(string(dir->d_name)));
@@ -109,7 +109,7 @@ vector<string> Utils::getFiles(string dirname, bool ignoreExtension) {
         }
         closedir(d);
     } else {
-	LOG(DEBUGL) << "getFiles: could not open";
+        LOG(DEBUGL) << "getFiles: could not open";
     }
     std::vector<string> files;
     for(auto s : sfiles) {
@@ -176,9 +176,14 @@ void Utils::create_directories(string newdir) {
     if (pd != newdir && !exists(pd)) {
         create_directories(pd);
     }
-    if (mkdir(newdir.c_str(), 0777) != 0) {
-        LOG(ERRORL) << "Error creating dir " << newdir;
-        throw 10;
+    if (!Utils::exists(newdir)) {
+        if (mkdir(newdir.c_str(), 0777) != 0) {
+            LOG(ERRORL) << "Error creating dir " << newdir;
+            throw 10;
+        }
+    } else if (!Utils::isDirectory(newdir)) {
+        LOG(ERRORL) << "Directory " << newdir << " is already existing but it is not a dir";
+        abort();
     }
 }
 void Utils::remove(string file) {
@@ -188,8 +193,10 @@ void Utils::remove(string file) {
             abort();
         }
     } else {
-        if (std::remove(file.c_str()) != 0 )
+        if (std::remove(file.c_str()) != 0 ) {
             LOG(ERRORL) << "Error deleting file " << file;
+            abort();
+        }
     }
 }
 void Utils::remove_all(string path) {
@@ -198,12 +205,12 @@ void Utils::remove_all(string path) {
         struct dirent *dir;
         if (d) {
             while ((dir = readdir(d)) != NULL) {
-		string f = path + "/" + dir->d_name;
+                string f = path + "/" + dir->d_name;
                 if (isDirectory(f)) {
-		    if (strcmp(dir->d_name, ".") != 0 && strcmp(dir->d_name, "..") != 0) {
-			remove_all(f);
-		    }
-		} else {
+                    if (strcmp(dir->d_name, ".") != 0 && strcmp(dir->d_name, "..") != 0) {
+                        remove_all(f);
+                    }
+                } else {
                     remove(f);
                 }
             }
@@ -1071,7 +1078,7 @@ long Utils::getNBytes(std::string input) {
         struct dirent *dir;
         if (d) {
             while ((dir = readdir(d)) != NULL) {
-		string fn = input + "/" + string(dir->d_name);
+                string fn = input + "/" + string(dir->d_name);
                 if (isFile(fn)) {
                     size += Utils::fileSize(fn);
                 }
@@ -1097,7 +1104,7 @@ bool Utils::isCompressed(std::string input) {
         struct dirent *dir;
         if (d) {
             while ((dir = readdir(d)) != NULL) {
-		string path = input + "/" + string(dir->d_name);
+                string path = input + "/" + string(dir->d_name);
                 if (isFile(path)) {
                     if (Utils::extension(path) == string(".gz")) {
                         isCompressed = true;
