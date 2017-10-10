@@ -58,27 +58,43 @@ class ProgramArgs {
                     while (out.size() + padder.size() < 40) {
                         padder += " ";
                     }
-                    string d = desc;
+                    string d = desc + " (";
+                    if (required) {
+                        d += "REQUIRED";
+                    } else {
+                        d += "OPTIONAL";
+                    }
+
                     if (d.size() < 40) {
                         out += padder + d;
                     } else {
-                        string d1 = d.substr(0, 40);
-                        out += padder + d1 + "\n";
-                        d = d.substr(40, d.size() - 40);
-                        while (d.size() > 40) {
-                            d1 = d.substr(0, 40);
-                            for (int i = 0; i < 40; ++i) out += " ";
-                            out += d1 + "\n";
-                            d = d.substr(40, d.size() - 40);
+                        int cutpos = 40;
+                        string d1 = d.substr(0, cutpos);
+                        while (cutpos < d.size() && d[cutpos] != ' ') {
+                            d1 += d[cutpos++];
                         }
-                        for (int i = 0; i < 40; ++i) out += " ";
-                        out += d;
-                    }
-                    out += " (";
-                    if (required) {
-                        out += "REQUIRED";
-                    } else {
-                        out += "OPTIONAL";
+                        if (cutpos < d.size() && d[cutpos] == ' ')
+                            cutpos++;
+                        out += padder + d1;
+                        d = d.substr(cutpos, d.size() - cutpos);
+                        while (d.size() > 40) {
+                            out += "\n";
+                            for (int i = 0; i < 40; ++i) out += " ";
+                            int cutpos = 40;
+                            d1 = d.substr(0, cutpos);
+                            while (cutpos < d.size() && d[cutpos] != ' ') {
+                                d1 += d[cutpos++];
+                            }
+                            if (cutpos < d.size() && d[cutpos] == ' ')
+                                cutpos++;
+                            d = d.substr(cutpos, d.size() - cutpos);
+                            out += d1;
+                        }
+                        if (d.size() > 0) {
+                            out += "\n";
+                            for (int i = 0; i < 40; ++i) out += " ";
+                            out += d;
+                        }
                     }
                     return out;
                 }
@@ -176,8 +192,8 @@ class ProgramArgs {
                     }
                 string tostring() {
                     string out = "";
-                    for(auto params : names) {
-                        out += params.second->tostring() + "\n";
+                    for(auto params : args) {
+                        out += params->tostring() + "\n";
                     }
                     out += "\n";
                     return out;
