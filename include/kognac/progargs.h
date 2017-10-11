@@ -47,7 +47,7 @@ class ProgramArgs {
                     return name;
                 }
                 virtual void set(string value) = 0;
-                virtual string tostring() {
+                virtual string tostring(string def) {
                     string out = "";
                     if (shortname == "") {
                         out += "--" + name + " arg ";
@@ -58,13 +58,19 @@ class ProgramArgs {
                     while (out.size() + padder.size() < 40) {
                         padder += " ";
                     }
-                    string d = desc + " (";
+                    string d = "";
                     if (required) {
-                        d += "REQUIRED";
+                        d += "[REQUIRED] ";
                     } else {
-                        d += "OPTIONAL";
+                        d += "[OPTIONAL " + def + "] ";
                     }
-
+                    d += desc;
+                    string nonformatted = "";
+                    if (d.find('\n') != string::npos) {
+                        auto pos = d.find('\n');
+                        nonformatted = d.substr(pos + 1);
+                        d = d.substr(0, pos+1);
+                    }
                     if (d.size() < 40) {
                         out += padder + d;
                     } else {
@@ -96,7 +102,11 @@ class ProgramArgs {
                             out += d;
                         }
                     }
+                    out += nonformatted;
                     return out;
+                }
+                string tostring() {
+                    return tostring("");
                 }
         };
         template <class K>
@@ -126,15 +136,14 @@ class ProgramArgs {
                     K get() {
                         return value;
                     }
-                    string tostring() {
-                        string out = AbsArg::tostring();
+                    string tostring(string def) {
+                        string defaultvalue = "";
                         if (!isRequired()) {
                             std::stringstream ss;
                             ss << value;
-                            out += " DEFAULT=" + ss.str() + ")";
-                        } else {
-                            out += ")";
-                        }
+                            defaultvalue += " DEFAULT=" + ss.str();
+                        } 
+                        string out = AbsArg::tostring(defaultvalue);
                         return out;
                     }
             };
@@ -191,7 +200,7 @@ class ProgramArgs {
                         return *this;
                     }
                 string tostring() {
-                    string out = "";
+                    string out = namegroup + ":\n";
                     for(auto params : args) {
                         out += params->tostring() + "\n";
                     }
@@ -268,7 +277,6 @@ class ProgramArgs {
         string tostring() const {
             string out = "";
             for (auto pair : args) {
-                out += pair.first + ":\n";
                 out += pair.second->tostring();
             }
             return out;
