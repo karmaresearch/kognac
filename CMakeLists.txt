@@ -5,6 +5,7 @@ set(CMAKE_C_COMPILER "gcc")
 
 project (kognac)
 include(ExternalProject)
+set(CMAKE_MACOSX_RPATH 1)
 
 #Set to release mode if nothing is specified
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -41,10 +42,17 @@ ENDIF()
 
 #add files to compile
 file(GLOB kognac_SRC
-    "src/kognac/**/*.cpp"
+    "src/kognac/compression/*.cpp"
+    "src/kognac/schema/*.cpp"
+    "src/kognac/sorting/*.cpp"
+    "src/kognac/utils/*.cpp"
+)
+file(GLOB kognac_log_SRC
+    "src/kognac/log/*.cpp"
 )
 
 #Create both a library and the executable program
+add_library(kognac-log SHARED ${kognac_log_SRC})
 add_library(kognac STATIC ${kognac_SRC})
 add_executable(kognac_exec src/launcher/main.cpp)
 
@@ -52,6 +60,7 @@ add_executable(kognac_exec src/launcher/main.cpp)
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 set(COMPILE_FLAGS "-c -fPIC -std=c++11 -Wall -Wno-sign-compare")
+set_target_properties(kognac-log PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS}")
 set_target_properties(kognac PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS}")
 set_target_properties(kognac_exec PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS}")
 
@@ -114,5 +123,5 @@ ENDIF()
 
 #standard include
 include_directories(include/)
-TARGET_LINK_LIBRARIES(kognac lz4)
-TARGET_LINK_LIBRARIES(kognac_exec kognac)
+TARGET_LINK_LIBRARIES(kognac lz4 kognac-log)
+TARGET_LINK_LIBRARIES(kognac_exec kognac kognac-log)
