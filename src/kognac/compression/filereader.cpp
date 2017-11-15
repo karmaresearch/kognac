@@ -215,7 +215,7 @@ bool FileReader::parseLine(const char *line, const int sizeLine) {
 
     } catch (std::exception &e) {
         LOG(ERRORL) << "Failed parsing line: " + string(line, sizeLine);
-	abort();
+	//abort();
     }
     return false;
 }
