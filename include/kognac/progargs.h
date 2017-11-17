@@ -142,7 +142,7 @@ class ProgramArgs {
                             std::stringstream ss;
                             ss << value;
                             defaultvalue += " DEFAULT=" + ss.str();
-                        } 
+                        }
                         string out = AbsArg::tostring(defaultvalue);
                         return out;
                     }
