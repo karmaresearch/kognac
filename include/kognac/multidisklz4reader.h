@@ -50,7 +50,7 @@ public:
                        int nbuffersPerPartition,
                        int maxopenedstreams);
 
-    virtual void run();
+    void run();
 
     virtual void start();
 

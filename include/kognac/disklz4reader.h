@@ -37,7 +37,7 @@ private:
     bool getNewCompressedBuffer(std::unique_lock<std::mutex> &lk,
                                 const int id);
 
-    virtual void run();
+    void run();
 
 protected:
 
