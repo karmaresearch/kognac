@@ -61,6 +61,27 @@
 using namespace std;
 
 /**** FILE UTILS ****/
+//Return full path of the exec/library
+string Utils::getFullPathExec() {
+#if defined(_WIN32)
+    char ownPth[MAX_PATH];
+    // When NULL is passed to GetModuleHandle, the handle of the exe itself is returned
+    HMODULE hModule = GetModuleHandle(NULL);
+    if (hModule != NULL) {
+        // Use GetModuleFileName() with module handle to get the path
+        GetModuleFileName(hModule, ownPth, (sizeof(ownPth)));
+        return string(ownPth);
+    } else {
+        return string("");
+    }
+#elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
+    char buff[FILENAME_MAX];
+    getcwd(buff, FILENAME_MAX);
+    std::string current_working_dir(buff);
+    return current_working_dir;
+#endif
+}
+
 //Return only the files or the entire path?
 vector<string> Utils::getFilesWithPrefix(string dirname, string prefix) {
     vector<string> files;
