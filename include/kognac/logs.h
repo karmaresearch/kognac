@@ -105,7 +105,7 @@ class Logger {
             return *this;
         }
 
-        Logger& operator << (uint64_t n) {
+        Logger& operator << (unsigned long long n) {
             std::string s = std::to_string(n);
             return *this << s.c_str();
         }
@@ -120,7 +120,7 @@ class Logger {
             return *this << s.c_str();
         }
 
-        Logger& operator << (size_t n) {
+        Logger& operator << (unsigned long n) {
             std::string s = std::to_string(n);
             return *this << s.c_str();
         }
