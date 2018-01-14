@@ -1148,6 +1148,15 @@ bool Utils::isCompressed(std::string input) {
     }
 }
 
+void Utils::linkdir(string source, string dest) {
+#if defined(_WIN32)
+    LOG(ERRORL) << "LinkDir: Not supported";
+    throw 10;
+#elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
+    symlink(source.c_str(), dest.c_str());
+#endif
+}
+
 //int partition(long* input, int start, int end) {
 //  int pivot = input[end];
 //
