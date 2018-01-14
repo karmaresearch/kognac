@@ -66,6 +66,7 @@ class Utils {
         static bool isEmpty(string dir);
         static void resizeFile(string file, uint64_t newsize);
         static void linkdir(string source, string dest);
+        static void rmlink(string link);
         //End file utils
 
         static int numberOfLeadingZeros(unsigned int number) {

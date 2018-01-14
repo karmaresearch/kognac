@@ -1157,6 +1157,15 @@ void Utils::linkdir(string source, string dest) {
 #endif
 }
 
+void Utils::rmlink(string link) {
+#if defined(_WIN32)
+    LOG(ERRORL) << "RmLink: Not supported";
+    throw 10;
+#elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
+    unlink(link.c_str());
+#endif
+}
+
 //int partition(long* input, int start, int end) {
 //  int pivot = input[end];
 //
