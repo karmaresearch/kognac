@@ -130,11 +130,9 @@ void Compressor::uncompressTriples(ParamsUncompressTriples params) {
 
     FlajoletMartin estimator;
 
-    size_t sizebuffer = 0;
-    bool gzipped = false;
-    char *buffer = filesreader->getfile(sizebuffer, gzipped);
-    while (buffer != NULL) {
-        FileReader reader(buffer, sizebuffer, gzipped);
+    DiskReader::Buffer buffer = filesreader->getfile();
+    while (buffer.b != NULL) {
+        FileReader reader(buffer.b, buffer.size, buffer.gzipped);
         while (reader.parseTriple()) {
             if (reader.isTripleValid()) {
                 count++;
@@ -218,7 +216,7 @@ void Compressor::uncompressTriples(ParamsUncompressTriples params) {
         }
         //Get next file
         filesreader->releasefile(buffer);
-        buffer = filesreader->getfile(sizebuffer, gzipped);
+        buffer = filesreader->getfile();
     }
 
     fileswriter->setTerminated(idwriter);
