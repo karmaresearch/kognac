@@ -7,6 +7,8 @@
 #include <condition_variable>
 #include <vector>
 
+#define DISKREADER_MAX_SIZE 256 * 1024 * 1024
+
 class DiskReader {
     public:
         struct Buffer {
