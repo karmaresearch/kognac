@@ -12,10 +12,10 @@ DiskReader::DiskReader(int nbuffers, std::vector<FileInfo> *files) {
         if (files->at(i).size > maxsize)
             maxsize = files->at(i).size;
     }
-    //maxsize += 32 * 1024 + maxsize * 0.1; //max size + add a 10%
     if (maxsize > DISKREADER_MAX_SIZE) { //Limit the max size to 128MB
         maxsize = DISKREADER_MAX_SIZE;
     }
+    maxsize += 32 * 1024 + maxsize * 0.1; //max size + add a 10%
     LOG(DEBUGL) << "Max size=" << maxsize;
 
     for (int i = 0; i < nbuffers; ++i) {
