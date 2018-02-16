@@ -66,15 +66,11 @@ set_target_properties(kognac_exec PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS}")
 
 #ZLIB
 find_package(ZLIB REQUIRED)
-target_link_libraries(kognac_exec "${ZLIB_LIBRARIES}")
 
 #PTHREADS
 find_package(Threads REQUIRED)
 if (THREADS_HAVE_PTHREAD_ARG)
     target_compile_options(PUBLIC kognac_exec "-pthread")
-endif()
-if (CMAKE_THREAD_LIBS_INIT)
-    target_link_libraries(kognac_exec "${CMAKE_THREAD_LIBS_INIT}")
 endif()
     
 #SPARSEHASH
@@ -125,3 +121,7 @@ ENDIF()
 include_directories(include/)
 TARGET_LINK_LIBRARIES(kognac lz4 kognac-log)
 TARGET_LINK_LIBRARIES(kognac_exec kognac kognac-log)
+target_link_libraries(kognac_exec "${ZLIB_LIBRARIES}")
+if (CMAKE_THREAD_LIBS_INIT)
+    target_link_libraries(kognac_exec "${CMAKE_THREAD_LIBS_INIT}")
+endif()
