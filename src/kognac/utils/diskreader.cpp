@@ -135,7 +135,7 @@ void DiskReader::run() {
                     if (b == -1) {
                         break; //magic value
                     }
-                    if (readSize > maxsize) {
+                    if (readSize > buffer.maxsize) {
                         LOG(ERRORL) << "Buffers are too small. Must fix this";
                         throw 10;
                     }
