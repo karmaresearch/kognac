@@ -104,9 +104,15 @@ void DiskReader::run() {
         long readSize = itr->size;
         if (readSize > buffer.maxsize) {
             //The buffer is too small. Must create a bigger one
+	    //But need some extra, to search for next '\n'.
             delete[] buffer.b;
-            buffer.b = new char[readSize];
-            buffer.maxsize = readSize;
+	    if (! gzipped) {
+		buffer.maxsize = readSize + 32 * 1024;
+		buffer.b = new char[buffer.maxsize];
+	    } else {
+		buffer.b = new char[readSize];
+		buffer.maxsize = readSize;
+	    }
         }
 
         if (!gzipped) {
