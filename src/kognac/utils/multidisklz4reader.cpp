@@ -1,5 +1,6 @@
 #include <kognac/multidisklz4reader.h>
 
+#include <algorithm>
 #include <assert.h>
 
 MultiDiskLZ4Reader::MultiDiskLZ4Reader(int maxNPartitions,

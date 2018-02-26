@@ -23,16 +23,22 @@
 
 /**** MEMORY STATISTICS ****/
 #if defined(_WIN32)
+#include <io.h>
+#include <fcntl.h> 
 #include <windows.h>
 #include <psapi.h>
+#include <tchar.h>
+#include <direct.h> 
 #elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
 #include <unistd.h>
 #include <sys/resource.h>
+#include <dirent.h>
 
 #if defined(__APPLE__) && defined(__MACH__)
 #include <mach/mach.h>
 #include <sys/types.h>
 #include <sys/sysctl.h>
+#include <dirent.h>
 
 #elif (defined(_AIX) || defined(__TOS__AIX__)) || (defined(__sun__) || defined(__sun) || defined(sun) && (defined(__SVR4) || defined(__svr4__)))
 #include <fcntl.h>
@@ -53,7 +59,6 @@
 #include <algorithm>
 #include <vector>
 #include <string>
-#include <dirent.h>
 #include <set>
 #include <assert.h>
 #include <stdio.h>
@@ -84,22 +89,36 @@ string Utils::getFullPathExec() {
 
 //Return only the files or the entire path?
 vector<string> Utils::getFilesWithPrefix(string dirname, string prefix) {
-    vector<string> files;
-    DIR *d = opendir(dirname.c_str());
-    struct dirent *dir;
-    if (d) {
-        while ((dir = readdir(d)) != NULL) {
-            if (dir->d_name[0] != '.' && Utils::starts_with(string(dir->d_name), prefix))
-                files.push_back(dirname + "/" + string(dir->d_name));
-        }
-        closedir(d);
-    }
-    return files;
+	vector<string> files;
+	vector<string> allfiles = Utils::getFiles(dirname);
+	for (long i = 0; i < files.size(); ++i) {
+		string fn = filename(files[i]);
+		if (Utils::starts_with(fn, prefix))
+			files.push_back(files[i]);
+	}
+  return files;
 }
 
 vector<string> Utils::getSubdirs(string dirname) {
     vector<string> files;
-    DIR *d = opendir(dirname.c_str());
+#if defined(_WIN32)
+	WIN32_FIND_DATA ffd;
+	TCHAR szDir[MAX_PATH];
+	HANDLE hFind = INVALID_HANDLE_VALUE;
+	DWORD dwError = 0;
+	hFind = FindFirstFile(dirname.c_str(), &ffd);
+	if (INVALID_HANDLE_VALUE == hFind) {
+		return std::vector<string>();
+	}
+	// List all the files in the directory with some info about them.
+	do {
+		if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+			string fileFullPath = dirname + "/" + ffd.cFileName;
+			files.push_back(fileFullPath);
+		}	
+} while (FindNextFile(hFind, &ffd) != 0);
+#else
+	DIR *d = opendir(dirname.c_str());
     struct dirent *dir;
     if (d) {
         while ((dir = readdir(d)) != NULL) {
@@ -110,28 +129,54 @@ vector<string> Utils::getSubdirs(string dirname) {
         }
         closedir(d);
     }
+#endif
     return files;
 }
 
 vector<string> Utils::getFiles(string dirname, bool ignoreExtension) {
-    std::set<string> sfiles;
-    DIR *d = opendir(dirname.c_str());
-    struct dirent *dir;
-    if (d) {
-        while ((dir = readdir(d)) != NULL) {
-            string path = dirname + "/" + string(dir->d_name);
-            if (isFile(path) && dir->d_name[0] != '.') {
-                if (ignoreExtension) {
-                    sfiles.insert(dirname + "/" + Utils::removeExtension(string(dir->d_name)));
-                } else {
-                    sfiles.insert(path);
-                }
-            }
-        }
-        closedir(d);
-    } else {
-        LOG(DEBUGL) << "getFiles: could not open";
-    }
+	std::set<string> sfiles;
+#if defined(_WIN32)
+	WIN32_FIND_DATA ffd;
+	TCHAR szDir[MAX_PATH];
+	HANDLE hFind = INVALID_HANDLE_VALUE;
+	DWORD dwError = 0;
+	hFind = FindFirstFile(dirname.c_str(), &ffd);
+	if (INVALID_HANDLE_VALUE == hFind) {
+		return std::vector<string>();
+	}
+	// List all the files in the directory with some info about them.
+	do {
+		if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+			//ignore the subdirectories
+		}
+		else if (ffd.cFileName[0] != '.') {
+			string fileFullPath = dirname + "/" + ffd.cFileName;
+			if (ignoreExtension) {
+				sfiles.insert(Utils::removeExtension(fileFullPath));
+			}
+			else {
+				sfiles.insert(fileFullPath);
+			}
+		}
+	} while (FindNextFile(hFind, &ffd) != 0);
+#else
+	DIR *d = opendir(dirname.c_str());
+	struct dirent *dir;
+	if (d) {
+		while ((dir = readdir(d)) != NULL) {
+			if (dir->d_name[0] != '.') {
+				string fileFullPath = dirname + "/" + string(dir->d_name);
+				if (ignoreExtension) {
+					sfiles.insert(Utils::removeExtension(fileFullPath));
+				}
+				else {
+					sfiles.insert(fileFullPath);
+				}
+			}
+		}
+		closedir(d);
+	}
+#endif  
     std::vector<string> files;
     for(auto s : sfiles) {
         files.push_back(s);
@@ -140,16 +185,13 @@ vector<string> Utils::getFiles(string dirname, bool ignoreExtension) {
 }
 vector<string> Utils::getFilesWithSuffix(string dirname, string suffix) {
     vector<string> files;
-    DIR *d = opendir(dirname.c_str());
-    struct dirent *dir;
-    if (d) {
-        while ((dir = readdir(d)) != NULL) {
-            if (dir->d_name[0] != '.' && Utils::ends_with(string(dir->d_name), suffix))
-                files.push_back(dirname + "/" + string(dir->d_name));
-        }
-        closedir(d);
-    }
-    return files;
+	vector<string> allfiles = Utils::getFiles(dirname);
+	for (long i = 0; i < allfiles.size(); ++i) {
+		string f = allfiles[i];
+		if (Utils::ends_with(f, suffix)) {
+			files.push_back(f);
+		}
+	}
 }
 bool Utils::hasExtension(const string &file){
     string fn = filename(file);
@@ -198,10 +240,14 @@ void Utils::create_directories(string newdir) {
         create_directories(pd);
     }
     if (!Utils::exists(newdir)) {
+#if defined(_WIN32)
+		_mkdir(newdir.c_str());
+#else
         if (mkdir(newdir.c_str(), 0777) != 0) {
             LOG(ERRORL) << "Error creating dir " << newdir;
             throw 10;
         }
+#endif
     } else if (!Utils::isDirectory(newdir)) {
         LOG(ERRORL) << "Directory " << newdir << " is already existing but it is not a dir";
         abort();
@@ -222,25 +268,14 @@ void Utils::remove(string file) {
 }
 void Utils::remove_all(string path) {
     if (isDirectory(path)) {
-        DIR *d = opendir(path.c_str());
-        struct dirent *dir;
-        if (d) {
-            while ((dir = readdir(d)) != NULL) {
-                string f = path + "/" + dir->d_name;
-                if (isDirectory(f)) {
-                    if (strcmp(dir->d_name, ".") != 0 && strcmp(dir->d_name, "..") != 0) {
-                        remove_all(f);
-                    }
-                } else {
-                    remove(f);
-                }
-            }
-            closedir(d);
-            remove(path);
-        } else {
-            LOG(ERRORL) << "Dir " << path << " Not existing";
-            throw 10;
-        }
+		std::vector<std::string> filechildren = Utils::getFiles(path);
+		for (long i = 0; i < filechildren.size(); ++i) {
+			remove(filechildren[i]);
+		}
+		std::vector<std::string> subdirs = Utils::getSubdirs(path);
+		for (long i = 0; i < subdirs.size(); ++i) {
+			remove_all(subdirs[i]);
+		}
     } else {
         remove(path);
     }
@@ -283,8 +318,14 @@ void Utils::resizeFile(string file, uint64_t newsize) {
     }
     uint64_t oldsize = Utils::fileSize(file);
     if (oldsize != newsize) {
+#if defined(_WIN32)
+		int fd = _sopen_s(&fd, file.c_str(), _O_RDWR | _O_CREAT, _SH_DENYNO,
+			_S_IREAD | _S_IWRITE);
+		_chsize(fd, newsize);
+#else
         truncate(file.c_str(), newsize);
-    }
+#endif
+	}
 }
 /**** END FILE UTILS ****/
 /**** START STRING UTILS ****/
@@ -965,13 +1006,19 @@ int Utils::prefixEquals(char* o1, int len, char* o2) {
 }
 
 double Utils::get_max_mem() {
-    struct rusage rusage;
-    getrusage(RUSAGE_SELF, &rusage);
     double memory = 0.0;
 #if defined(__APPLE__) && defined(__MACH__)
     memory = (double) rusage.ru_maxrss / 1024 / 1024;
-#else
+#elif defined(__unix__) || defined(__unix) || defined(unix)
+	struct rusage rusage;
+	getrusage(RUSAGE_SELF, &rusage);
     memory = (double)rusage.ru_maxrss / 1024;
+#elif defined(_WIN32)
+	HANDLE hProcess;
+	PROCESS_MEMORY_COUNTERS pmc;
+	bool result = GetProcessMemoryInfo(GetCurrentProcess(),
+		&pmc, sizeof(PPROCESS_MEMORY_COUNTERS));
+	memory = pmc.PeakWorkingSetSize / 1024 / 1024;
 #endif
     return memory;
 }
@@ -985,10 +1032,15 @@ long Utils::getSystemMemory() {
     size_t len = sizeof(size);
     sysctl(mib, 2, &size, &len, NULL, 0);
     return size;
-#else
+#elif defined(__unix__) || defined(__unix) || defined(unix)
     long pages = sysconf(_SC_PHYS_PAGES);
     long page_size = sysconf(_SC_PAGE_SIZE);
     return pages * page_size;
+#elif defined(_WIN32)
+	MEMORYSTATUSEX memInfo;
+	memInfo.dwLength = sizeof(MEMORYSTATUSEX);
+	GlobalMemoryStatusEx(&memInfo);
+	return memInfo.ullTotalPhys;
 #endif
 }
 
@@ -1064,15 +1116,23 @@ long Utils::getIOReadBytes() {
 
 
 long long unsigned Utils::getCPUCounter() {
-    unsigned a, d;
-
+#if defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
+	unsigned a, d;
     __asm__ volatile("rdtsc" : "=a" (a), "=d" (d));
-
-    return ((unsigned long long)a) | (((unsigned long long)d) << 32);;
+    return ((unsigned long long)a) | (((unsigned long long)d) << 32);
+#else
+	return 0; //unsupported
+#endif
 }
 
 int Utils::getNumberPhysicalCores() {
+#if defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
     return sysconf( _SC_NPROCESSORS_ONLN);
+#else
+	SYSTEM_INFO sysinfo;
+	GetSystemInfo(&sysinfo);
+	return sysinfo.dwNumberOfProcessors;
+#endif
 }
 
 long Utils::quickSelect(long *vector, int size, int k) {
@@ -1095,17 +1155,11 @@ long Utils::quickSelect(long *vector, int size, int k) {
 long Utils::getNBytes(std::string input) {
     if (Utils::isDirectory(input)) {
         long size = 0;
-        DIR *d = opendir(input.c_str());
-        struct dirent *dir;
-        if (d) {
-            while ((dir = readdir(d)) != NULL) {
-                string fn = input + "/" + string(dir->d_name);
-                if (isFile(fn)) {
-                    size += Utils::fileSize(fn);
-                }
-            }
-            closedir(d);
-        }
+		std::vector<std::string> files = Utils::getFiles(input);
+		for (long i = 0; i < files.size(); ++i) {
+			if (isFile(files[i]))
+				size += Utils::fileSize(files[i]);
+		}
         /*for (fs::directory_iterator itr(input); itr != fs::directory_iterator();
           ++itr) {
           if (fs::is_regular(itr->path())) {
@@ -1121,20 +1175,13 @@ long Utils::getNBytes(std::string input) {
 bool Utils::isCompressed(std::string input) {
     if (Utils::isDirectory(input)) {
         bool isCompressed = false;
-        DIR *d = opendir(input.c_str());
-        struct dirent *dir;
-        if (d) {
-            while ((dir = readdir(d)) != NULL) {
-                string path = input + "/" + string(dir->d_name);
-                if (isFile(path)) {
-                    if (Utils::extension(path) == string(".gz")) {
-                        isCompressed = true;
-                    }
-                }
-            }
-            closedir(d);
-        }
-
+		std::vector<std::string> files = Utils::getFiles(input);
+		for (long i = 0; i < files.size(); ++i) {
+			string &f = files[i];
+			if (Utils::extension(f) == string(".gz")) {
+				isCompressed = true;
+			}
+		}
         /*for (fs::directory_iterator itr(input); itr != fs::directory_iterator();
           ++itr) {
           if (fs::is_regular(itr->path())) {

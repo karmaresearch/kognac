@@ -1,6 +1,9 @@
 #include <kognac/progargs.h>
 
 #include <algorithm>
+#include <ctype.h>
+
+using namespace std;
 
 template<>
 bool ProgramArgs::AbsArg::check<string>(string s) {
@@ -9,17 +12,17 @@ bool ProgramArgs::AbsArg::check<string>(string s) {
 template<>
 bool ProgramArgs::AbsArg::check<int>(string s) {
     return !s.empty() && std::find_if(s.begin(),
-            s.end(), [](char c) { return !(std::isdigit(c) || c == '-'); }) == s.end();
+            s.end(), [](char c) { return !(isdigit(c) || c == '-'); }) == s.end();
 }
 template<>
 bool ProgramArgs::AbsArg::check<long>(string s) {
     return !s.empty() && std::find_if(s.begin(),
-            s.end(), [](char c) { return !(std::isdigit(c) || c == '-'); }) == s.end();
+            s.end(), [](char c) { return !(isdigit(c) || c == '-'); }) == s.end();
 }
 template<>
 bool ProgramArgs::AbsArg::check<double>(string s) {
     return !s.empty() && std::find_if(s.begin(),
-            s.end(), [](char c) { return !(std::isdigit(c) || c == '-' || c == '.'); }) == s.end();
+            s.end(), [](char c) { return !(isdigit(c) || c == '-' || c == '.'); }) == s.end();
 }
 template<>
 bool ProgramArgs::AbsArg::check<bool>(string s) {

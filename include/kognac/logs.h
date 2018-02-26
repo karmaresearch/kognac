@@ -34,9 +34,23 @@ class Logger {
                 }
         };
 
+#if defined(_WIN32)
+public:
+#if LOG_SHARED_LIB
+	__declspec(dllexport) static int minLevel;
+    __declspec(dllexport) static std::mutex mutex;
+    __declspec(dllexport) static std::unique_ptr<FileLogger> file;
+#else
+	__declspec(dllimport) static int minLevel;
+	__declspec(dllimport) static std::mutex mutex;
+	__declspec(dllimport) static std::unique_ptr<FileLogger> file;
+#endif
+private:
+#else
         static int minLevel;
         static std::mutex mutex;
         static std::unique_ptr<FileLogger> file;
+#endif
 
         const int level;
 

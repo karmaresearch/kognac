@@ -1,7 +1,8 @@
 cmake_minimum_required (VERSION 2.8)
 
-set(CMAKE_CXX_COMPILER "g++")
-set(CMAKE_C_COMPILER "gcc")
+#set(CMAKE_CXX_COMPILER "g++")
+#set(CMAKE_C_COMPILER "gcc")
+set(CMAKE_VS_PLATFORM_NAME, "x64")
 
 project (kognac)
 include(ExternalProject)
@@ -12,7 +13,7 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     message(STATUS "Setting build type to 'Release' as none was specified.")
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
     # Set the possible values of build type for cmake-gui
-      set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
 
@@ -57,9 +58,12 @@ add_library(kognac STATIC ${kognac_SRC})
 add_executable(kognac_exec src/launcher/main.cpp)
 
 #Set compiler options
-set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")
-set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
-set(COMPILE_FLAGS "-c -fPIC -std=c++11 -Wall -Wno-sign-compare")
+if(CMAKE_COMPILER_IS_GNUCXX)
+  set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")
+  set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
+  set(COMPILE_FLAGS "-c -fPIC -std=c++11")
+endif()
+
 set_target_properties(kognac-log PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS}")
 set_target_properties(kognac PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS}")
 set_target_properties(kognac_exec PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS}")
@@ -72,7 +76,7 @@ find_package(Threads REQUIRED)
 if (THREADS_HAVE_PTHREAD_ARG)
     target_compile_options(PUBLIC kognac_exec "-pthread")
 endif()
-    
+
 #SPARSEHASH
 find_path (sparsehash sparsehash/sparse_hash_map)
 IF (${sparsehash} STREQUAL "sparsehash-NOTFOUND")
@@ -89,6 +93,8 @@ IF (${sparsehash} STREQUAL "sparsehash-NOTFOUND")
     ExternalProject_Get_Property(git-sparsehash SOURCE_DIR)
     include_directories(${SOURCE_DIR}/src/)
     add_dependencies(kognac git-sparsehash)
+ELSE()
+    message("Found sparsehash")
 ENDIF()
 
 #LZ4
@@ -114,7 +120,6 @@ IF ((${lz4} STREQUAL "lz4-NOTFOUND") OR (${lz4h} STREQUAL "lz4h-NOTFOUND"))
 ELSE()
     include_directories(lz4h)
     message("Found LZ4")
-    
 ENDIF()
 
 #standard include

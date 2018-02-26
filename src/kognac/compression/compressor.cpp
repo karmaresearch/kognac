@@ -240,7 +240,7 @@ void Compressor::uncompressTriples(ParamsUncompressTriples params) {
 void Compressor::sampleTerm(const char *term, int sizeTerm, int sampleArg,
         int dictPartitions, GStringToNumberMap *map/*,
                                                      LRUSet *duplicateCache, LZ4Writer **dictFile*/) {
-    if (abs(random() % 10000) < sampleArg) {
+    if (abs(rand() % 10000) < sampleArg) {
         GStringToNumberMap::iterator itr = map->find(string(term + 2, sizeTerm - 2));
         if (itr != map->end()) {
             itr->second = itr->second + 1;
