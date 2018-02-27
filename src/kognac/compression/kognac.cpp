@@ -28,7 +28,6 @@
 #include <algorithm>
 #include <string>
 #include <mutex>
-#include <dirent.h>
 
 Kognac::Kognac(string inputPath, string outputPath, const int maxPatternLength)
     : inputPath(inputPath), outputPath(outputPath),
@@ -460,12 +459,12 @@ void Kognac::sortCompressedGraph(string inputDir, string outputFile, int v) {
 	std::vector<string> outputFiles;
 	int id = 0;
 	long countTriples = 0;
-	DIR *d = opendir(inputDir.c_str());
-	struct dirent *dir;
-	while ((dir = readdir(d)) != NULL) {
-	    string fn = string(inputDir + "/" + string(dir->d_name));
-	    if (! Utils::isFile(fn)) {
-		continue;
+	std::vector<std::string> childrenFiles = Utils::getFiles(inputDir);
+	for (int idx = 0; idx < childrenFiles.size(); ++idx) {
+		string fn = childrenFiles[idx];
+	    //string fn = string(inputDir + "/" + string(dir->d_name));
+	    if (!Utils::isFile(fn)) {
+			continue;
 	    }
 	    LZ4Reader reader(fn.c_str());
 	    if (v == 1)
@@ -503,7 +502,6 @@ void Kognac::sortCompressedGraph(string inputDir, string outputFile, int v) {
 		}
 	    }
 	}
-	closedir(d);
 
 	if (outputFiles.size() > 0) {
 	    //Dump current file

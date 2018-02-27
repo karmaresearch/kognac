@@ -12,12 +12,19 @@ DiskReader::DiskReader(int nbuffers, std::vector<FileInfo> *files) {
         if (files->at(i).size > maxsize)
             maxsize = files->at(i).size;
     }
-    maxsize += 32 * 1024 + maxsize * 0.1; //min size + add a 10%
-
+    if (maxsize > DISKREADER_MAX_SIZE) { //Limit the max size to 128MB
+        maxsize = DISKREADER_MAX_SIZE;
+    }
+    maxsize += 32 * 1024 + maxsize * 0.1; //max size + add a 10%
     LOG(DEBUGL) << "Max size=" << maxsize;
+
     for (int i = 0; i < nbuffers; ++i) {
-        availablebuffers.push_back(new char[maxsize]);
-        memset(availablebuffers.back(), 0, sizeof(char) * maxsize);
+        Buffer buffer;
+        buffer.size = 0;
+        buffer.maxsize = maxsize;
+        buffer.b = new char[maxsize];
+        memset(buffer.b, 0, sizeof(char) * maxsize);
+        availablebuffers.push_back(buffer);
     }
     waitingTime = std::chrono::duration<double>::zero();
 }
@@ -30,7 +37,7 @@ bool DiskReader::isAvailable() {
     return !availablebuffers.empty();
 }
 
-char *DiskReader::getfile(size_t &size, bool &gzipped) {
+DiskReader::Buffer DiskReader::getfile() {
     std::unique_lock<std::mutex> lk(mutex1);
     cv1.wait(lk, std::bind(&DiskReader::isReady, this));
 
@@ -46,19 +53,25 @@ char *DiskReader::getfile(size_t &size, bool &gzipped) {
     cv1.notify_one();
 
     if (gotit) {
-        size = info.size;
-        gzipped = info.gzipped;
-        return info.b;
+        return info;
     } else {
-        size = 0;
-        gzipped = false;
-        return NULL;
+        info.size = 0;
+        info.gzipped = false;
+        info.b = NULL;
+        return info;
     }
 }
 
-void DiskReader::releasefile(char *file) {
+void DiskReader::releasefile(DiskReader::Buffer buffer) {
+    if (buffer.maxsize > maxsize) {
+        //This buffer was too large. Reduce it to free some memory
+        delete[] buffer.b;
+        buffer.b = new char[maxsize];
+        buffer.maxsize = maxsize;
+        buffer.size = 0;
+    }
     std::unique_lock<std::mutex> lk(mutex2);
-    availablebuffers.push_back(file);
+    availablebuffers.push_back(buffer);
     lk.unlock();
     cv2.notify_one();
 }
@@ -67,14 +80,14 @@ void DiskReader::run() {
     ifstream ifs;
     size_t count = 0;
     while (itr != files->end()) {
-	bool gzipped = false;
-	if (Utils::hasExtension(itr->path) && Utils::extension(itr->path) == string(".gz")) {
-	    gzipped = true;
-	}
-	LOG(DEBUGL) << "Path is " << itr->path << ", gzipped = " << gzipped;
+        bool gzipped = false;
+        if (Utils::hasExtension(itr->path) && Utils::extension(itr->path) == string(".gz")) {
+            gzipped = true;
+        }
+        LOG(DEBUGL) << "Path is " << itr->path << ", gzipped = " << gzipped;
 
         //Is there an available buffer that I can use?
-        char *buffer = NULL;
+        Buffer buffer;
         {
             std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
             std::unique_lock<std::mutex> lk(mutex2);
@@ -86,49 +99,60 @@ void DiskReader::run() {
         }
 
         //Read a file and copy it in buffer
+        buffer.gzipped = gzipped;
         ifs.open(itr->path);
         long readSize = itr->size;
-	if (! gzipped) {
-	    if (itr->start > 0) {
-		ifs.seekg(itr->start);
-		while (!ifs.eof() && ifs.get() != '\n') {
-		    readSize--;
-		};
-		readSize--;
-	    }
-	    if (readSize <= 0) {
-		//No line was found within the allocated chunk
-		readSize = 0;
+        if (readSize > buffer.maxsize) {
+            //The buffer is too small. Must create a bigger one
+	    //But need some extra, to search for next '\n'.
+            delete[] buffer.b;
+	    if (! gzipped) {
+		buffer.maxsize = readSize + 32 * 1024;
+		buffer.b = new char[buffer.maxsize];
 	    } else {
-		ifs.read(buffer, readSize);
-		assert(ifs);
-		//Keep reading until the final '\n'
-		while (!ifs.eof()) {
-		    char b = ifs.get();
-		    if (b == -1) {
-			break; //magic value
-		    }
-		    if (readSize > maxsize) {
-			LOG(ERRORL) << "Buffers are too small. Must fix this";
-			throw 10;
-		    }
-		    buffer[readSize++] = b;
-		    if (b == '\n')
-			break;
-		};
+		buffer.b = new char[readSize];
+		buffer.maxsize = readSize;
 	    }
-	} else {
-	    ifs.read(buffer, readSize);
-	}
+        }
+
+        if (!gzipped) {
+            if (itr->start > 0) {
+                ifs.seekg(itr->start);
+                while (!ifs.eof() && ifs.get() != '\n') {
+                    readSize--;
+                };
+                readSize--;
+            }
+            if (readSize <= 0) {
+                //No line was found within the allocated chunk
+                readSize = 0;
+            } else {
+                ifs.read(buffer.b, readSize);
+                assert(ifs);
+                //Keep reading until the final '\n'
+                while (!ifs.eof()) {
+                    char b = ifs.get();
+                    if (b == -1) {
+                        break; //magic value
+                    }
+                    if (readSize > buffer.maxsize) {
+                        LOG(ERRORL) << "Buffers are too small. Must fix this";
+                        throw 10;
+                    }
+                    buffer.b[readSize++] = b;
+                    if (b == '\n')
+                        break;
+                };
+            }
+        } else {
+            ifs.read(buffer.b, readSize);
+        }
+        buffer.size = readSize;
         ifs.close();
         count++;
         {
             std::lock_guard<std::mutex> lk(mutex1);
-            Buffer newbuffer;
-            newbuffer.b = buffer;
-            newbuffer.size = readSize;
-	    newbuffer.gzipped = gzipped;
-            readybuffers.push_back(newbuffer);
+            readybuffers.push_back(buffer);
         }
 
         //Alert one waiting thread that there is one new buffer
@@ -145,7 +169,8 @@ void DiskReader::run() {
 }
 
 DiskReader::~DiskReader() {
-    for (int i = 0; i < availablebuffers.size(); ++i)
-        delete[] availablebuffers[i];
+    for (int i = 0; i < availablebuffers.size(); ++i) {
+        delete[] availablebuffers[i].b;
+    }
     availablebuffers.clear();
 }

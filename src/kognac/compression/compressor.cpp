@@ -130,11 +130,9 @@ void Compressor::uncompressTriples(ParamsUncompressTriples params) {
 
     FlajoletMartin estimator;
 
-    size_t sizebuffer = 0;
-    bool gzipped = false;
-    char *buffer = filesreader->getfile(sizebuffer, gzipped);
-    while (buffer != NULL) {
-        FileReader reader(buffer, sizebuffer, gzipped);
+    DiskReader::Buffer buffer = filesreader->getfile();
+    while (buffer.b != NULL) {
+        FileReader reader(buffer.b, buffer.size, buffer.gzipped);
         while (reader.parseTriple()) {
             if (reader.isTripleValid()) {
                 count++;
@@ -218,7 +216,7 @@ void Compressor::uncompressTriples(ParamsUncompressTriples params) {
         }
         //Get next file
         filesreader->releasefile(buffer);
-        buffer = filesreader->getfile(sizebuffer, gzipped);
+        buffer = filesreader->getfile();
     }
 
     fileswriter->setTerminated(idwriter);
@@ -242,7 +240,7 @@ void Compressor::uncompressTriples(ParamsUncompressTriples params) {
 void Compressor::sampleTerm(const char *term, int sizeTerm, int sampleArg,
         int dictPartitions, GStringToNumberMap *map/*,
                                                      LRUSet *duplicateCache, LZ4Writer **dictFile*/) {
-    if (abs(random() % 10000) < sampleArg) {
+    if (abs(rand() % 10000) < sampleArg) {
         GStringToNumberMap::iterator itr = map->find(string(term + 2, sizeTerm - 2));
         if (itr != map->end()) {
             itr->second = itr->second + 1;

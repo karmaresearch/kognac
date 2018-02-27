@@ -60,7 +60,7 @@ struct static_method_holder
         {
             if (mode & mode_val_v[i])
             {
-                res += (not res.empty()? "|" : "");
+                res += (!(res.empty()) ? "|" : "");
                 res += mode_name_v[i];
             }
         }
@@ -69,15 +69,15 @@ struct static_method_holder
     }
     static void check_mode(const std::string& filename, std::ios_base::openmode mode)
     {
-        if ((mode & std::ios_base::trunc) and not (mode & std::ios_base::out))
+        if ((mode & std::ios_base::trunc) && !(mode & std::ios_base::out))
         {
             throw Exception(std::string("strict_fstream: open('") + filename + "'): mode error: trunc and not out");
         }
-        else if ((mode & std::ios_base::app) and not (mode & std::ios_base::out))
+        else if ((mode & std::ios_base::app) && !(mode & std::ios_base::out))
         {
             throw Exception(std::string("strict_fstream: open('") + filename + "'): mode error: app and not out");
         }
-        else if ((mode & std::ios_base::trunc) and (mode & std::ios_base::app))
+        else if ((mode & std::ios_base::trunc) && (mode & std::ios_base::app))
         {
             throw Exception(std::string("strict_fstream: open('") + filename + "'): mode error: trunc and app");
         }
@@ -162,7 +162,7 @@ public:
     }
     void open(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in)
     {
-        if (not (mode & std::ios_base::out)) mode |= std::ios_base::in;
+        if (!(mode & std::ios_base::out)) mode |= std::ios_base::in;
         exceptions(std::ios_base::badbit);
         detail::static_method_holder::check_mode(filename, mode);
         std::fstream::open(filename, mode);
