@@ -70,10 +70,10 @@ class Logger {
         Logger& operator << (const char *msg) {
             if (first) {
                 auto t = std::time(NULL);
-                auto tm = *std::localtime(&t);
+                auto localtm = *std::localtime(&t);
                 std::stringstream ss;
                 char tmpbuf[128];
-                if(0 < strftime(tmpbuf, sizeof(tmpbuf), "%Y-%m-%d %H:%M:%S", &tm)) {
+                if(0 < strftime(tmpbuf, sizeof(tmpbuf), "%Y-%m-%d %H:%M:%S", &localtm)) {
                     ss << "[0x" << std::hex << std::hash<std::thread::id>()(std::this_thread::get_id());
                     while (ss.tellp() < 20) {
                         ss << " ";
