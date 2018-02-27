@@ -192,6 +192,7 @@ vector<string> Utils::getFilesWithSuffix(string dirname, string suffix) {
 			files.push_back(f);
 		}
 	}
+	return files;
 }
 bool Utils::hasExtension(const string &file){
     string fn = filename(file);
@@ -1007,12 +1008,14 @@ int Utils::prefixEquals(char* o1, int len, char* o2) {
 
 double Utils::get_max_mem() {
     double memory = 0.0;
-#if defined(__APPLE__) && defined(__MACH__)
-    memory = (double) rusage.ru_maxrss / 1024 / 1024;
-#elif defined(__unix__) || defined(__unix) || defined(unix)
+#if defined(__unix__) || defined(__unix) || defined(unix)
 	struct rusage rusage;
 	getrusage(RUSAGE_SELF, &rusage);
+#if defined(__APPLE__) && defined(__MACH__)
+    memory = (double) rusage.ru_maxrss / 1024 / 1024;
+#else
     memory = (double)rusage.ru_maxrss / 1024;
+#endif
 #elif defined(_WIN32)
 	HANDLE hProcess;
 	PROCESS_MEMORY_COUNTERS pmc;

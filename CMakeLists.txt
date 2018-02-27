@@ -58,7 +58,7 @@ add_library(kognac STATIC ${kognac_SRC})
 add_executable(kognac_exec src/launcher/main.cpp)
 
 #Set compiler options
-if(CMAKE_COMPILER_IS_GNUCXX)
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")
   set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
   set(COMPILE_FLAGS "-c -fPIC -std=c++11")
