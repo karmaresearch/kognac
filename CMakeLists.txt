@@ -1,8 +1,8 @@
 cmake_minimum_required (VERSION 2.8)
 
-#set(CMAKE_CXX_COMPILER "g++")
-#set(CMAKE_C_COMPILER "gcc")
-set(CMAKE_VS_PLATFORM_NAME, "x64")
+set(CMAKE_CXX_COMPILER "g++")
+set(CMAKE_C_COMPILER "gcc")
+#set(CMAKE_VS_PLATFORM_NAME, "x64")
 
 project (kognac)
 include(ExternalProject)
@@ -58,11 +58,11 @@ add_library(kognac STATIC ${kognac_SRC})
 add_executable(kognac_exec src/launcher/main.cpp)
 
 #Set compiler options
-if(CMAKE_COMPILER_IS_GNUCXX)
+#if(CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")
   set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
   set(COMPILE_FLAGS "-c -fPIC -std=c++11")
-endif()
+#endif()
 
 set_target_properties(kognac-log PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS}")
 set_target_properties(kognac PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS}")
