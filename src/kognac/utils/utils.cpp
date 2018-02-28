@@ -192,6 +192,7 @@ vector<string> Utils::getFilesWithSuffix(string dirname, string suffix) {
 			files.push_back(f);
 		}
 	}
+	return files;
 }
 bool Utils::hasExtension(const string &file){
     string fn = filename(file);
@@ -1011,9 +1012,10 @@ double Utils::get_max_mem() {
 	getrusage(RUSAGE_SELF, &rusage);
 #if defined(__APPLE__) && defined(__MACH__)
     memory = (double) rusage.ru_maxrss / 1024 / 1024;
-#elif defined(__unix__) || defined(__unix) || defined(unix)
+#else
     memory = (double)rusage.ru_maxrss / 1024;
-#elif defined(_WIN32)
+#endif
+#if defined(_WIN32)
 	HANDLE hProcess;
 	PROCESS_MEMORY_COUNTERS pmc;
 	bool result = GetProcessMemoryInfo(GetCurrentProcess(),
