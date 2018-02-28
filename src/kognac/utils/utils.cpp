@@ -1007,11 +1007,11 @@ int Utils::prefixEquals(char* o1, int len, char* o2) {
 
 double Utils::get_max_mem() {
     double memory = 0.0;
+	struct rusage rusage;
+	getrusage(RUSAGE_SELF, &rusage);
 #if defined(__APPLE__) && defined(__MACH__)
     memory = (double) rusage.ru_maxrss / 1024 / 1024;
 #elif defined(__unix__) || defined(__unix) || defined(unix)
-	struct rusage rusage;
-	getrusage(RUSAGE_SELF, &rusage);
     memory = (double)rusage.ru_maxrss / 1024;
 #elif defined(_WIN32)
 	HANDLE hProcess;
