@@ -91,10 +91,10 @@ string Utils::getFullPathExec() {
 vector<string> Utils::getFilesWithPrefix(string dirname, string prefix) {
     vector<string> files;
     vector<string> allfiles = Utils::getFiles(dirname);
-    for (uint64_t i = 0; i < files.size(); ++i) {
-        string fn = filename(files[i]);
+    for (uint64_t i = 0; i < allfiles.size(); ++i) {
+        string fn = filename(allfiles[i]);
         if (Utils::starts_with(fn, prefix))
-            files.push_back(files[i]);
+            files.push_back(allfiles[i]);
     }
     return files;
 }
