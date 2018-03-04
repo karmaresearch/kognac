@@ -99,7 +99,7 @@ void Kognac::compress(const int nthreads,
 
     // Create the output
     int64_t counter = startCounter;
-    zstr::ofstream out(outputPath + string("/dict.gz"), ios_base::binary);
+    zstr::ofstream out(outputPath + DIR_SEP + string("dict.gz"), ios_base::binary);
     {
         //Assign the number to the popular terms and copy them in a fast
         //hashmap
@@ -133,7 +133,7 @@ void Kognac::compress(const int nthreads,
         //Annotate each term with a class ID
         LOG(INFOL) << "Annotate the terms with class info ...[threads = "
             << nthreads << "]";
-        string tmpDir = outputPath + string("/extractedTerms");
+        string tmpDir = outputPath + DIR_SEP + string("extractedTerms");
         Utils::create_directories(tmpDir);
         extractAllTermsWithClassIDs(nthreads, nReadingThreads,
                 useFP, tmpDir, frequentTermsMap,
@@ -161,7 +161,7 @@ void Kognac::compress(const int nthreads,
 
     //Re-sort the terms by class ID
     LOG(INFOL) << "Sort and merge the terms by class ID...";
-    string tmpDir2 = outputPath + string("/sortedByClass");
+    string tmpDir2 = outputPath + DIR_SEP + string("sortedByClass");
     Utils::create_directories(tmpDir2);
     sortTermsByClassId(tmpDir, tmpDir2);
     Utils::remove_all(tmpDir);
@@ -174,7 +174,7 @@ void Kognac::compress(const int nthreads,
 
 if (serializeTaxonomy) {
     LOG(INFOL) << "Serializing the taxonomy ...";
-    string path = outputPath + string("/taxonomy.gz");
+    string path = outputPath + DIR_SEP + string("taxonomy.gz");
     extractor.serialize(path);
 }
 
@@ -311,9 +311,9 @@ void Kognac::compressGraph(const int nthreads, const int nReadingThreads) {
         Utils::getUsedMemory();
 
     //The dictionary
-    zstr::ifstream in(outputPath + string("/dict.gz"), ios_base::binary);
+    zstr::ifstream in(outputPath + DIR_SEP + string("dict.gz"), ios_base::binary);
     //Create a temporary directory where to store the partially compr. files
-    string workingDir = outputPath + "/tmp_graph_compr";
+    string workingDir = outputPath + DIR_SEP + "tmp_graph_compr";
     Utils::create_directories(workingDir);
     {
         //Create a large hash map
@@ -327,7 +327,7 @@ void Kognac::compressGraph(const int nthreads, const int nReadingThreads) {
         for (int i = 0; i < nthreads; ++i) {
             counters[i] = 0;
             finalWriters.push_back(new LZ4Writer(
-                        workingDir + "/triples_unsorted" +
+                        workingDir + DIR_SEP + "triples_unsorted" +
                         to_string(i)));
         }
         bool firstPass = true;
@@ -379,7 +379,7 @@ void Kognac::compressGraph(const int nthreads, const int nReadingThreads) {
                             this,
                             readers[idxThread % nReadingThreads],
                             idxThread / nReadingThreads,
-                            workingDir + "/file" +
+                            workingDir + DIR_SEP + "file" +
                             to_string(incr++),
                             firstPass,
                             &map,
@@ -416,7 +416,7 @@ void Kognac::compressGraph(const int nthreads, const int nReadingThreads) {
     //Sort and remove the duplicates
     LOG(DEBUGL) << "Used memory at this moment " <<
         Utils::getUsedMemory();
-    sortCompressedGraph(workingDir, outputPath + string("/triples.gz"));
+    sortCompressedGraph(workingDir, outputPath + DIR_SEP + string("triples.gz"));
 
     //Remove the tmp dir
     Utils::remove_all(workingDir);
@@ -464,7 +464,7 @@ void Kognac::sortCompressedGraph(string inputDir, string outputFile, int v) {
                     cmp c;
                     std::sort(inmemorytriples.begin(), inmemorytriples.end(), c);
                     //Dump the triples in a file
-                    string tmpfile = diroutput + string("/tmp-") + to_string(id);
+                    string tmpfile = diroutput + DIR_SEP + string("tmp-") + to_string(id);
                     {
                         LZ4Writer writer(tmpfile);
                         for (std::vector<Triple>::iterator
@@ -486,7 +486,7 @@ void Kognac::sortCompressedGraph(string inputDir, string outputFile, int v) {
                 cmp c;
                 std::sort(inmemorytriples.begin(), inmemorytriples.end(), c);
                 //Dump the triples in a file
-                string tmpfile = diroutput + string("/tmp-") + to_string(id);
+                string tmpfile = diroutput + DIR_SEP + string("tmp-") + to_string(id);
                 {
                     LZ4Writer writer(tmpfile);
                     for (std::vector<Triple>::iterator itr = inmemorytriples.begin();
@@ -564,7 +564,7 @@ void Kognac::sortTermsByClassId(string inputdir, string outputdir) {
                         col.allocatedBytes() > maxMem) {
                     std::sort(elements.begin(), elements.end(),
                             &Kognac_TextClassID::lessClassIDFirst);
-                    LZ4Writer writer(outputdir + string("/") + to_string(idx++));
+                    LZ4Writer writer(outputdir + DIR_SEP + to_string(idx++));
                     for (std::vector<Kognac_TextClassID>::iterator itr =
                             elements.begin(); itr != elements.end(); ++itr) {
                         itr->writeTo(&writer);
@@ -578,7 +578,7 @@ void Kognac::sortTermsByClassId(string inputdir, string outputdir) {
         if (elements.size() > 0) {
             std::sort(elements.begin(), elements.end(),
                     &Kognac_TextClassID::lessClassIDFirst);
-            LZ4Writer writer(outputdir + string("/") + to_string(idx++));
+            LZ4Writer writer(outputdir + DIR_SEP + to_string(idx++));
             for (std::vector<Kognac_TextClassID>::iterator itr =
                     elements.begin(); itr != elements.end(); ++itr) {
                 itr->writeTo(&writer);
@@ -816,7 +816,7 @@ void Kognac::mergeAllTermsWithClassIDsPart(std::vector<string> inputFiles) {
         string file2 = inputFiles.back();
         inputFiles.pop_back();
 
-        string outputFile = Utils::parentDir(file1) + string("/n-")
+        string outputFile = Utils::parentDir(file1) + DIR_SEP + string("n-")
             + Utils::filename(file1);
         {
             LZ4Writer writer(outputFile);
@@ -967,7 +967,7 @@ void Kognac::extractAllTermsWithClassIDs(const int nthreads,
 
     std::thread *threads = new std::thread[nthreads - 1];
     for (int i = 1; i < nthreads; ++i) {
-        string outputFile = outputdir + string("/") + to_string(i);
+        string outputFile = outputdir + DIR_SEP + to_string(i);
         localClasses[i - 1] = frequencyClasses;
         if (useFP) {
             threads[i - 1] = std::thread(
@@ -993,7 +993,7 @@ void Kognac::extractAllTermsWithClassIDs(const int nthreads,
         }
     }
 
-    string outputFile = outputdir + string("/") + to_string(0);
+    string outputFile = outputdir + DIR_SEP + to_string(0);
     if (useFP) {
         extractAllTermsWithClassIDs_int(maxMem,
                 readers[0],
