@@ -1205,7 +1205,7 @@ void Compressor::parse(int dictPartitions, int sampleMethod, int sampleArg,
     } else if (sampleMethod == PARSE_MGCS) {
         LOG(ERRORL) << "No int64_ter supported";
         throw 10;
-        do_mcgs();
+        //do_mcgs();
     } else { //PARSE_SAMPLE
         if (ignorePredicates) {
             LOG(ERRORL) << "The option ignorePredicates is not implemented in combination with sampling";
