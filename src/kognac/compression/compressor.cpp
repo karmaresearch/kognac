@@ -1072,11 +1072,11 @@ bool Compressor::isSplittable(string path) {
 vector<FileInfo> *Compressor::splitInputInChunks(const string &input, int nchunks, string prefix) {
     /*** Get list all files ***/
     vector<FileInfo> infoAllFiles;
-    long totalSize = 0;
+    int64_t totalSize = 0;
     if (Utils::isDirectory(input)) {
         std::vector<string> children = Utils::getFilesWithPrefix(input, prefix);
         for(auto f : children) {
-            long fileSize = Utils::fileSize(f);
+            int64_t fileSize = Utils::fileSize(f);
             totalSize += fileSize;
             FileInfo i;
             i.size = fileSize;
@@ -1086,7 +1086,7 @@ vector<FileInfo> *Compressor::splitInputInChunks(const string &input, int nchunk
             infoAllFiles.push_back(i);
         }
     } else {
-        long fileSize = Utils::fileSize(input);
+        int64_t fileSize = Utils::fileSize(input);
         totalSize += fileSize;
         FileInfo i;
         i.size = fileSize;
@@ -1101,10 +1101,10 @@ vector<FileInfo> *Compressor::splitInputInChunks(const string &input, int nchunk
     /*** Sort the input files by size, and split the files through the multiple processors ***/
     std::sort(infoAllFiles.begin(), infoAllFiles.end(), cmpInfoFiles);
     vector<FileInfo> *files = new vector<FileInfo>[nchunks];
-    long splitTargetSize = totalSize / nchunks;
+    int64_t splitTargetSize = totalSize / nchunks;
     int processedFiles = 0;
     int currentSplit = 0;
-    long splitSize = 0;
+    int64_t splitSize = 0;
     while (processedFiles < infoAllFiles.size()) {
         FileInfo f = infoAllFiles[processedFiles++];
         if (!f.splittable) {
@@ -1116,9 +1116,9 @@ vector<FileInfo> *Compressor::splitInputInChunks(const string &input, int nchunk
                 splitSize = 0;
             }
         } else {
-            long assignedFileSize = 0;
+            int64_t assignedFileSize = 0;
             while (assignedFileSize < f.size) {
-                long sizeToCopy;
+                int64_t sizeToCopy;
                 if (currentSplit == nchunks - 1) {
                     sizeToCopy = f.size - assignedFileSize;
                 } else {
@@ -1147,7 +1147,7 @@ vector<FileInfo> *Compressor::splitInputInChunks(const string &input, int nchunk
     infoAllFiles.clear();
 
     for (int i = 0; i < nchunks; ++i) {
-        long totalSize = 0;
+        int64_t totalSize = 0;
         for (vector<FileInfo>::iterator itr = files[i].begin();
                 itr < files[i].end(); ++itr) {
             totalSize += itr->size;

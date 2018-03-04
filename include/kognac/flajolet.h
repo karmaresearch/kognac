@@ -32,7 +32,7 @@ using namespace std;
 class FlajoletMartin {
 private:
 
-    long key1, key2, key3;
+    int64_t key1, key2, key3;
 
     //Taken from http://graphics.stanford.edu/~seander/bithacks.html#ZerosOnRightMultLookup
     static int deBruijnAlgo(const unsigned int v) {
@@ -51,7 +51,7 @@ public:
         key1 = key2 = key3 = 0;
     }
 
-    static int posleastSignificantOne(const long i) {
+    static int posleastSignificantOne(const int64_t i) {
         unsigned int n = (unsigned int)i;
         if (n == 0) {
             n = (unsigned int)(i >> 32);
@@ -67,28 +67,28 @@ public:
         }
     }
 
-    static int posFirstZero(long n) {
+    static int posFirstZero(int64_t n) {
         int i = 0;
         for (; i < 64 && n & 1; ++i)
             n >>= 1;
         return i;
     }
 
-    void addElement(const long el1, const long el2, const long el3) {
+    void addElement(const int64_t el1, const int64_t el2, const int64_t el3) {
         int p1 = posleastSignificantOne(el1);
         int p2 = posleastSignificantOne(el2);
         int p3 = posleastSignificantOne(el3);
-        key1 |= (long)1 << p1;
-        key2 |= (long)1 << p2;
-        key3 |= (long)1 << p3;
+        key1 |= (int64_t)1 << p1;
+        key2 |= (int64_t)1 << p2;
+        key3 |= (int64_t)1 << p3;
     }
 
-    long estimateCardinality() {
+    int64_t estimateCardinality() {
         int pos1 = posFirstZero(key1);
         int pos2 = posFirstZero(key2);
         int pos3 = posFirstZero(key3);
         int avg = (pos1 + pos2 + pos3) / 3;
-        return (long) (double)pow(2, avg) / FLAJETCOS * 3;
+        return (int64_t) (double)pow(2, avg) / FLAJETCOS * 3;
     }
 };
 

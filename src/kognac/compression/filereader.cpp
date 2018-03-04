@@ -17,7 +17,7 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
-**/
+ **/
 
 #include <kognac/filereader.h>
 #include <kognac/consts.h>
@@ -35,46 +35,46 @@ string GZIP_EXTENSION = string(".gz");
 FileReader::FileReader(char *buffer, size_t sizebuffer, bool gzipped) :
     byteArray(true), rawByteArray(buffer),
     sizeByteArray(sizebuffer), compressed(gzipped) {
-    rawFile = NULL;
-    if (compressed) {
-        //Decompress the stream
-	std::string b(buffer, buffer + sizebuffer);
-	std::istringstream bytestream(b);
-	zstr::istream stream(bytestream);
-	std::vector<char> contents((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
-	uncompressedByteArray.swap(contents);
+        rawFile = NULL;
+        if (compressed) {
+            //Decompress the stream
+            std::string b(buffer, buffer + sizebuffer);
+            std::istringstream bytestream(b);
+            zstr::istream stream(bytestream);
+            std::vector<char> contents((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
+            uncompressedByteArray.swap(contents);
+        }
+        currentIdx = 0;
     }
-    currentIdx = 0;
-}
 
 FileReader::FileReader(FileInfo sFile) :
     byteArray(false), compressed(!sFile.splittable) {
-    //First check the extension to identify what kind of file it is.
-    if (Utils::hasExtension(sFile.path) && Utils::extension(sFile.path) == GZIP_EXTENSION) {
-	rawFile = new zstr::ifstream(sFile.path);
-    } else {
-	rawFile = new std::ifstream(sFile.path, ios_base::in | ios_base::binary);
-    }
+        //First check the extension to identify what kind of file it is.
+        if (Utils::hasExtension(sFile.path) && Utils::extension(sFile.path) == GZIP_EXTENSION) {
+            rawFile = new zstr::ifstream(sFile.path);
+        } else {
+            rawFile = new std::ifstream(sFile.path, ios_base::in | ios_base::binary);
+        }
 
-    if (sFile.splittable) {
-        end = sFile.start + sFile.size;
-    } else {
-        end = LONG_MAX;
-    }
+        if (sFile.splittable) {
+            end = sFile.start + sFile.size;
+        } else {
+            end = INT64_MAX;
+        }
 
-    //If start != 0 then move to first '\n'
-    if (sFile.start > 0) {
-        rawFile->seekg(sFile.start);
-//Seek to the first '\n'
-        while (!rawFile->eof() && rawFile->get() != '\n') {
-        };
-    }
-    countBytes = rawFile->tellg();
-    tripleValid = false;
+        //If start != 0 then move to first '\n'
+        if (sFile.start > 0) {
+            rawFile->seekg(sFile.start);
+            //Seek to the first '\n'
+            while (!rawFile->eof() && rawFile->get() != '\n') {
+            };
+        }
+        countBytes = rawFile->tellg();
+        tripleValid = false;
 
-    startS = startP = startO = NULL;
-    lengthS = lengthP = lengthO = 0;
-}
+        startS = startP = startO = NULL;
+        lengthS = lengthP = lengthO = 0;
+    }
 
 bool FileReader::parseTriple() {
     bool ok = false;
@@ -91,7 +91,7 @@ bool FileReader::parseTriple() {
                     return parseTriple();
                 }
                 tripleValid = parseLine(&uncompressedByteArray[currentIdx],
-                                        e - currentIdx);
+                        e - currentIdx);
                 currentIdx = e + 1;
                 return true;
             } else {
@@ -119,7 +119,7 @@ bool FileReader::parseTriple() {
         }
     } else {
         if (compressed) {
-	    ok = (bool) std::getline(*rawFile, currentLine);
+            ok = (bool) std::getline(*rawFile, currentLine);
         } else {
             ok = countBytes <= end && std::getline(*rawFile, currentLine);
             if (ok) {
@@ -159,7 +159,7 @@ bool FileReader::isTripleValid() {
 }
 
 void FileReader::checkRange(const char *pointer, const char* start,
-                            const char *end) {
+        const char *end) {
     if (pointer == NULL || pointer <= (start + 1) || pointer > end) {
         throw ex;
     }
@@ -215,7 +215,7 @@ bool FileReader::parseLine(const char *line, const int sizeLine) {
 
     } catch (std::exception &e) {
         LOG(ERRORL) << "Failed parsing line: " + string(line, sizeLine);
-	//abort();
+        //abort();
     }
     return false;
 }

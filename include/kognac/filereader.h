@@ -17,7 +17,7 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
-**/
+ **/
 
 #ifndef FILEREADER_H_
 #define FILEREADER_H_
@@ -32,67 +32,67 @@
 using namespace std;
 
 class ParseException: public exception {
-public:
-    virtual const char* what() const throw () {
-        return "Line is not parsed correctly";
-    }
+    public:
+        virtual const char* what() const throw () {
+            return "Line is not parsed correctly";
+        }
 };
 
 typedef struct FileInfo {
-    long size;
-    long start;
+    int64_t size;
+    int64_t start;
     bool splittable;
     string path;
 } FileInfo;
 
 class FileReader {
-private:
-    //Params used if we read from a byte array
-    const bool byteArray;
-    std::vector<char> uncompressedByteArray;
-    char *rawByteArray;
-    size_t sizeByteArray;
-    size_t currentIdx;
+    private:
+        //Params used if we read from a byte array
+        const bool byteArray;
+        std::vector<char> uncompressedByteArray;
+        char *rawByteArray;
+        size_t sizeByteArray;
+        size_t currentIdx;
 
-    const bool compressed;
-    istream *rawFile;
-    string currentLine;
-    bool tripleValid;
-    long end;
-    long countBytes;
+        const bool compressed;
+        istream *rawFile;
+        string currentLine;
+        bool tripleValid;
+        int64_t end;
+        int64_t countBytes;
 
-    const char *startS;
-    int lengthS;
-    const char* startP;
-    int lengthP;
-    const char *startO;
-    int lengthO;
+        const char *startS;
+        int lengthS;
+        const char* startP;
+        int lengthP;
+        const char *startO;
+        int lengthO;
 
-    ParseException ex;
-    bool parseLine(const char *input, const int sizeInput);
+        ParseException ex;
+        bool parseLine(const char *input, const int sizeInput);
 
-    void checkRange(const char *pointer, const char* start, const char *end);
+        void checkRange(const char *pointer, const char* start, const char *end);
 
-public:
-    FileReader(FileInfo file);
+    public:
+        FileReader(FileInfo file);
 
-    FileReader(char *buffer, size_t sizebuffer, bool gzipped);
+        FileReader(char *buffer, size_t sizebuffer, bool gzipped);
 
-    bool parseTriple();
+        bool parseTriple();
 
-    bool isTripleValid();
+        bool isTripleValid();
 
-    const char *getCurrentS(int &length);
+        const char *getCurrentS(int &length);
 
-    const char *getCurrentP(int &length);
+        const char *getCurrentP(int &length);
 
-    const char *getCurrentO(int &length);
+        const char *getCurrentO(int &length);
 
-    ~FileReader() {
-	if (rawFile != NULL) {
-	    delete rawFile;
-	}
-    }
+        ~FileReader() {
+            if (rawFile != NULL) {
+                delete rawFile;
+            }
+        }
 };
 
 #endif /* FILEREADER_H_ */

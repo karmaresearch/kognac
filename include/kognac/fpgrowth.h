@@ -34,7 +34,7 @@ using namespace std;
 template<class NodeType>
 struct FPattern {
     std::vector<NodeType> patternElements;
-    long support;
+    int64_t support;
 };
 
 template<class NodeType>
@@ -89,7 +89,7 @@ private:
 
     public:
         NodeType node;
-        unsigned long freq;
+        uint64_t freq;
 
         FPNode *parent;
         FPNode* nextNode;
@@ -189,11 +189,11 @@ private:
         }
     }
 
-    typedef std::vector<std::pair<long, std::pair<NodeType,
+    typedef std::vector<std::pair<int64_t, std::pair<NodeType,
             FPNode*> > > SupportElements;
     void find_with_suffix(PatternContainer<NodeType> &output,
                           const FPTree &tree,
-                          long minSupport,
+                          int64_t minSupport,
                           const int maxLen,
                           FPattern<NodeType> &existingPattern) const {
         SupportElements input = tree.
@@ -255,7 +255,7 @@ private:
 
     static FPTree createConditionalTreeFromPrefixes(const NodeType &root,
             const std::vector <
-            std::vector<FPNode* > > &prefixes, long minSupport,
+            std::vector<FPNode* > > &prefixes, int64_t minSupport,
             const NodeType &leaf) {
         FPTree tree(root);
 
@@ -275,20 +275,20 @@ private:
         return tree;
     }
 
-    static bool lessAscOrder(const std::pair<long, std::pair<NodeType,
+    static bool lessAscOrder(const std::pair<int64_t, std::pair<NodeType,
                              FPNode*> > &el1,
-                             const std::pair<long, std::pair<NodeType,
+                             const std::pair<int64_t, std::pair<NodeType,
                              FPNode*> > &el2) {
         return el1.first > el2.first;
     }
 
-    SupportElements getListElementsSortedBySupport(const long threshold)
+    SupportElements getListElementsSortedBySupport(const int64_t threshold)
     const {
         //Scroll the list from bottom to top
         SupportElements supportAllPatterns;
         for (const auto& itr : fptable) {
             //Calculate overall support for each pattern
-            long support = 0;
+            int64_t support = 0;
             auto node = itr.second;
             for (; node; node = node->nextNode) {
                 support += node->freq;
@@ -336,11 +336,11 @@ public:
         }
     }
 
-    std::map<unsigned long, unsigned long> getClassesSupport() {
-        std::map<unsigned long, unsigned long> output;
+    std::map<uint64_t, uint64_t> getClassesSupport() {
+        std::map<uint64_t, uint64_t> output;
         for (auto &el : fptable) {
             //Get the sum of the support
-            long sum = 0;
+            int64_t sum = 0;
             FPNode* n = el.second;
             while (n) {
                 sum += n->freq;
@@ -351,7 +351,7 @@ public:
         return output;
     }
 
-    void getFreqPatterns(PatternContainer<NodeType> &container, const int maxLen, const long threshold)
+    void getFreqPatterns(PatternContainer<NodeType> &container, const int maxLen, const int64_t threshold)
     const {
         //Start the extraction
         //std::vector<FPattern<NodeType>> output;
@@ -377,11 +377,11 @@ public:
         }
     }
 
-    void pruneNodesInTreeWithNoSupport(const long minSupport) {
+    void pruneNodesInTreeWithNoSupport(const int64_t minSupport) {
         std::vector<NodeType> nodesToRemove;
         for (auto &el : fptable) {
             //Get the sum of the support
-            long sum = 0;
+            int64_t sum = 0;
             FPNode* n = el.second;
             while (n) {
                 sum += n->freq;
