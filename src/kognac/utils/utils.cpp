@@ -277,6 +277,7 @@ void Utils::remove_all(string path) {
         for (uint64_t i = 0; i < subdirs.size(); ++i) {
             remove_all(subdirs[i]);
         }
+        remove(path);
     } else {
         remove(path);
     }
