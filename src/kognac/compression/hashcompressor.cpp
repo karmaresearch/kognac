@@ -32,7 +32,7 @@
 
 using namespace std;
 
-long HashCompressor::compress(string inputDir, string tmpDir, string *permDirs,
+int64_t HashCompressor::compress(string inputDir, string tmpDir, string *permDirs,
                               int nperms, int signaturePerms,
                               string *nameDicts, int ndicts, int maxThreads,
                               int readThreads) {
@@ -49,7 +49,7 @@ long HashCompressor::compress(string inputDir, string tmpDir, string *permDirs,
     /***** Compress the triples and extract (in parallel) all the terms from the input *****/
     std::thread *threads = new std::thread[maxThreads - 1];
     int chunksToProcess = 0;
-    long *outputs = new long[maxThreads];
+    int64_t *outputs = new int64_t[maxThreads];
     for (int i = 0; i < maxThreads; ++i)
         outputs[i] = 0;
 
@@ -75,14 +75,14 @@ long HashCompressor::compress(string inputDir, string tmpDir, string *permDirs,
         chunksToProcess += readThreads;
     }
     delete[] threads;
-    long total = 0;
+    int64_t total = 0;
     for (int i = 0; i < maxThreads; ++i) {
         total += outputs[i];
     }
     delete[] outputs;
 
     /***** Then I merge the dictionaries entries looking for conflicts *****/
-    long maxMemAllocate = max((long) (BLOCK_SUPPORT_BUFFER_COMPR * 2), (long) (Utils::getSystemMemory() * 0.70 / ndicts));
+    int64_t maxMemAllocate = max((int64_t) (BLOCK_SUPPORT_BUFFER_COMPR * 2), (int64_t) (Utils::getSystemMemory() * 0.70 / ndicts));
     threads = new std::thread[ndicts - 1];
     for (int i = 1; i < ndicts; ++i) {
         threads[i - 1] = std::thread(std::bind(&HashCompressor::mergeDictionaries, this, tmpDir, tmpDictFiles, i, maxThreads, nameDicts[i], maxMemAllocate));
@@ -104,7 +104,7 @@ long HashCompressor::compress(string inputDir, string tmpDir, string *permDirs,
     return total;
 }
 
-void HashCompressor::mergeDictionaries(string tmpDir, string **files, int dictID, int nfiles, string outputFile, long maxSizeToSort) {
+void HashCompressor::mergeDictionaries(string tmpDir, string **files, int dictID, int nfiles, string outputFile, int64_t maxSizeToSort) {
     //First create a temporary directory
     string dir = tmpDir + string("/tmp-sorting-pool-") + to_string(dictID);
     Utils::create_directories(dir);
@@ -127,7 +127,7 @@ void HashCompressor::mergeFiles(string tmpPrefixFile, int nInputFiles, string ou
     }
     FileMerger<DictPair> merger(inputFiles);
 
-    long previousKey = -1;
+    int64_t previousKey = -1;
     char *previousTerm = new char[MAX_TERM_SIZE + 2];
     int sPreviousTerm = 0;
     Utils::encode_short(previousTerm, 0, 0);
@@ -155,12 +155,12 @@ void HashCompressor::mergeFiles(string tmpPrefixFile, int nInputFiles, string ou
     delete[] previousTerm;
 }
 
-void HashCompressor::inmemorysort(string **inputFiles, int dictID, int nFiles, string outputFile, int &noutputFiles, const long maxSizeToSort) {
+void HashCompressor::inmemorysort(string **inputFiles, int dictID, int nFiles, string outputFile, int &noutputFiles, const int64_t maxSizeToSort) {
 
     noutputFiles = 0;
     StringCollection supportCollection(BLOCK_SUPPORT_BUFFER_COMPR);
-    long bytesAllocated = 0;
-    vector<std::pair<long, const char*>> terms;
+    int64_t bytesAllocated = 0;
+    vector<std::pair<int64_t, const char*>> terms;
 
     for (int i = 0; i < nFiles; ++i) {
         //Read the file
@@ -169,11 +169,11 @@ void HashCompressor::inmemorysort(string **inputFiles, int dictID, int nFiles, s
         if (Utils::exists(fileName)) {
             LZ4Reader *fis = new LZ4Reader(fileName);
             while (!fis->isEof()) {
-                long key = fis->parseLong();
+                int64_t key = fis->parseLong();
                 int lenStr = 0;
                 const char *t = fis->parseString(lenStr);
 
-                if ((bytesAllocated + (sizeof(pair<long, const char*>) * terms.size()))
+                if ((bytesAllocated + (sizeof(pair<int64_t, const char*>) * terms.size()))
                         >= maxSizeToSort) {
                     string ofile = outputFile + string(".")
                                    + to_string(noutputFiles++);
@@ -182,7 +182,7 @@ void HashCompressor::inmemorysort(string **inputFiles, int dictID, int nFiles, s
                     supportCollection.clear();
                     bytesAllocated = 0;
                 }
-                std::pair<long, const char*> pair = std::make_pair(key, supportCollection.addNew(t, lenStr));
+                std::pair<int64_t, const char*> pair = std::make_pair(key, supportCollection.addNew(t, lenStr));
                 terms.push_back(pair);
                 bytesAllocated += lenStr;
             }
@@ -196,7 +196,7 @@ void HashCompressor::inmemorysort(string **inputFiles, int dictID, int nFiles, s
     }
 }
 
-bool HashCompressor::inmemoryPairLess(std::pair<long, const char*> p1, std::pair<long, const char*> p2) {
+bool HashCompressor::inmemoryPairLess(std::pair<int64_t, const char*> p1, std::pair<int64_t, const char*> p2) {
     return p1.first < p2.first;
 }
 
@@ -209,11 +209,11 @@ bool te(const char *p1, const char *p2) {
     return false;
 }
 
-void HashCompressor::sortAndDumpToFile(vector<std::pair<long, const char*>> *terms, string outputFile) {
+void HashCompressor::sortAndDumpToFile(vector<std::pair<int64_t, const char*>> *terms, string outputFile) {
     std::sort(terms->begin(), terms->end(), HashCompressor::inmemoryPairLess);
     LZ4Writer *outputSegment = new LZ4Writer(outputFile);
     const char *prevTerm = NULL;
-    for (vector<std::pair<long, const char*>>::iterator itr = terms->begin(); itr != terms->end();
+    for (vector<std::pair<int64_t, const char*>>::iterator itr = terms->begin(); itr != terms->end();
             ++itr) {
         if (prevTerm == NULL
                 || !te(prevTerm, itr->second)) {
@@ -230,13 +230,13 @@ void HashCompressor::encodeTerm(char *supportTerm, const char *term, const int l
     memcpy(supportTerm + 2, term, l);
 }
 
-void HashCompressor::writeTermOnTmpFile(const long key, const char *term, const int l, LZ4Writer **writers, const int nwriters) {
+void HashCompressor::writeTermOnTmpFile(const int64_t key, const char *term, const int l, LZ4Writer **writers, const int nwriters) {
     int part = key % nwriters;
     writers[part]->writeLong(key);
     writers[part]->writeString(term, l);
 }
 
-void HashCompressor::compressAndExtractDictionaries(int partitionId, vector<FileInfo> &input, string *tmpDictEntries, int ndicts, string *permDirs, int nperms, int signaturePerms, long *output) {
+void HashCompressor::compressAndExtractDictionaries(int partitionId, vector<FileInfo> &input, string *tmpDictEntries, int ndicts, string *permDirs, int nperms, int signaturePerms, int64_t *output) {
     LZ4Writer **writers = new LZ4Writer*[ndicts];
     for (int i  = 0; i < ndicts; ++i) {
         writers[i] = new LZ4Writer(tmpDictEntries[i]);
@@ -249,8 +249,8 @@ void HashCompressor::compressAndExtractDictionaries(int partitionId, vector<File
 
     LRUByteArraySet lrucache(10000, MAX_TERM_SIZE + 2);
     char *supportTerm = new char[MAX_TERM_SIZE + 2];
-    long count = 0;
-    long countNotValid = 0;
+    int64_t count = 0;
+    int64_t countNotValid = 0;
     int detailPerms[6];
     Compressor::parsePermutationSignature(signaturePerms, detailPerms);
     for (int i = 0; i < input.size(); ++i) {
@@ -261,21 +261,21 @@ void HashCompressor::compressAndExtractDictionaries(int partitionId, vector<File
                 //Write subject predicate object on both spo and ops, and add data structures
                 int l = 0;
                 const char *t = reader.getCurrentS(l);
-                long ks = Hashes::getCodeWithDefaultFunction(t, l);
+                int64_t ks = Hashes::getCodeWithDefaultFunction(t, l);
                 encodeTerm(supportTerm, t, l);
                 if (lrucache.put(supportTerm)) {
                     writeTermOnTmpFile(ks, supportTerm, l + 2, writers, ndicts);
                 }
 
                 t = reader.getCurrentP(l);
-                long kp = Hashes::getCodeWithDefaultFunction(t, l);
+                int64_t kp = Hashes::getCodeWithDefaultFunction(t, l);
                 encodeTerm(supportTerm, t, l);
                 if (lrucache.put(supportTerm)) {
                     writeTermOnTmpFile(kp, supportTerm, l + 2, writers, ndicts);
                 }
 
                 t = reader.getCurrentO(l);
-                long ko = Hashes::getCodeWithDefaultFunction(t, l);
+                int64_t ko = Hashes::getCodeWithDefaultFunction(t, l);
                 encodeTerm(supportTerm, t, l);
                 if (lrucache.put(supportTerm)) {
                     writeTermOnTmpFile(ko, supportTerm, l + 2, writers, ndicts);

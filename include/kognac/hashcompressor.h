@@ -26,7 +26,7 @@
 #include <kognac/lz4io.h>
 
 struct DictPair {
-    long key;
+    int64_t key;
     const char *value;
 
     void readFrom(LZ4Reader *reader) {
@@ -43,24 +43,24 @@ struct DictPair {
 class HashCompressor {
 
 private:
-    void writeTermOnTmpFile(const long key, const char *term, const int l, LZ4Writer **writers, const int nwriters);
+    void writeTermOnTmpFile(const int64_t key, const char *term, const int l, LZ4Writer **writers, const int nwriters);
 
-    void compressAndExtractDictionaries(int partitionId, vector<FileInfo> &input, string *tmpDictFiles, int ndicts, string *permDirs, int nperms, int signaturePerms, long *output);
+    void compressAndExtractDictionaries(int partitionId, vector<FileInfo> &input, string *tmpDictFiles, int ndicts, string *permDirs, int nperms, int signaturePerms, int64_t *output);
 
     void encodeTerm(char *supportTerm, const char *term, const int l);
 
-    void mergeDictionaries(string tmpDir, string **files, int dictID, int nfiles, string outputFile, long maxSizeToSort);
+    void mergeDictionaries(string tmpDir, string **files, int dictID, int nfiles, string outputFile, int64_t maxSizeToSort);
 
-    void inmemorysort(string **inputFiles, int dictID, int nFiles, string outputFile, int &noutputFiles, const long maxSizeToSort);
+    void inmemorysort(string **inputFiles, int dictID, int nFiles, string outputFile, int &noutputFiles, const int64_t maxSizeToSort);
 
-    void sortAndDumpToFile(vector<std::pair<long, const char*>> *terms, string outputFile);
+    void sortAndDumpToFile(vector<std::pair<int64_t, const char*>> *terms, string outputFile);
 
     void mergeFiles(string tmpPrefixFile, int nInputFiles, string outputFile);
 
-    static bool inmemoryPairLess(std::pair<long, const char*> p1, std::pair<long, const char*> p2);
+    static bool inmemoryPairLess(std::pair<int64_t, const char*> p1, std::pair<int64_t, const char*> p2);
 
 public:
-    long compress(string inputDir, string tmpDir, string *permDirs, int nperms,
+    int64_t compress(string inputDir, string tmpDir, string *permDirs, int nperms,
                   int signaturePerm, string *nameDicts, int ndicts, int threads,
                   int readThreads);
 };
