@@ -48,7 +48,8 @@ void initParams(int argc, const char** argv, ProgramArgs &vm) {
         .add<bool>("c","compressGraph", false, "Should I also compress the graph. If set, I create a compressed version of the triples.", false)
         .add<int>("", "sampleArg1", 0, "Argument for the method to identify the popular terms. If the method is sample, then it represents the top k elements to extract. If it is hash or mgcs, then it indicates the number o  popular terms", true)
         .add<string>("", "sampleMethod", "cm", "Method to use to identify the popular terms. Can be either 'sample', 'cm', 'mgcs', 'cm_mgcs'", false)
-        .add<int>("", "sampleArg2", 500, "This argument is used during the sampling procedure. It determines the sampling rate (x/10000)", false);
+        .add<int>("", "sampleArg2", 500, "This argument is used during the sampling procedure. It determines the sampling rate (x/10000)", false)
+        .add<int64_t>("", "startCounter", 0, "Number to use to start assigning IDs.", false);
 
     vm.parse(argc, argv);
 }
@@ -77,6 +78,7 @@ int main(int argc, const char **argv) {
     const int minSupport = vm["minSupport"].as<int>();
     const bool useFP = vm["fp"].as<bool>();
     const bool serializeTaxonomy = vm["serializeTax"].as<bool>();
+    const int64_t startCounter = vm["startCounter"].as<int64_t>();
     int sampleMethod = PARSE_COUNTMIN;
     if (vm["sampleMethod"].as<string>() == string("sample")) {
         sampleMethod = PARSE_SAMPLE;
@@ -93,7 +95,7 @@ int main(int argc, const char **argv) {
             maxConcurrentThreads);
     LOG(INFOL) << "Creating the dictionary mapping ...";
     kognac.compress(parallelThreads, maxConcurrentThreads, useFP, minSupport,
-            serializeTaxonomy);
+            serializeTaxonomy, startCounter);
 
     if (compressGraph) {
         LOG(INFOL) << "Compressing the triples ...";

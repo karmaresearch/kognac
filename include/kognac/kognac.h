@@ -321,7 +321,8 @@ public:
                   const int nReadingThreads,
                   const bool useFP,
                   const int minSupport,
-                  const bool serializeTaxonomy);
+                  const bool serializeTaxonomy,
+                  const int64_t startCounter = 0);
 
     void compressGraph(const int nthreads, const int nReadingThreads);
 

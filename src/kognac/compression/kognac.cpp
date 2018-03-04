@@ -91,13 +91,14 @@ void Kognac::compress(const int nthreads,
         const int nReadingThreads,
         const bool useFP,
         const int minSupport,
-        const bool serializeTaxonomy) {
+        const bool serializeTaxonomy,
+        int64_t startCounter) {
 
     LOG(DEBUGL) << "Used memory at this moment " <<
         Utils::getUsedMemory();
 
     // Create the output
-    int64_t counter = 0;
+    int64_t counter = startCounter;
     zstr::ofstream out(outputPath + string("/dict.gz"), ios_base::binary);
     {
         //Assign the number to the popular terms and copy them in a fast
@@ -150,30 +151,6 @@ void Kognac::compress(const int nthreads,
 
             //Extract frequent patterns
             throw 10;
-            //Not supported. I must implement a container first
-            /*std::vector<FPattern<uint64_t>> patterns =
-              frequentPatterns->
-              getFreqPatterns(minSupport);
-
-            //Store all the patterns in one file
-            ofstream patternFile(outputPath + " / logs_patterns");
-            for (auto &pattern : patterns) {
-            if (pattern.patternElements.size() > 1) {
-            string line = "s = " + to_string(pattern.support) + " {";
-            for (auto &el : pattern.patternElements) {
-            line += " " + classesHash2.find(el)->second +
-            " " + to_string(el);
-            }
-            line += "
-            }";
-            patternFile << line << endl;
-            }
-            }
-
-            LOG(INFOL) << "Rearranging tree ...";
-            auto classes = frequentPatterns->getClassesSupport();
-            extractor.rearrangeWithPatterns(classes, patterns);*/
-            //extractor.printTree();
     } else {
         mergeAllTermsWithClassIDs(nthreads, tmpDir);
     }
