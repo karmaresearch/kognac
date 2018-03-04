@@ -98,7 +98,7 @@ private:
         }
 
         if (!is.good() || is.gcount() != 21) {
-            LOG(ERRORL) << "Problems reading from the file. Only " << is.gcount() << " out of 21 were being read";
+            LOG(ERRORL) << "Problems reading from the file. Only " << (int64_t)is.gcount() << " out of 21 were being read";
         }
 
         int token = header[8] & 0xFF;
@@ -111,13 +111,13 @@ private:
         case 16:
             is.read(uncompressedBuffer, uncompressedLen);
             if (!is.good()) {
-                LOG(ERRORL) << "Problems reading from the file. Only " << is.gcount() << " out of " << uncompressedLen << " were being read";
+                LOG(ERRORL) << "Problems reading from the file. Only " << (int64_t)is.gcount() << " out of " << uncompressedLen << " were being read";
             }
             break;
         case 32:
             is.read(compressedBuffer, compressedLen);
             if (!is.good()) {
-                LOG(ERRORL) << "Problems reading from the file. Only " << is.gcount() << " out of " << compressedLen << " were being read";
+                LOG(ERRORL) << "Problems reading from the file. Only " << (int64_t)is.gcount() << " out of " << compressedLen << " were being read";
             }
 
             if (!LZ4_decompress_fast(compressedBuffer, uncompressedBuffer,
