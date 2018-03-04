@@ -35,21 +35,21 @@
 
 using namespace std;
 
-typedef google::dense_hash_map<const char *, vector<long>, hashstr, eqstr> SchemaMap;
-typedef google::dense_hash_map<long, vector<long> *> NumericSchemaMap;
-typedef google::dense_hash_map<long, vector<long> > NumericNPSchemaMap;
+typedef google::dense_hash_map<const char *, vector<int64_t>, hashstr, eqstr> SchemaMap;
+typedef google::dense_hash_map<int64_t, vector<int64_t> *> NumericSchemaMap;
+typedef google::dense_hash_map<int64_t, vector<int64_t> > NumericNPSchemaMap;
 typedef google::dense_hash_set<const char*, hashstr, eqstr> TextualSet;
 
-typedef google::dense_hash_map<long, long> DomainRangeMap;
+typedef google::dense_hash_map<int64_t, int64_t> DomainRangeMap;
 
 typedef struct ExtNode {
-    const long key;
+    const int64_t key;
     ExtNode *child;
     ExtNode *parent;
     ExtNode* sibling;
-    long assignedID;
+    int64_t assignedID;
     int depth;
-    ExtNode(const long k) : key(k), child(NULL), parent(NULL), sibling(NULL),
+    ExtNode(const int64_t k) : key(k), child(NULL), parent(NULL), sibling(NULL),
         assignedID(0), depth(0) {}
     static bool less(ExtNode *n1, ExtNode *n2) {
         return n1->depth > n2->depth;
@@ -59,23 +59,23 @@ typedef struct ExtNode {
 class SchemaExtractor {
 
 private:
-    bool isPresent(const long el, vector<long> &elements);
+    bool isPresent(const int64_t el, vector<int64_t> &elements);
 
     void rearrangeTreeByDepth(ExtNode *node);
 
-    bool isReachable(NumericSchemaMap &map, vector<long> &prevEls, long source,
-                     long dest);
+    bool isReachable(NumericSchemaMap &map, vector<int64_t> &prevEls, int64_t source,
+                     int64_t dest);
 
-    bool isDirectSubclass(NumericSchemaMap &map, long subclass, long superclass);
+    bool isDirectSubclass(NumericSchemaMap &map, int64_t subclass, int64_t superclass);
 
     void addToMap(SchemaMap &map, const char *key, const char *value);
 
-    void addToMap(SchemaMap &map, const char *key, const long value);
+    void addToMap(SchemaMap &map, const char *key, const int64_t value);
 
-    void addToMap(NumericNPSchemaMap &map, const long key, const long value);
+    void addToMap(NumericNPSchemaMap &map, const int64_t key, const int64_t value);
 
     ExtNode *buildTreeFromRoot(NumericNPSchemaMap &map, NumericSchemaMap &subclassMap,
-                               const long root);
+                               const int64_t root);
 
     void processClasses(SchemaMap &inputMap, NumericNPSchemaMap &outputMap);
 
@@ -85,7 +85,7 @@ private:
 
     void deallocateTree(ExtNode *node);
 
-    void assignID(ExtNode *root, long &counter);
+    void assignID(ExtNode *root, int64_t &counter);
 
     void printTree(int padding, ExtNode *root);
 
@@ -107,8 +107,8 @@ protected:
     DomainRangeMap domains;
     DomainRangeMap ranges;
 
-    map<long, string> hashMappings;
-    map<long, std::pair<long, long> > classesRanges;
+    map<int64_t, string> hashMappings;
+    map<int64_t, std::pair<int64_t, int64_t> > classesRanges;
 
     /*SetEstimation propertyCardinality;
     google::dense_hash_map<long, long> propertiesID;*/
@@ -116,8 +116,8 @@ protected:
     ExtNode *root;
 
 public:
-    static const long HASHCLASS;
-    static const long HASHTYPE;
+    static const int64_t HASHCLASS;
+    static const int64_t HASHTYPE;
 
     SchemaExtractor();
 
@@ -133,28 +133,28 @@ public:
 
     void serialize(string file);
 
-    void rearrangeWithPatterns(std::map<unsigned long, unsigned long> &classes,
-                               std::vector<FPattern<unsigned long> > &patterns);
+    void rearrangeWithPatterns(std::map<uint64_t, uint64_t> &classes,
+                               std::vector<FPattern<uint64_t> > &patterns);
 
-    long getRankingProperty(const long property);
+    int64_t getRankingProperty(const int64_t property);
 
-    bool hasDomain(const long hashProperty) const;
+    bool hasDomain(const int64_t hashProperty) const;
 
-    long getDomain(const long hashProperty) const;
+    int64_t getDomain(const int64_t hashProperty) const;
 
-    bool hasRange(const long hashProperty) const;
+    bool hasRange(const int64_t hashProperty) const;
 
-    long getRange(const long hashProperty) const;
+    int64_t getRange(const int64_t hashProperty) const;
 
     std::set<string> getAllClasses() const;
 
-    string getText(long id) const;
+    string getText(int64_t id) const;
 
-    void retrieveInstances(const long term, const vector<long> **output) const;
+    void retrieveInstances(const int64_t term, const vector<int64_t> **output) const;
 
-    void addClassesBeginEndRange(const long classId,
-                                 const long start,
-                                 const long end);
+    void addClassesBeginEndRange(const int64_t classId,
+                                 const int64_t start,
+                                 const int64_t end);
 
     ~SchemaExtractor();
 };

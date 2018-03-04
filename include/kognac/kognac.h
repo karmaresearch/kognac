@@ -36,8 +36,7 @@ using namespace std;
 struct Kognac_TextClassID {
     const char *term;
     int size;
-    long classID, classID2;
-    //long pred;
+    int64_t classID, classID2;
 
     void readFrom(LZ4Reader *reader) {
         term = reader->parseString(size);

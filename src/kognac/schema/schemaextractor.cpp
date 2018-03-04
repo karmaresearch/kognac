@@ -17,7 +17,7 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
-**/
+ **/
 
 #include <kognac/schemaextractor.h>
 #include <kognac/utils.h>
@@ -32,29 +32,29 @@
 
 using namespace std;
 
-const long SchemaExtractor::HASHCLASS = Hashes::murmur3_56(S_RDFS_CLASS,
-                                        strlen(S_RDFS_CLASS));
-const long SchemaExtractor::HASHTYPE = Hashes::murmur3_56(S_RDF_TYPE,
-                                       strlen(S_RDF_TYPE));
+const int64_t SchemaExtractor::HASHCLASS = Hashes::murmur3_56(S_RDFS_CLASS,
+        strlen(S_RDFS_CLASS));
+const int64_t SchemaExtractor::HASHTYPE = Hashes::murmur3_56(S_RDF_TYPE,
+        strlen(S_RDF_TYPE));
 
 #ifdef DEBUG
 /*StringCollection SchemaExtractor::support(64 * 1024 * 1024);
-void SchemaExtractor::initMap() {
-    if (!isSet) {
-        mappings.set_empty_key(-1);
-        mappings.set_deleted_key(-2);
-        properties.set_empty_key(-1);
-        properties.set_deleted_key(-2);
-        isSet = true;
-    }
-}
-google::dense_hash_map<long, const char*> SchemaExtractor::mappings;
-google::dense_hash_map<long, const char*> SchemaExtractor::properties;
-bool SchemaExtractor::isSet = false;*/
+  void SchemaExtractor::initMap() {
+  if (!isSet) {
+  mappings.set_empty_key(-1);
+  mappings.set_deleted_key(-2);
+  properties.set_empty_key(-1);
+  properties.set_deleted_key(-2);
+  isSet = true;
+  }
+  }
+  google::dense_hash_map<long, const char*> SchemaExtractor::mappings;
+  google::dense_hash_map<long, const char*> SchemaExtractor::properties;
+  bool SchemaExtractor::isSet = false;*/
 #endif
 
-bool SchemaExtractor::isPresent(const long el, vector<long> &elements) {
-    for (vector<long>::iterator itr = elements.begin(); itr != elements.end();
+bool SchemaExtractor::isPresent(const int64_t el, vector<int64_t> &elements) {
+    for (vector<int64_t>::iterator itr = elements.begin(); itr != elements.end();
             itr++) {
         if (el == *itr) {
             return true;
@@ -66,26 +66,26 @@ bool SchemaExtractor::isPresent(const long el, vector<long> &elements) {
 void SchemaExtractor::addToMap(SchemaMap &map, const char *key, const char *value) {
     SchemaMap::iterator itr = map.find(key);
     if (itr == map.end()) {
-        long hash = Hashes::murmur3_56(value + 2, Utils::decode_short(value));
-        vector<long> newVector;
+        int64_t hash = Hashes::murmur3_56(value + 2, Utils::decode_short(value));
+        vector<int64_t> newVector;
         newVector.push_back(hash);
         map.insert(make_pair(supportSubclasses.addNew(key,
-                             Utils::decode_short(key) + 2), newVector));
+                        Utils::decode_short(key) + 2), newVector));
     } else {
-        long hash = Hashes::murmur3_56(value + 2, Utils::decode_short(value));
+        int64_t hash = Hashes::murmur3_56(value + 2, Utils::decode_short(value));
         if (!isPresent(hash, itr->second)) {
             (itr->second).push_back(hash);
         }
     }
 }
 
-void SchemaExtractor::addToMap(SchemaMap &map, const char *key, const long value) {
+void SchemaExtractor::addToMap(SchemaMap &map, const char *key, const int64_t value) {
     SchemaMap::iterator itr = map.find(key);
     if (itr == map.end()) {
-        vector<long> newVector;
+        vector<int64_t> newVector;
         newVector.push_back(value);
         map.insert(make_pair(supportSubclasses.addNew(key, Utils::decode_short(key) + 2),
-                             newVector));
+                    newVector));
     } else {
         if (!isPresent(value, itr->second)) {
             (itr->second).push_back(value);
@@ -93,11 +93,11 @@ void SchemaExtractor::addToMap(SchemaMap &map, const char *key, const long value
     }
 }
 
-void SchemaExtractor::addToMap(NumericNPSchemaMap &map, const long key,
-                               const long value) {
+void SchemaExtractor::addToMap(NumericNPSchemaMap &map, const int64_t key,
+        const int64_t value) {
     NumericNPSchemaMap::iterator itr = map.find(key);
     if (itr == map.end()) {
-        vector<long> newVector;
+        vector<int64_t> newVector;
         newVector.push_back(value);
         map.insert(make_pair(key, newVector));
     } else {
@@ -109,13 +109,13 @@ void SchemaExtractor::addToMap(NumericNPSchemaMap &map, const long key,
 
 SchemaExtractor::SchemaExtractor() : supportSubclasses(SC_SIZE_SUPPORT_BUFFER),
     supportExplicitClasses(SC_SIZE_SUPPORT_BUFFER) {
-    explicitClasses.set_empty_key(NULL);
-    subclasses.set_empty_key(NULL);
-    outputSubclasses.set_empty_key(-1);
-    domains.set_empty_key(-1);
-    ranges.set_empty_key(-1);
-    root = NULL;
-};
+        explicitClasses.set_empty_key(NULL);
+        subclasses.set_empty_key(NULL);
+        outputSubclasses.set_empty_key(-1);
+        domains.set_empty_key(-1);
+        ranges.set_empty_key(-1);
+        root = NULL;
+    };
 
 void SchemaExtractor::extractSchema(char **triple) {
     int sizeP = Utils::decode_short(triple[1]);
@@ -125,7 +125,7 @@ void SchemaExtractor::extractSchema(char **triple) {
         if (explicitClasses.find(triple[2]) ==
                 explicitClasses.end()) {
             explicitClasses.insert(supportExplicitClasses.addNew(triple[2],
-                                   Utils::decode_short(triple[2]) + 2));
+                        Utils::decode_short(triple[2]) + 2));
         }
     } else if (pred.compare(string(S_RDFS_SUBCLASS)) == 0) {
         addToMap(subclasses, triple[0], triple[2]);
@@ -135,24 +135,24 @@ void SchemaExtractor::extractSchema(char **triple) {
         if (explicitClasses.find(triple[2]) ==
                 explicitClasses.end()) {
             explicitClasses.insert(supportExplicitClasses.addNew(triple[2],
-                                   Utils::decode_short(triple[2]) + 2));
+                        Utils::decode_short(triple[2]) + 2));
         }
 
-        long hashS = Hashes::murmur3_56(triple[0] + 2, Utils::decode_short(triple[0]));
+        int64_t hashS = Hashes::murmur3_56(triple[0] + 2, Utils::decode_short(triple[0]));
         if (domains.find(hashS) == domains.end()) {
-            long hashO = Hashes::murmur3_56(triple[2] + 2, Utils::decode_short(triple[2]));
+            int64_t hashO = Hashes::murmur3_56(triple[2] + 2, Utils::decode_short(triple[2]));
             domains.insert(make_pair(hashS, hashO));
         }
     } else if (pred == string(S_RDFS_RANGE)) {
         if (explicitClasses.find(triple[2]) ==
                 explicitClasses.end()) {
             explicitClasses.insert(supportExplicitClasses.addNew(triple[2],
-                                   Utils::decode_short(triple[2]) + 2));
+                        Utils::decode_short(triple[2]) + 2));
         }
 
-        long hashS = Hashes::murmur3_56(triple[0] + 2, Utils::decode_short(triple[0]));
+        int64_t hashS = Hashes::murmur3_56(triple[0] + 2, Utils::decode_short(triple[0]));
         if (ranges.find(hashS) == ranges.end()) {
-            long hashO = Hashes::murmur3_56(triple[2] + 2, Utils::decode_short(triple[2]));
+            int64_t hashO = Hashes::murmur3_56(triple[2] + 2, Utils::decode_short(triple[2]));
             ranges.insert(make_pair(hashS, hashO));
         }
     }
@@ -161,7 +161,7 @@ void SchemaExtractor::extractSchema(char **triple) {
 void SchemaExtractor::merge(SchemaExtractor & schema) {
     for (SchemaMap::iterator itr = schema.subclasses.begin();
             itr != schema.subclasses.end(); ++itr) {
-        for (vector<long>::iterator itr2 = itr->second.begin(); itr2 !=
+        for (vector<int64_t>::iterator itr2 = itr->second.begin(); itr2 !=
                 itr->second.end(); ++itr2) {
             addToMap(subclasses, itr->first, *itr2);
         }
@@ -171,7 +171,7 @@ void SchemaExtractor::merge(SchemaExtractor & schema) {
             itr != schema.explicitClasses.end(); ++itr) {
         if (explicitClasses.find(*itr) == explicitClasses.end()) {
             explicitClasses.insert(supportExplicitClasses.addNew(*itr,
-                                   Utils::decode_short(*itr) + 2));
+                        Utils::decode_short(*itr) + 2));
         }
     }
 
@@ -197,15 +197,15 @@ void SchemaExtractor::merge(SchemaExtractor & schema) {
     }
 };
 
-bool SchemaExtractor::isReachable(NumericSchemaMap &map, vector<long> &prevEls,
-                                  long source, long dest) {
+bool SchemaExtractor::isReachable(NumericSchemaMap &map, vector<int64_t> &prevEls,
+        int64_t source, int64_t dest) {
     NumericSchemaMap::iterator itr = map.find(source);
     if (itr != map.end()) {
-        for (vector<long>::iterator itr2 = itr->second->begin();
+        for (vector<int64_t>::iterator itr2 = itr->second->begin();
                 itr2 != itr->second->end(); ++itr2) {
 
             bool found = false;
-            for (vector<long>::iterator ipe = prevEls.begin(); ipe != prevEls.end();
+            for (vector<int64_t>::iterator ipe = prevEls.begin(); ipe != prevEls.end();
                     ++ipe) {
                 if (*ipe == *itr2) {
                     found = true;
@@ -226,16 +226,16 @@ bool SchemaExtractor::isReachable(NumericSchemaMap &map, vector<long> &prevEls,
     return false;
 }
 
-bool SchemaExtractor::isDirectSubclass(NumericSchemaMap &map, long subclass,
-                                       long superclass) {
+bool SchemaExtractor::isDirectSubclass(NumericSchemaMap &map, int64_t subclass,
+        int64_t superclass) {
     assert(subclass != superclass);
     NumericSchemaMap::iterator itr = map.find(subclass);
-    for (vector<long>::iterator itr2 = itr->second->begin(); itr2 != itr->second->end();
+    for (vector<int64_t>::iterator itr2 = itr->second->begin(); itr2 != itr->second->end();
             ++itr2) {
         if (*itr2 == subclass || *itr2 == superclass)
             continue;
 
-        vector<long> alreadyProcessedElements;
+        vector<int64_t> alreadyProcessedElements;
         alreadyProcessedElements.push_back(subclass);
         alreadyProcessedElements.push_back(*itr2);
         if (isReachable(map, alreadyProcessedElements, *itr2, superclass)) {
@@ -257,12 +257,12 @@ std::set<string> SchemaExtractor::getAllClasses() const {
 }
 
 ExtNode *SchemaExtractor::buildTreeFromRoot(NumericNPSchemaMap &map,
-        NumericSchemaMap &subclassMap, const long root) {
+        NumericSchemaMap &subclassMap, const int64_t root) {
     ExtNode *node = new ExtNode(root);
     vector<ExtNode*> queueElements;
     queueElements.push_back(node);
 
-    google::dense_hash_set<long> insertedElements;
+    google::dense_hash_set<int64_t> insertedElements;
     insertedElements.set_empty_key(-1);
     insertedElements.insert(root);
 
@@ -275,7 +275,7 @@ ExtNode *SchemaExtractor::buildTreeFromRoot(NumericNPSchemaMap &map,
         if (itr != map.end()) {
             bool first = true;
             ExtNode *prevNode = NULL;
-            for (vector<long>::iterator itr2 = itr->second.begin();
+            for (vector<int64_t>::iterator itr2 = itr->second.begin();
                     itr2 != itr->second.end(); ++itr2) {
 
                 //Check the element was not already processed
@@ -327,9 +327,9 @@ void SchemaExtractor::transitiveClosure(NumericNPSchemaMap &map, ExtNode *node) 
     addToMap(map, node->key, node->assignedID);
 
     /*while (node->parent != NULL) {
-        addToMap(map, node->key, node->parent->assignedID);
-        node = node->parent;
-    }*/
+      addToMap(map, node->key, node->parent->assignedID);
+      node = node->parent;
+      }*/
 }
 
 SchemaExtractor::~SchemaExtractor() {
@@ -347,14 +347,14 @@ void SchemaExtractor::deallocateTree(ExtNode *node) {
     delete node;
 }
 
-string SchemaExtractor::getText(long id) const {
+string SchemaExtractor::getText(int64_t id) const {
     if (hashMappings.count(id)) {
         return hashMappings.find(id)->second;
     }
     return "";
 }
 
-void SchemaExtractor::assignID(ExtNode *root, long &counterID) {
+void SchemaExtractor::assignID(ExtNode *root, int64_t &counterID) {
     //Assign the numbers using a post-order scheme
     if (root->child != NULL) {
         assignID(root->child, counterID);
@@ -366,11 +366,11 @@ void SchemaExtractor::assignID(ExtNode *root, long &counterID) {
     }
 
 #ifdef DEBUG
-//    google::dense_hash_map<long, const char*>::iterator itr = mappings.find(root->key);
-//    if (itr != mappings.end()) {
-//        mappings.insert(make_pair(counterID, itr->second));
-//        mappings.erase(itr);
-//    }
+    //    google::dense_hash_map<int64_t, const char*>::iterator itr = mappings.find(root->key);
+    //    if (itr != mappings.end()) {
+    //        mappings.insert(make_pair(counterID, itr->second));
+    //        mappings.erase(itr);
+    //    }
 #endif
 
     root->assignedID = counterID++;
@@ -388,7 +388,7 @@ void SchemaExtractor::printTree(int padding, ExtNode* node) {
         cout << "  ";
     string text = to_string(node->key);
     cout << "(" << padding << "-" << node->depth << ") " << text << "("
-         << node->assignedID << ")" << endl;
+        << node->assignedID << ")" << endl;
     ExtNode *child = node->child;
     while (child != NULL) {
         printTree(padding + 1, child);
@@ -404,28 +404,28 @@ void SchemaExtractor::processClasses(SchemaMap &map, NumericNPSchemaMap &omap) {
     inverseTmpMap.set_empty_key(-1);
     for (SchemaMap::iterator itr = map.begin(); itr
             != map.end(); itr++) {
-        long ks = Hashes::murmur3_56(itr->first + 2,
-                                     Utils::decode_short(itr->first));
+        int64_t ks = Hashes::murmur3_56(itr->first + 2,
+                Utils::decode_short(itr->first));
         tmpMap.insert(make_pair(ks, &(itr->second)));
-        for (vector<long>::iterator itr2 = itr->second.begin();
+        for (vector<int64_t>::iterator itr2 = itr->second.begin();
                 itr2 != itr->second.end(); ++itr2) {
             addToMap(inverseTmpMap, *itr2, ks);
         }
         //Add a mapping between the hashes and the textual strings
         hashMappings.insert(make_pair(ks, string(itr->first + 2,
-                                      Utils::decode_short(itr->first))));
+                        Utils::decode_short(itr->first))));
     }
 
 
 
     //Determine all roots
-    google::dense_hash_set<long> roots;
+    google::dense_hash_set<int64_t> roots;
     roots.set_empty_key(-1);
     for (NumericNPSchemaMap::iterator itr = inverseTmpMap.begin();
             itr != inverseTmpMap.end(); itr++) {
         NumericSchemaMap::iterator itr2 = tmpMap.find(itr->first);
         if (itr2 == tmpMap.end() || ((itr2->second)->size() == 1
-                                     && (itr2->second)->at(0) == itr->first)) {
+                    && (itr2->second)->at(0) == itr->first)) {
             roots.insert(itr->first);
         }
     }
@@ -445,7 +445,7 @@ void SchemaExtractor::processClasses(SchemaMap &map, NumericNPSchemaMap &omap) {
 
     //Assign a number to all the terms in the tree
     omap.clear();
-    long counterID = 0;
+    int64_t counterID = 0;
     assignID(root, counterID);
     //printTree(0,root);
 
@@ -457,10 +457,10 @@ void SchemaExtractor::processClasses(SchemaMap &map, NumericNPSchemaMap &omap) {
     }
 
     LOG(DEBUGL) << "Members of " << omap.size() <<
-                             " classes have a clustering ID";
+        " classes have a clustering ID";
 }
 
-bool lessRankingPairs(pair<long, long> &p1, pair<long, long> &p2) {
+bool lessRankingPairs(pair<int64_t, int64_t> &p1, pair<int64_t, int64_t> &p2) {
     return p1.second < p2.second;
 }
 
@@ -479,7 +479,7 @@ void SchemaExtractor::prepare() {
     LOG(DEBUGL) << "There are " << outputSubclasses.size() << " subclasses to cluster the terms";
 }
 
-void SchemaExtractor::retrieveInstances(const long term, const vector<long> **output) const {
+void SchemaExtractor::retrieveInstances(const int64_t term, const vector<int64_t> **output) const {
     NumericNPSchemaMap::const_iterator itr = outputSubclasses.find(term);
     if (itr != outputSubclasses.end()) {
         *output = &(itr->second);
@@ -488,19 +488,19 @@ void SchemaExtractor::retrieveInstances(const long term, const vector<long> **ou
     }
 };
 
-bool SchemaExtractor::hasDomain(const long hashProperty) const {
+bool SchemaExtractor::hasDomain(const int64_t hashProperty) const {
     return domains.find(hashProperty) != domains.end();
 }
 
-long SchemaExtractor::getDomain(const long hashProperty) const {
+int64_t SchemaExtractor::getDomain(const int64_t hashProperty) const {
     return domains.find(hashProperty)->second;
 }
 
-bool SchemaExtractor::hasRange(const long hashProperty) const {
+bool SchemaExtractor::hasRange(const int64_t hashProperty) const {
     return ranges.find(hashProperty) != ranges.end();
 }
 
-long SchemaExtractor::getRange(const long hashProperty) const {
+int64_t SchemaExtractor::getRange(const int64_t hashProperty) const {
     return ranges.find(hashProperty)->second;
 }
 
@@ -530,10 +530,10 @@ void SchemaExtractor::rearrangeTreeByDepth(ExtNode *node) {
 }
 
 void rearrangeChildrenWithPatterns(ExtNode *node,
-                                   const std::map<unsigned long,
-                                   unsigned long> &classes,
-                                   const std::map < unsigned long,
-                                   std::vector<unsigned long>> &neighbours) {
+        const std::map<uint64_t,
+        uint64_t> &classes,
+        const std::map < uint64_t,
+        std::vector<uint64_t>> &neighbours) {
     if (node != NULL) {
         if (node->child != NULL) {
             if (node->child->sibling != NULL) {
@@ -549,26 +549,26 @@ void rearrangeChildrenWithPatterns(ExtNode *node,
                 std::vector<ExtNode*> rearrangedChildren;
                 int posClass = 0;
                 /*long maxSupport = classes.find(childrenToRearrange[0]->key)
-                                  ->second;
-                for (int i = 1; i < childrenToRearrange.size(); ++i) {
-                    long key = childrenToRearrange[i]->key;
-                    if (classes.find(key)->second > maxSupport) {
-                        posClass = i;
-                        maxSupport = classes.find(key)->second;
-                    }
-                }*/
+                  ->second;
+                  for (int i = 1; i < childrenToRearrange.size(); ++i) {
+                  long key = childrenToRearrange[i]->key;
+                  if (classes.find(key)->second > maxSupport) {
+                  posClass = i;
+                  maxSupport = classes.find(key)->second;
+                  }
+                  }*/
 
                 //Now I know the most popular class. Extract it.
                 rearrangedChildren.push_back(childrenToRearrange[posClass]);
                 childrenToRearrange.erase(childrenToRearrange.begin() +
-                                          posClass);
+                        posClass);
                 //Start from it to select the most relevant classes
                 while (childrenToRearrange.size() > 0) {
                     //Take the last class. See if there is a friend class to use
-                    long currentClass = rearrangedChildren.back()->key;
+                    int64_t currentClass = rearrangedChildren.back()->key;
                     bool foundNext = false;
                     if (neighbours.count(currentClass)) {
-                        const std::vector<unsigned long> &neighboursClasses =
+                        const std::vector<uint64_t> &neighboursClasses =
                             neighbours.find(currentClass)->second;
                         //Go through the elements in the cluster. Is one still
                         //available?
@@ -578,7 +578,7 @@ void rearrangeChildrenWithPatterns(ExtNode *node,
                                     < childrenToRearrange.size();
                                     ++idxRemainingClass) {
                                 if (childrenToRearrange[
-                                            idxRemainingClass]->key == el) {
+                                        idxRemainingClass]->key == el) {
                                     foundNext = true;
                                     break;
                                 }
@@ -586,10 +586,10 @@ void rearrangeChildrenWithPatterns(ExtNode *node,
 
                             if (foundNext) {
                                 rearrangedChildren.push_back(
-                                    childrenToRearrange[idxRemainingClass]);
+                                        childrenToRearrange[idxRemainingClass]);
                                 childrenToRearrange.erase(
-                                    childrenToRearrange.begin() +
-                                    idxRemainingClass);
+                                        childrenToRearrange.begin() +
+                                        idxRemainingClass);
                                 break;
                             }
                         }
@@ -600,7 +600,7 @@ void rearrangeChildrenWithPatterns(ExtNode *node,
                     //Just pick the next element
                     if (!foundNext) {
                         rearrangedChildren.push_back(
-                            childrenToRearrange.front());
+                                childrenToRearrange.front());
                         childrenToRearrange.erase(childrenToRearrange.begin());
                     }
                 }
@@ -616,39 +616,39 @@ void rearrangeChildrenWithPatterns(ExtNode *node,
                     nodeToFix->sibling = NULL;
                 } else {
                     LOG(DEBUGL) << "I was"
-                                             "unable to rearrange a list of " <<
-                                             (childrenToRearrange.size() +
-                                              rearrangedChildren.size()) <<
-                                             " nodes";
+                        "unable to rearrange a list of " <<
+                        (childrenToRearrange.size() +
+                         rearrangedChildren.size()) <<
+                        " nodes";
                 }
             }
         }
     }
 }
 
-bool sorterKeyFirst(const std::pair<unsigned long, long> &el1,
-                    const std::pair<unsigned long, long> &el2) {
+bool sorterKeyFirst(const std::pair<uint64_t, int64_t> &el1,
+        const std::pair<uint64_t, int64_t> &el2) {
     return el1.first < el2.first || (el1.first == el2.first && el1.second > el2.second);
 }
 
-bool sorterSupportFirst(const std::pair<unsigned long, long> &el1,
-                        const std::pair<unsigned long, long> &el2) {
+bool sorterSupportFirst(const std::pair<uint64_t, int64_t> &el1,
+        const std::pair<uint64_t, int64_t> &el2) {
     return el1.second > el2.second;
 }
 
 void SchemaExtractor::rearrangeWithPatterns(
-    std::map<unsigned long, unsigned long> &classes,
-    std::vector<FPattern<unsigned long>> &patterns) {
+        std::map<uint64_t, uint64_t> &classes,
+        std::vector<FPattern<uint64_t>> &patterns) {
     assert(root);
 
     //Create a tmp adjancency table from the patterns
-    std::map<unsigned long, std::vector<std::pair<unsigned long, long>>> tmpMap;
+    std::map<uint64_t, std::vector<std::pair<uint64_t, int64_t>>> tmpMap;
     for (auto &pattern : patterns) {
         for (auto element : pattern.patternElements) {
             if (!tmpMap.count(element)) {
                 tmpMap.insert(make_pair(element,
-                                        std::vector <
-                                        std::pair<unsigned long, long >> ()));
+                            std::vector <
+                            std::pair<uint64_t, int64_t >> ()));
             }
             auto &vector = tmpMap.find(element)->second;
             for (auto element2 : pattern.patternElements) {
@@ -658,15 +658,15 @@ void SchemaExtractor::rearrangeWithPatterns(
             }
         }
     }
-    std::map < unsigned long,
-        std::vector<unsigned long>> neighbours;
+    std::map < uint64_t,
+        std::vector<uint64_t>> neighbours;
     //Construct the table from the tmp table
     for (auto &pair : tmpMap) {
         //Clean the vector of elements
         std::sort(pair.second.begin(), pair.second.end(), sorterKeyFirst);
         //Remove the duplicates
-        std::vector<std::pair<unsigned long, long>> newVector;
-        long prev = -1;
+        std::vector<std::pair<uint64_t, int64_t>> newVector;
+        int64_t prev = -1;
         for (auto el : pair.second) {
             if (el.first != prev) {
                 newVector.push_back(el);
@@ -677,7 +677,7 @@ void SchemaExtractor::rearrangeWithPatterns(
         std::sort(newVector.begin(), newVector.end(), sorterSupportFirst);
 
         //Create a new pair in neighbours
-        std::vector<unsigned long> onlyClasses;
+        std::vector<uint64_t> onlyClasses;
         for (auto &p : newVector) {
             onlyClasses.push_back(p.first);
         }
@@ -688,7 +688,7 @@ void SchemaExtractor::rearrangeWithPatterns(
     rearrangeChildrenWithPatterns(root, classes, neighbours);
 
     //Assign a number to all the terms in the tree
-    long counterID = 0;
+    int64_t counterID = 0;
     assignID(root, counterID);
 
     //Compute the transitive closure and deallocate all the trees
@@ -696,7 +696,7 @@ void SchemaExtractor::rearrangeWithPatterns(
     transitiveClosure(outputSubclasses, root);
 }
 
-string _getText(map<long, string> &map, long hash) {
+string _getText(map<int64_t, string> &map, int64_t hash) {
     string out;
     if (map.count(hash)) {
         out = map.find(hash)->second;
@@ -711,7 +711,7 @@ string _getText(map<long, string> &map, long hash) {
 }
 
 void SchemaExtractor::serializeNode(std::ostream &out,
-                                    ExtNode *node) {
+        ExtNode *node) {
     string sk = _getText(hashMappings, node->key);
     if (node->parent != NULL) {
         string spk = _getText(hashMappings, node->parent->key);
@@ -732,7 +732,7 @@ void SchemaExtractor::serializeNode(std::ostream &out,
 void SchemaExtractor::serializeNodeBeginRange(std::ostream &out,
         ExtNode *node) {
     string sk = _getText(hashMappings, node->key);
-    const long classID = node->assignedID;
+    const int64_t classID = node->assignedID;
     if (classesRanges.count(classID)) {
         auto det = classesRanges.find(classID);
         out << sk << "\t" << node->assignedID << "\t" << det->second.first << "\t" << det->second.second << '\n';
@@ -756,12 +756,12 @@ void SchemaExtractor::serialize(string outputFile) {
     zstr::ofstream *zout = NULL;
     bool compress = false;
     if (Utils::ends_with(outputFile, ".gz")) {
-	zout = new zstr::ofstream(outputFile);
-	out = zout;
-	compress = true;
+        zout = new zstr::ofstream(outputFile);
+        out = zout;
+        compress = true;
     } else {
-	fout.open(outputFile, ios_base::binary);
-	out = &fout;
+        fout.open(outputFile, ios_base::binary);
+        out = &fout;
     }
 
     *out << "#Ranges#" << '\n';
@@ -771,14 +771,14 @@ void SchemaExtractor::serialize(string outputFile) {
     serializeNode(*out, root);
 
     if (compress) {
-	delete zout;
+        delete zout;
     } else {
-	fout.close();
+        fout.close();
     }
 }
 
-void SchemaExtractor::addClassesBeginEndRange(const long classId,
-        const long start,
-        const long end) {
+void SchemaExtractor::addClassesBeginEndRange(const int64_t classId,
+        const int64_t start,
+        const int64_t end) {
     classesRanges.insert(make_pair(classId, make_pair(start, end)));
 }

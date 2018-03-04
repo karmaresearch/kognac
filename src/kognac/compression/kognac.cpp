@@ -750,7 +750,7 @@ void Kognac::pickSmallestClassIDPart(string inputFile, const bool useFP) {
         char supportBuffer[MAX_TERM_SIZE + 2];
         size_t sSupportBuffer = 0;
         long minClass = LONG_MAX;
-        const std::vector<long> *taxonomyClasses;
+        const std::vector<int64_t> *taxonomyClasses;
 
         bool first = true;
         while (!reader.isEof()) {
@@ -790,7 +790,7 @@ void Kognac::pickSmallestClassIDPart(string inputFile, const bool useFP) {
         char supportBuffer[MAX_TERM_SIZE + 2];
         size_t sSupportBuffer = 0;
         long minClass = LONG_MAX;
-        const std::vector<long> *taxonomyClasses;
+        const std::vector<int64_t> *taxonomyClasses;
         bool first = true;
         while (!reader.isEof()) {
             Kognac_TextClassID el;
