@@ -24,6 +24,14 @@
 
 #include <stdint.h>
 
+#if defined(_WIN32)
+#define DIR_SEP string("\")
+#define CDIR_SEP '\'
+#else
+#define DIR_SEP string("/")
+#define CDIR_SEP '/'
+#endif
+
 #define PARSE_SAMPLE 0
 #define PARSE_COUNTMIN 1
 #define PARSE_MGCS 2

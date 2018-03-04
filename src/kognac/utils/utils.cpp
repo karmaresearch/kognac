@@ -113,7 +113,7 @@ vector<string> Utils::getSubdirs(string dirname) {
     // List all the files in the directory with some info about them.
     do {
         if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-            string fileFullPath = dirname + "/" + ffd.cFileName;
+            string fileFullPath = dirname + DIR_SEP + ffd.cFileName;
             files.push_back(fileFullPath);
         }
     } while (FindNextFile(hFind, &ffd) != 0);
@@ -122,7 +122,7 @@ vector<string> Utils::getSubdirs(string dirname) {
     struct dirent *dir;
     if (d) {
         while ((dir = readdir(d)) != NULL) {
-            string path = dirname + "/" + string(dir->d_name);
+            string path = dirname + DIR_SEP + string(dir->d_name);
             if (isDirectory(path) && dir->d_name[0] != '.') {
                 files.push_back(path);
             }
@@ -150,7 +150,7 @@ vector<string> Utils::getFiles(string dirname, bool ignoreExtension) {
             //ignore the subdirectories
         }
         else if (ffd.cFileName[0] != '.') {
-            string fileFullPath = dirname + "/" + ffd.cFileName;
+            string fileFullPath = dirname + DIR_SEP + ffd.cFileName;
             if (ignoreExtension) {
                 sfiles.insert(Utils::removeExtension(fileFullPath));
             }
@@ -165,7 +165,7 @@ vector<string> Utils::getFiles(string dirname, bool ignoreExtension) {
     if (d) {
         while ((dir = readdir(d)) != NULL) {
             if (dir->d_name[0] != '.') {
-                string fileFullPath = dirname + "/" + string(dir->d_name);
+                string fileFullPath = dirname + DIR_SEP + string(dir->d_name);
                 if (ignoreExtension) {
                     sfiles.insert(Utils::removeExtension(fileFullPath));
                 }
@@ -287,7 +287,7 @@ void Utils::rename(string oldfile, string newfile) {
         LOG(ERRORL) << "Error renaming file " << oldfile;
 }
 string Utils::parentDir(string path) {
-    auto pos = path.rfind('/');
+    auto pos = path.rfind(CDIR_SEP);
     if (pos != std::string::npos) {
         return path.substr(0, pos);
     } else {
@@ -295,7 +295,7 @@ string Utils::parentDir(string path) {
     }
 }
 string Utils::filename(string path) {
-    auto pos = path.rfind('/');
+    auto pos = path.rfind(CDIR_SEP);
     if (pos != std::string::npos) {
         return path.substr(pos + 1, path.size() - pos);
     } else {
@@ -1011,12 +1011,12 @@ double Utils::get_max_mem() {
     double memory = 0.0;
 
 #if defined(__APPLE__) && defined(__MACH__)
-	struct rusage rusage;
-	getrusage(RUSAGE_SELF, &rusage);
+    struct rusage rusage;
+    getrusage(RUSAGE_SELF, &rusage);
     memory = (double) rusage.ru_maxrss / 1024 / 1024;
-#elif defined(__unix__) || defined(__unix) || defined(unix) 
-	struct rusage rusage;
-	getrusage(RUSAGE_SELF, &rusage);
+#elif defined(__unix__) || defined(__unix) || defined(unix)
+    struct rusage rusage;
+    getrusage(RUSAGE_SELF, &rusage);
     memory = (double)rusage.ru_maxrss / 1024;
 #endif
 #if defined(_WIN32)

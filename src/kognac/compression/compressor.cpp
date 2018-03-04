@@ -1180,9 +1180,9 @@ void Compressor::parse(int dictPartitions, int sampleMethod, int sampleArg,
         string *df = new string[dictPartitions];
         string *df2 = new string[dictPartitions];
         for (int j = 0; j < dictPartitions; ++j) {
-            df[j] = kbPath + string("/dict-file-") + to_string(i) + string("-")
+            df[j] = kbPath + string(DIR_SEP + "dict-file-") + to_string(i) + string("-")
                 + to_string(j);
-            df2[j] = kbPath + string("/udict-file-") + to_string(i)
+            df2[j] = kbPath + string(DIR_SEP + "udict-file-") + to_string(i)
                 + string("-") + to_string(j);
         }
         dictFileNames[i] = df;
@@ -1416,7 +1416,7 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
 
     //Set up the output file names
     for (int i = 0; i < maxReadingThreads; ++i) {
-        tmpFileNames[i] = kbPath + string("/tmp-") + to_string(i);
+        tmpFileNames[i] = kbPath + string(DIR_SEP + "tmp-") + to_string(i);
     }
 
     DiskReader **readers = new DiskReader*[maxReadingThreads];
@@ -1599,7 +1599,7 @@ void Compressor::do_sample(const int dictPartitions, const int sampleArg,
                 i < maxReadingThreads
                 && (chunksToProcess + i) < parallelProcesses;
                 ++i) {
-            tmpFileNames[chunksToProcess + i] = kbPath + string("/tmp-")
+            tmpFileNames[chunksToProcess + i] = kbPath + string(DIR_SEP + "tmp-")
                 + to_string(chunksToProcess + i);
             threads[i - 1] = std::thread(
                     std::bind(&Compressor::uncompressAndSampleTriples,
@@ -1612,7 +1612,7 @@ void Compressor::do_sample(const int dictPartitions, const int sampleArg,
                         &commonTermsMaps[chunksToProcess + i],
                         copyHashes ? extractors + i : NULL));
         }
-        tmpFileNames[chunksToProcess] = kbPath + string("/tmp-" + to_string(chunksToProcess));
+        tmpFileNames[chunksToProcess] = kbPath + string(DIR_SEP + "tmp-" + to_string(chunksToProcess));
         uncompressAndSampleTriples(files[chunksToProcess],
                 tmpFileNames[chunksToProcess],
                 dictFileNames[chunksToProcess],
@@ -2773,7 +2773,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
             //Set up the output files
             for (int i = 0; i < parallelProcesses; ++i) {
                 for (int j = 0; j < nperms; ++j) {
-                    string file = permDirs[j] + string("/") + prefixOutputFile + to_string(i);
+                    string file = permDirs[j] + DIR_SEP + prefixOutputFile + to_string(i);
                     chunks[i % maxReadingThreads].push_back(file);
                 }
             }
@@ -2858,7 +2858,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
         DiskLZ4Writer **writers = new DiskLZ4Writer*[maxReadingThreads];
         for (int i = 0; i < maxReadingThreads; ++i) {
             const int filesPerPart = parallelProcesses / maxReadingThreads;
-            outputFiles.push_back(kbPath + string("/listUncommonTerms") + to_string(i));
+            outputFiles.push_back(kbPath + DIR_SEP + string("listUncommonTerms") + to_string(i));
             writers[i] = new DiskLZ4Writer(outputFiles.back(),
                     filesPerPart,
                     3);
@@ -2883,11 +2883,11 @@ void Compressor::sortPartition(ParamsSortPartition params) {
                         readers[i % maxReadingThreads],
                         writers[i % maxReadingThreads],
                         i / maxReadingThreads,
-                        kbPath + string("/listUncommonTerms-tmp") + to_string(i),
+                        kbPath + DIR_SEP + string("listUncommonTerms-tmp") + to_string(i),
                         maxMem));
         }
         sortByTripleID(readers[0], /*&inputFinalSorting[0],*/ writers[0], 0,
-                kbPath + string("/listUncommonTerms-tmp") + to_string(0),
+                kbPath + DIR_SEP + string("listUncommonTerms-tmp") + to_string(0),
                 maxMem);
 
         for (int i = 1; i < parallelProcesses; ++i) {

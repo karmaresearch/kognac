@@ -23,7 +23,7 @@
 #include <kognac/sorter.h>
 
 SimpleTripleWriter::SimpleTripleWriter(string dir, string prefixFile, bool quad) {
-    writer = new LZ4Writer(dir + string("/") + prefixFile);
+    writer = new LZ4Writer(dir + DIR_SEP + prefixFile);
     writer->writeByte(quad);
 }
 
@@ -65,7 +65,7 @@ void SortedTripleWriter::write(const int64_t t1, const int64_t t2, const int64_t
 
     if (buffersCurrentSize == fileSize) {
         idLastWrittenFile++;
-        string fileName = dir + string("/") + prefixFile
+        string fileName = dir + DIR_SEP + prefixFile
                           + to_string(idLastWrittenFile);
         Sorter::sortBufferAndWriteToFile(buffer, fileName);
         buffersCurrentSize = 0;
@@ -76,7 +76,7 @@ void SortedTripleWriter::write(const int64_t t1, const int64_t t2, const int64_t
 SortedTripleWriter::~SortedTripleWriter() {
     if (buffersCurrentSize > 0) {
         idLastWrittenFile++;
-        string fileName = dir + string("/") + prefixFile
+        string fileName = dir + DIR_SEP + prefixFile
                           + to_string(idLastWrittenFile);
         Sorter::sortBufferAndWriteToFile(buffer, fileName);
     }

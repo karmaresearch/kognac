@@ -124,13 +124,13 @@ void Sorter::mergeSort(string inputDir, int nThreads, bool initialSorting,
         //Sort the files
         std::thread *threads = new std::thread[nThreads - 1];
         for (int i = 1; i < nThreads; ++i) {
-            string prefixOutputFile = string("/sorted-inputfile-")
+            string prefixOutputFile = DIR_SEP + string("sorted-inputfile-")
                 + to_string(i);
             threads[i - 1] = std::thread(
                     std::bind(&Sorter::sortUnsortedFiles, splits[i], inputDir,
                         prefixOutputFile, fileSize));
         }
-        string prefixOutputFile = string("/sorted-inputfile-0");
+        string prefixOutputFile = DIR_SEP + string("sorted-inputfile-0");
         sortUnsortedFiles(splits[0], inputDir, prefixOutputFile, fileSize);
         for (int i = 1; i < nThreads; ++i) {
             threads[i - 1].join();
@@ -163,13 +163,13 @@ void Sorter::mergeSort(string inputDir, int nThreads, bool initialSorting,
         //Start the threads and wait until they are finished
         std::thread *threads = new std::thread[nThreads - 1];
         for (int i = 1; i < nThreads; ++i) {
-            string prefixOutputFile = inputDir + string("/merged-file-")
+            string prefixOutputFile = inputDir + DIR_SEP + string("merged-file-")
                 + to_string(i) + string("-") + to_string(iteration);
             threads[i - 1] = std::thread(
                     std::bind(&Sorter::sort, splits[i], filesPerMerge,
                         prefixOutputFile));
         }
-        string prefixOutputFile = inputDir + string("/merged-file-0-")
+        string prefixOutputFile = inputDir + DIR_SEP + string("merged-file-0-")
             + to_string(iteration);
         sort(splits[0], filesPerMerge, prefixOutputFile);
         for (int i = 1; i < nThreads; ++i) {
