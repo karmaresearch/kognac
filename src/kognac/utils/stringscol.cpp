@@ -53,12 +53,12 @@ const char *StringCollection::addNew(const char *text, int size) {
     return segment + startPos;
 }
 
-long StringCollection::allocatedBytes() {
-    return (long)pool.size() * (long)segmentSize;
+int64_t StringCollection::allocatedBytes() {
+    return (int64_t)pool.size() * (int64_t)segmentSize;
 }
 
-long StringCollection::occupiedBytes() {
-    return (long)currentIdx * segmentSize + currentPos;
+int64_t StringCollection::occupiedBytes() {
+    return (int64_t)currentIdx * segmentSize + currentPos;
 }
 
 StringCollection::~StringCollection() {

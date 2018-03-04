@@ -31,9 +31,9 @@ class MultiDiskLZ4Writer;
 class MultiDiskLZ4Reader;
 
 typedef struct Triple {
-    long s, p, o, count;
+    int64_t s, p, o, count;
 
-    Triple(long s, long p, long o) {
+    Triple(int64_t s, int64_t p, int64_t o) {
         this->s = s;
         this->p = p;
         this->o = o;
@@ -104,10 +104,10 @@ typedef struct Triple {
 
 } Triple;
 
-const Triple minv(std::numeric_limits<long>::min(),
-        std::numeric_limits<long>::min(), std::numeric_limits<long>::min());
-const Triple maxv(std::numeric_limits<long>::max(),
-        std::numeric_limits<long>::max(), std::numeric_limits<long>::max());
+const Triple minv(std::numeric_limits<int64_t>::min(),
+        std::numeric_limits<int64_t>::min(), std::numeric_limits<int64_t>::min());
+const Triple maxv(std::numeric_limits<int64_t>::max(),
+        std::numeric_limits<int64_t>::max(), std::numeric_limits<int64_t>::max());
 
 struct cmp: std::less<Triple> {
     bool operator ()(const Triple& a, const Triple& b) const {
@@ -134,8 +134,8 @@ struct cmp: std::less<Triple> {
 
 class TripleWriter {
     public:
-        virtual void write(const long t1, const long t2, const long t3) = 0;
-        virtual void write(const long t1, const long t2, const long t3, const long count) = 0;
+        virtual void write(const int64_t t1, const int64_t t2, const int64_t t3) = 0;
+        virtual void write(const int64_t t1, const int64_t t2, const int64_t t3, const int64_t count) = 0;
         virtual ~TripleWriter() {
         }
 };

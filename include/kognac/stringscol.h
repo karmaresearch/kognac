@@ -46,9 +46,9 @@ public:
 
     const char *addNew(const char *text, int size);
 
-    long allocatedBytes();
+    int64_t allocatedBytes();
 
-    long occupiedBytes();
+    int64_t occupiedBytes();
 
     ~StringCollection();
 };

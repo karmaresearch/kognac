@@ -30,19 +30,19 @@
 #include <algorithm>
 
 void Sorter::sortUnsortedFiles(vector<string> &inputFiles, string dir,
-                               string prefixOutputFiles, int fileSize) {
+        string prefixOutputFiles, int fileSize) {
     SortedTripleWriter writer(dir, prefixOutputFiles, fileSize);
     for (vector<string>::iterator itr = inputFiles.begin();
-         itr != inputFiles.end(); ++itr) {
+            itr != inputFiles.end(); ++itr) {
         LOG(DEBUGL) << "Started reading " << *itr;
         LZ4Reader reader(*itr);
         const bool quad = reader.parseByte() != 0;
         while (!reader.isEof()) {
-            long t1 = reader.parseLong();
-            long t2 = reader.parseLong();
-            long t3 = reader.parseLong();
+            int64_t t1 = reader.parseLong();
+            int64_t t2 = reader.parseLong();
+            int64_t t3 = reader.parseLong();
             if (quad) {
-                long count = reader.parseLong();
+                int64_t count = reader.parseLong();
                 writer.write(t1, t2, t3, count);
             } else {
                 writer.write(t1, t2, t3);
@@ -54,7 +54,7 @@ void Sorter::sortUnsortedFiles(vector<string> &inputFiles, string dir,
 }
 
 void Sorter::sort(vector<string> &inputFiles, int filesPerMerge,
-                  string prefixOutputFiles) {
+        string prefixOutputFiles) {
     int segment = 0;
     while (inputFiles.size() > 0) {
         //Take out the filesPerMerge lastFiles
@@ -63,20 +63,20 @@ void Sorter::sort(vector<string> &inputFiles, int filesPerMerge,
             inputForSorting.push_back(inputFiles.back());
             inputFiles.pop_back();
         }
-        
+
         //Sort them and write a new file
         FileMerger<Triple> merger(inputForSorting);
         string fileOutput = prefixOutputFiles + string("-")
-        + to_string(segment);
+            + to_string(segment);
         LZ4Writer writer(fileOutput);
         while (!merger.isEmpty()) {
             Triple t = merger.get();
             t.writeTo(&writer);
         }
-        
+
         //Delete the old files
         for (vector<string>::iterator itr = inputForSorting.begin();
-             itr != inputForSorting.end(); ++itr) {
+                itr != inputForSorting.end(); ++itr) {
             Utils::remove(*itr);
         }
         segment++;
@@ -105,11 +105,11 @@ void Sorter::sortBufferAndWriteToFile(vector<Triple> &v, string fileOutput) {
 }
 
 void Sorter::mergeSort(string inputDir, int nThreads, bool initialSorting,
-                       long fileSize, int filesPerMerge) {
+        int64_t fileSize, int filesPerMerge) {
     int filesInDir = 0;
     int iteration = 0;
     LOG(DEBUGL) << "nthreads=" << nThreads;
-    
+
     /*** SORT THE ORIGINAL FILES IN BLOCKS OF N RECORDS ***/
     if (initialSorting) {
         vector<string> unsortedFiles = Utils::getFiles(inputDir);
@@ -117,7 +117,7 @@ void Sorter::mergeSort(string inputDir, int nThreads, bool initialSorting,
         //Give each file to a different split
         int currentSplit = 0;
         for (vector<string>::iterator itr = unsortedFiles.begin();
-             itr != unsortedFiles.end(); ++itr) {
+                itr != unsortedFiles.end(); ++itr) {
             splits[currentSplit].push_back(*itr);
             currentSplit = (currentSplit + 1) % nThreads;
         }
@@ -125,10 +125,10 @@ void Sorter::mergeSort(string inputDir, int nThreads, bool initialSorting,
         std::thread *threads = new std::thread[nThreads - 1];
         for (int i = 1; i < nThreads; ++i) {
             string prefixOutputFile = string("/sorted-inputfile-")
-            + to_string(i);
+                + to_string(i);
             threads[i - 1] = std::thread(
-                                           std::bind(&Sorter::sortUnsortedFiles, splits[i], inputDir,
-                                                       prefixOutputFile, fileSize));
+                    std::bind(&Sorter::sortUnsortedFiles, splits[i], inputDir,
+                        prefixOutputFile, fileSize));
         }
         string prefixOutputFile = string("/sorted-inputfile-0");
         sortUnsortedFiles(splits[0], inputDir, prefixOutputFile, fileSize);
@@ -138,7 +138,7 @@ void Sorter::mergeSort(string inputDir, int nThreads, bool initialSorting,
         delete[] threads;
         delete[] splits;
     }
-    
+
     /*** MERGE SORT ***/
     LOG(DEBUGL) << "Start merge sorting procedure";
     do {
@@ -148,34 +148,34 @@ void Sorter::mergeSort(string inputDir, int nThreads, bool initialSorting,
         if (files.size() <= nThreads) {
             return; //No need to do sorting
         }
-        
+
         LOG(DEBUGL) << "(Sorted) files to merge: " << files.size() << " maxLimit: " << nThreads;
-        
+
         //Split the files in nThreads splits
         vector<string> *splits = new vector<string> [nThreads];
         int currentSplit = 0;
         for (vector<string>::iterator itr = files.begin(); itr != files.end();
-             ++itr) {
+                ++itr) {
             splits[currentSplit].push_back(*itr);
             currentSplit = (currentSplit + 1) % nThreads;
         }
-        
+
         //Start the threads and wait until they are finished
         std::thread *threads = new std::thread[nThreads - 1];
         for (int i = 1; i < nThreads; ++i) {
             string prefixOutputFile = inputDir + string("/merged-file-")
-            + to_string(i) + string("-") + to_string(iteration);
+                + to_string(i) + string("-") + to_string(iteration);
             threads[i - 1] = std::thread(
-                                           std::bind(&Sorter::sort, splits[i], filesPerMerge,
-                                                       prefixOutputFile));
+                    std::bind(&Sorter::sort, splits[i], filesPerMerge,
+                        prefixOutputFile));
         }
         string prefixOutputFile = inputDir + string("/merged-file-0-")
-        + to_string(iteration);
+            + to_string(iteration);
         sort(splits[0], filesPerMerge, prefixOutputFile);
         for (int i = 1; i < nThreads; ++i) {
             threads[i - 1].join();
         }
-        
+
         delete[] threads;
         delete[] splits;
         iteration++;

@@ -44,15 +44,15 @@ public:
                                          string fileOutput);
 
     static void mergeSort(string inputDir, int nThreads, bool initialSorting,
-                          long recordsInitialMemorySort, int filesPerMerge);
+                          int64_t recordsInitialMemorySort, int filesPerMerge);
 
     template<class K>
     static vector<string> sortFiles(vector<string> inputFiles,
                                     string prefixOutputFile) {
-        long maxSizeToSort = max((long) (BLOCK_SUPPORT_BUFFER_COMPR * 2),
-                                 (long) (Utils::getSystemMemory() * 0.70));
+        int64_t maxSizeToSort = max((int64_t) (BLOCK_SUPPORT_BUFFER_COMPR * 2),
+                                 (int64_t) (Utils::getSystemMemory() * 0.70));
         int sizeEl = sizeof(K);
-        long currentSize = 0;
+        int64_t currentSize = 0;
         int idxFile = 0;
 
         vector<K> inmemoryContainer;

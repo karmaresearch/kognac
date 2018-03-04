@@ -33,9 +33,9 @@ private:
 public:
     SimpleTripleWriter(string dir, string prefixFile, bool quad);
 
-    void write(const long t1, const long t2, const long t3);
+    void write(const int64_t t1, const int64_t t2, const int64_t t3);
 
-    void write(const long t1, const long t2, const long t3, const long count);
+    void write(const int64_t t1, const int64_t t2, const int64_t t3, const int64_t count);
 
     ~SimpleTripleWriter() {
         delete writer;
@@ -54,9 +54,9 @@ private:
 public:
     SortedTripleWriter(string dir, string prefixFile, int fileSize);
 
-    void write(const long t1, const long t2, const long t3);
+    void write(const int64_t t1, const int64_t t2, const int64_t t3);
 
-    void write(const long t1, const long t2, const long t3, const long count);
+    void write(const int64_t t1, const int64_t t2, const int64_t t3, const int64_t count);
 
     ~SortedTripleWriter();
 };

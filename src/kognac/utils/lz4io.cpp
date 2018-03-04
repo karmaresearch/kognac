@@ -121,7 +121,7 @@ void LZ4Writer::writeRawArray(const char *bytes, int length) {
     }
 }
 
-void LZ4Writer::writeLong(long n) {
+void LZ4Writer::writeLong(int64_t n) {
     if (uncompressedBufferLen + 8 <= SIZE_SEG) {
         Utils::encode_long(uncompressedBuffer, uncompressedBufferLen, n);
         uncompressedBufferLen += 8;
@@ -139,7 +139,7 @@ void LZ4Writer::writeLong(long n) {
     }
 }
 
-void LZ4Writer::writeVLong(long n) {
+void LZ4Writer::writeVLong(int64_t n) {
     int i = 1;
     if (n < 128) { // One byte is enough
         writeByte(n);
@@ -169,13 +169,13 @@ LZ4Writer::~LZ4Writer() {
     os.close();
 }
 
-long LZ4Reader::parseLong() {
+int64_t LZ4Reader::parseLong() {
     if (currentOffset >= uncompressedBufferLen) {
         uncompressedBufferLen = uncompressBuffer();
         currentOffset = 0;
     }
 
-    long n = 0;
+    int64_t n = 0;
     if (currentOffset + 7 < uncompressedBufferLen) {
         //Parse it normally
         n = Utils::decode_long(uncompressedBuffer, currentOffset);
@@ -184,7 +184,7 @@ long LZ4Reader::parseLong() {
         //Need to parse the next buffer
         int numBytes = 7;
         for (; currentOffset < uncompressedBufferLen; numBytes--) {
-            n += (long) (uncompressedBuffer[currentOffset++] & 0xFF)
+            n += (int64_t) (uncompressedBuffer[currentOffset++] & 0xFF)
                  << (numBytes * 8);
         }
 
@@ -193,7 +193,7 @@ long LZ4Reader::parseLong() {
 
         //Read the remaining bytes
         for (; numBytes >= 0; numBytes--) {
-            n += (long) (uncompressedBuffer[currentOffset++] & 0xFF)
+            n += (int64_t) (uncompressedBuffer[currentOffset++] & 0xFF)
                  << (numBytes * 8);
         }
 
@@ -201,13 +201,13 @@ long LZ4Reader::parseLong() {
     return n;
 }
 
-long LZ4Reader::parseVLong() {
+int64_t LZ4Reader::parseVLong() {
     int shift = 7;
     char b = parseByte();
-    long n = b & 127;
+    int64_t n = b & 127;
     while (b < 0) {
         b = parseByte();
-        n += (long) (b & 127) << shift;
+        n += (int64_t) (b & 127) << shift;
         shift += 7;
     }
     return n;

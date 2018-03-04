@@ -61,11 +61,11 @@ public:
 
     void writeByte(char i);
 
-    void writeLong(long n);
+    void writeLong(int64_t n);
 
     void writeShort(short n);
 
-    void writeVLong(long n);
+    void writeVLong(int64_t n);
 
 //  void writeString(const char *el);
 
@@ -158,9 +158,9 @@ public:
         return false;
     }
 
-    long parseLong();
+    int64_t parseLong();
 
-    long parseVLong();
+    int64_t parseVLong();
 
     int parseInt();
 

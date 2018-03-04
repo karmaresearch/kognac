@@ -29,7 +29,7 @@
 using namespace std;
 
 struct ThreeLongs {
-    long v1, v2, v3;
+    int64_t v1, v2, v3;
 
     ThreeLongs() {
         v1 = v2 = v3;
@@ -41,7 +41,7 @@ struct ThreeLongs {
 class SetEstimation {
 private:
 
-    google::dense_hash_map<long, ThreeLongs> map;
+    google::dense_hash_map<int64_t, ThreeLongs> map;
 
     //Taken from http://graphics.stanford.edu/~seander/bithacks.html#ZerosOnRightMultLookup
     static int deBruijnAlgo(const unsigned int v) {
@@ -58,7 +58,7 @@ public:
         map.set_empty_key(-1);
     }
 
-    static int posleastSignificantOne(const long i) {
+    static int posleastSignificantOne(const int64_t i) {
         unsigned int n = (unsigned int)i;
         if (n == 0) {
             n = (unsigned int)(i >> 32);
@@ -74,45 +74,45 @@ public:
         }
     }
 
-    static int posFirstZero(long n) {
+    static int posFirstZero(int64_t n) {
         int i = 0;
         for (; i < 64 && n & 1; ++i)
             n >>= 1;
         return i;
     }
 
-    void addElement(const long key, const long el1, const long el2, const long el3) {
-        google::dense_hash_map<long, ThreeLongs>::iterator itr = map.find(key);
+    void addElement(const int64_t key, const int64_t el1, const int64_t el2, const int64_t el3) {
+        google::dense_hash_map<int64_t, ThreeLongs>::iterator itr = map.find(key);
         int p1 = posleastSignificantOne(el1);
         int p2 = posleastSignificantOne(el2);
         int p3 = posleastSignificantOne(el3);
         if (itr == map.end()) {
             ThreeLongs v;
-            v.v1 = (long)1 << p1;
-            v.v2 = (long)1 << p2;
-            v.v3 = (long)1 << p3;
+            v.v1 = (int64_t)1 << p1;
+            v.v2 = (int64_t)1 << p2;
+            v.v3 = (int64_t)1 << p3;
             map.insert(std::make_pair(key, v));
         } else {
-            itr->second.v1 |= (long)1 << p1;
-            itr->second.v2 |= (long)1 << p2;
-            itr->second.v3 |= (long)1 << p3;
+            itr->second.v1 |= (int64_t)1 << p1;
+            itr->second.v2 |= (int64_t)1 << p2;
+            itr->second.v3 |= (int64_t)1 << p3;
         }
     }
 
-    long estimateCardinality(const long key) {
-        google::dense_hash_map<long, ThreeLongs>::iterator itr = map.find(key);
+    int64_t estimateCardinality(const int64_t key) {
+        google::dense_hash_map<int64_t, ThreeLongs>::iterator itr = map.find(key);
         int pos1 = posFirstZero(itr->second.v1);
         int pos2 = posFirstZero(itr->second.v2);
         int pos3 = posFirstZero(itr->second.v3);
         int avg = (pos1 + pos2 + pos3) / 3;
-        return (long) (double)pow(2, avg) / FLAJETCOS * 3;
+        return (int64_t) (double)pow(2, avg) / FLAJETCOS * 3;
     }
 
-    std::vector<std::pair<long, long> > getAllRankings() {
-        vector<std::pair<long, long> > pairs;
-        for (google::dense_hash_map<long, ThreeLongs>::iterator itr = map.begin();
+    std::vector<std::pair<int64_t, int64_t> > getAllRankings() {
+        vector<std::pair<int64_t, int64_t> > pairs;
+        for (google::dense_hash_map<int64_t, ThreeLongs>::iterator itr = map.begin();
                 itr != map.end(); ++itr) {
-            long estimate = estimateCardinality(itr->first);
+            int64_t estimate = estimateCardinality(itr->first);
             pairs.push_back(make_pair(itr->first, estimate));
         }
         return pairs;

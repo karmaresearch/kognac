@@ -27,13 +27,13 @@ SimpleTripleWriter::SimpleTripleWriter(string dir, string prefixFile, bool quad)
     writer->writeByte(quad);
 }
 
-void SimpleTripleWriter::write(const long t1, const long t2, const long t3) {
+void SimpleTripleWriter::write(const int64_t t1, const int64_t t2, const int64_t t3) {
     writer->writeLong(t1);
     writer->writeLong(t2);
     writer->writeLong(t3);
 }
 
-void SimpleTripleWriter::write(const long t1, const long t2, const long t3, const long count) {
+void SimpleTripleWriter::write(const int64_t t1, const int64_t t2, const int64_t t3, const int64_t count) {
     writer->writeLong(t1);
     writer->writeLong(t2);
     writer->writeLong(t3);
@@ -50,11 +50,11 @@ SortedTripleWriter::SortedTripleWriter(string dir, string prefixFile,
     buffer.clear();
 }
 
-void SortedTripleWriter::write(const long t1, const long t2, const long t3) {
+void SortedTripleWriter::write(const int64_t t1, const int64_t t2, const int64_t t3) {
     write(t1, t2, t3, 0);
 }
 
-void SortedTripleWriter::write(const long t1, const long t2, const long t3, const long count) {
+void SortedTripleWriter::write(const int64_t t1, const int64_t t2, const int64_t t3, const int64_t count) {
     Triple t;
     t.s = t1;
     t.p = t2;
