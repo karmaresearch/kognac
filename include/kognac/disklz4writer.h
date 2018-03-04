@@ -72,7 +72,7 @@ private:
 
     string inputfile;
     std::ofstream stream;
-    std::vector<std::vector<long> > startpositions;
+    std::vector<std::vector<int64_t> > startpositions;
 
     int nterminated;
 
@@ -91,9 +91,9 @@ public:
 
     void writeByte(const int id, const int value);
 
-    void writeVLong(const int id, const long value);
+    void writeVLong(const int id, const int64_t value);
 
-    void writeLong(const int id, const long value);
+    void writeLong(const int id, const int64_t value);
 
     void writeRawArray(const int id, const char *buffer, const size_t sizebuffer);
 

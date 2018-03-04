@@ -34,7 +34,7 @@ class DiskReader {
 
         std::chrono::duration<double> waitingTime;
 
-        long maxsize;
+        int64_t maxsize;
 
     public:
         DiskReader(int nbuffers, std::vector<FileInfo> *files);

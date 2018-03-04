@@ -42,9 +42,9 @@ void DiskLZ4Writer::writeByte(const int id, const int value) {
     buffer[fileinfo[id].sizebuffer++] = value;
 }
 
-void DiskLZ4Writer::writeVLong(const int id, const long value) {
+void DiskLZ4Writer::writeVLong(const int id, const int64_t value) {
     int i = 1;
-    long n = value;
+    int64_t n = value;
     if (value < 128) { // One byte is enough
         writeByte(id, n);
         return;
@@ -60,7 +60,7 @@ void DiskLZ4Writer::writeVLong(const int id, const long value) {
     }
 }
 
-void DiskLZ4Writer::writeLong(const int id, const long value) {
+void DiskLZ4Writer::writeLong(const int id, const int64_t value) {
     assert(id < npartitions);
     char *buffer = fileinfo[id].buffer;
     if (fileinfo[id].sizebuffer + 8 <= SIZE_SEG) {

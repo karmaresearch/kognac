@@ -101,18 +101,18 @@ void DiskReader::run() {
         //Read a file and copy it in buffer
         buffer.gzipped = gzipped;
         ifs.open(itr->path);
-        long readSize = itr->size;
+        int64_t readSize = itr->size;
         if (readSize > buffer.maxsize) {
             //The buffer is too small. Must create a bigger one
-	    //But need some extra, to search for next '\n'.
+            //But need some extra, to search for next '\n'.
             delete[] buffer.b;
-	    if (! gzipped) {
-		buffer.maxsize = readSize + 32 * 1024;
-		buffer.b = new char[buffer.maxsize];
-	    } else {
-		buffer.b = new char[readSize];
-		buffer.maxsize = readSize;
-	    }
+            if (! gzipped) {
+                buffer.maxsize = readSize + 32 * 1024;
+                buffer.b = new char[buffer.maxsize];
+            } else {
+                buffer.b = new char[readSize];
+                buffer.maxsize = readSize;
+            }
         }
 
         if (!gzipped) {

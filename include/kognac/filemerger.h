@@ -52,7 +52,7 @@ class FileMerger {
         LZ4Reader **files;
         int nfiles;
         int nextFileToRead;
-        long elementsRead;
+        int64_t elementsRead;
         std::vector<int> extensions; //mark the current extension
         std::vector<string> input;
 
