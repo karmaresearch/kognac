@@ -78,15 +78,15 @@ DiskLZ4Reader::DiskLZ4Reader(string inputfile,
     idxreader.open(idxfile);
     char buffer[8];
     idxreader.read(buffer, 8);
-    long n = Utils::decode_long(buffer);
+    int64_t n = Utils::decode_long(buffer);
     assert(n == npartitions);
     for (int i = 0; i < n; ++i) {
         readBlocks[i] = 0;
         idxreader.read(buffer, 8);
-        long nblocks = Utils::decode_long(buffer);
+        int64_t nblocks = Utils::decode_long(buffer);
         for (int j = 0; j < nblocks; ++j) {
             idxreader.read(buffer, 8);
-            long pos = Utils::decode_long(buffer);
+            int64_t pos = Utils::decode_long(buffer);
             beginningBlocks[i].push_back(pos);
         }
     }
@@ -168,9 +168,9 @@ void DiskLZ4Reader::run() {
             currentFileIdx = firstPotentialPart;
         }
 
-        long blocknumber = readBlocks[currentFileIdx];
+        int64_t blocknumber = readBlocks[currentFileIdx];
         assert(blocknumber < beginningBlocks[currentFileIdx].size());
-        long position = beginningBlocks[currentFileIdx][blocknumber];
+        int64_t position = beginningBlocks[currentFileIdx][blocknumber];
         //LOG(DEBUGL) << "Read block " << blocknumber << " for file " << currentFileIdx << " at position " << position;
 
         reader.seekg(position);
@@ -363,9 +363,9 @@ int DiskLZ4Reader::readByte(const int id) {
     return files[id].buffer[files[id].pivot++];
 }
 
-long DiskLZ4Reader::readLong(const int id) {
+int64_t DiskLZ4Reader::readLong(const int id) {
     if (files[id].pivot + 8 <= files[id].sizebuffer) {
-        long n = Utils::decode_long(files[id].buffer + files[id].pivot);
+        int64_t n = Utils::decode_long(files[id].buffer + files[id].pivot);
         files[id].pivot += 8;
         return n;
     } else {
@@ -384,13 +384,13 @@ long DiskLZ4Reader::readLong(const int id) {
     }
 }
 
-long DiskLZ4Reader::readVLong(const int id) {
+int64_t DiskLZ4Reader::readVLong(const int id) {
     int shift = 7;
     char b = readByte(id);
-    long n = b & 127;
+    int64_t n = b & 127;
     while (b < 0) {
         b = readByte(id);
-        n += (long) (b & 127) << shift;
+        n += (int64_t) (b & 127) << shift;
         shift += 7;
     }
     return n;

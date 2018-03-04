@@ -26,8 +26,8 @@ private:
     string inputfile;
     std::vector<FileInfo> files;
     ifstream reader;
-    std::vector<std::vector<long> > beginningBlocks;
-    std::vector<long> readBlocks;
+    std::vector<std::vector<int64_t> > beginningBlocks;
+    std::vector<int64_t> readBlocks;
 
     //support buffers for strings
     std::vector<std::unique_ptr<char[]> > supportstringbuffers;
@@ -52,7 +52,7 @@ protected:
 
     //Pool of compressed buffers
     std::list<BlockToRead> *compressedbuffers;
-    std::vector<long> sCompressedbuffers; //number of elements in each list
+    std::vector<int64_t> sCompressedbuffers; //number of elements in each list
 
     //Larger buffers to read from disk. They are proportional to SIZE_SEG
     std::vector<char*> diskbufferpool;
@@ -73,9 +73,9 @@ public:
 
     int readByte(const int id);
 
-    long readVLong(const int id);
+    int64_t readVLong(const int id);
 
-    long readLong(const int id);
+    int64_t readLong(const int id);
 
     const char* readString(const int id, int &sizeTerm);
 
