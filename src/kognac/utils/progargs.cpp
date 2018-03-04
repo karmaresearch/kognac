@@ -15,7 +15,7 @@ bool ProgramArgs::AbsArg::check<int>(string s) {
             s.end(), [](char c) { return !(isdigit(c) || c == '-'); }) == s.end();
 }
 template<>
-bool ProgramArgs::AbsArg::check<long>(string s) {
+bool ProgramArgs::AbsArg::check<int64_t>(string s) {
     return !s.empty() && std::find_if(s.begin(),
             s.end(), [](char c) { return !(isdigit(c) || c == '-'); }) == s.end();
 }
@@ -47,7 +47,7 @@ void ProgramArgs::AbsArg::convert(string s, int &v) {
     ss >> v;
 }
 template<>
-void ProgramArgs::AbsArg::convert(string s, long &v) {
+void ProgramArgs::AbsArg::convert(string s, int64_t &v) {
     stringstream ss;
     ss << s;
     ss >> v;

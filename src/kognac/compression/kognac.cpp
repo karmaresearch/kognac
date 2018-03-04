@@ -749,7 +749,7 @@ void Kognac::pickSmallestClassIDPart(string inputFile, const bool useFP) {
     if (useFP) {
         char supportBuffer[MAX_TERM_SIZE + 2];
         size_t sSupportBuffer = 0;
-        int64_t minClass = LONG_MAX;
+        int64_t minClass = INT64_MAX;
         const std::vector<int64_t> *taxonomyClasses;
 
         bool first = true;
@@ -770,7 +770,7 @@ void Kognac::pickSmallestClassIDPart(string inputFile, const bool useFP) {
                 lastEl.writeTo(&writer);
                 memcpy(supportBuffer, el.term, el.size);
                 sSupportBuffer = el.size;
-                minClass = LONG_MAX;
+                minClass = INT64_MAX;
             }
 
             extractor.retrieveInstances(el.classID, &taxonomyClasses);
@@ -789,7 +789,7 @@ void Kognac::pickSmallestClassIDPart(string inputFile, const bool useFP) {
     } else { //No FP support
         char supportBuffer[MAX_TERM_SIZE + 2];
         size_t sSupportBuffer = 0;
-        int64_t minClass = LONG_MAX;
+        int64_t minClass = INT64_MAX;
         const std::vector<int64_t> *taxonomyClasses;
         bool first = true;
         while (!reader.isEof()) {
@@ -895,7 +895,7 @@ void Kognac::mergeAllTermsWithClassIDsPart(std::vector<string> inputFiles) {
                 memcpy(supportBuffer, el.term, el.size);
                 sSupportBuffer = el.size;
             }
-            if (el.classID != LONG_MAX) {
+            if (el.classID != INT64_MAX) {
                 //Get the frequency
                 uint64_t freq = 0;
                 if (classesWithFrequency.count(el.classID)) {
@@ -905,7 +905,7 @@ void Kognac::mergeAllTermsWithClassIDsPart(std::vector<string> inputFiles) {
                 }
                 classes.push_back(make_pair(freq, el.classID));
             }
-            if (el.classID2 != LONG_MAX) {
+            if (el.classID2 != INT64_MAX) {
                 uint64_t freq = 0;
                 if (classesWithFrequency.count(el.classID2)) {
                     freq = classesWithFrequency.find(el.classID2)->second;
@@ -1171,9 +1171,9 @@ void Kognac::processTerm(Kognac_TermBufferWriter & writer, const int pos,
         const char* otherterm2,
         std::map<uint64_t, uint64_t> *freqsClass,
         const bool useFP) const {
-    int64_t classID = LONG_MAX;
-    int64_t classID2 = LONG_MAX;
-    //int64_t pred = LONG_MAX;
+    int64_t classID = INT64_MAX;
+    int64_t classID2 = INT64_MAX;
+    //int64_t pred = INT64_MAX;
     int sizeTerm = Utils::decode_short(term);
 
     //Determine a potential classID
@@ -1243,28 +1243,6 @@ void Kognac::processTerm(Kognac_TermBufferWriter & writer, const int pos,
         //pair.pred = pred;
         writer.write(pair);
     } else {
-        //int64_t hashTerm = Hashes::murmur3_56(term + 2, sizeTerm);
-        /*** int64_t minClass = LONG_MAX;
-          minClass = writer.getClassFromCache2(term + 2, sizeTerm);
-
-          const std::vector<int64_t> *taxonomyClasses = NULL;
-          extractor.retrieveInstances(classID, &taxonomyClasses);
-          if (taxonomyClasses) {
-          if (taxonomyClasses->at(0) < minClass) {
-          classID = taxonomyClasses->at(0);
-        //Add it in the cache
-        writer.insertInCache2(term + 2, sizeTerm, classID);
-        } else {
-        return;
-        }
-        } else {
-        if (minClass < LONG_MAX) {
-        //I already inserted it
-        return;
-        }
-        classID = LONG_MAX;
-        writer.insertInCache2(term + 2, sizeTerm, classID - 1);
-        }***/
         pair.classID = classID;
         writer.write(pair);
     }

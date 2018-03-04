@@ -192,19 +192,12 @@ public:
     void write(const Kognac_TextClassID &pair);
 
     int64_t getClassFromCache(const int64_t hashTerm) {
-        int64_t cacheId = LONG_MAX;
+        int64_t cacheId = INT64_MAX;
         if (cacheClassAssignments.count(hashTerm)) {
             cacheId = cacheClassAssignments.find(hashTerm)->second;
         }
         return cacheId;
     }
-
-    /*int64_t getClassFromCache2(const char *key, const size_t sizekey) {
-        int64_t cacheId = LONG_MAX;
-        //TODO
-        return cacheId;
-    }*/
-
 
     void insertInCache(const int64_t key, const int64_t hashClass);
 
