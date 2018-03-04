@@ -33,6 +33,7 @@
 #include <unordered_map>
 #include <vector>
 #include <cstring>
+#include <inttypes.h>
 
 #include <google/dense_hash_map>
 #include <kognac/hashfunctions.h>
@@ -73,15 +74,15 @@ struct MG_hashstr {
     }
 };
 
-typedef google::dense_hash_map<HashMapKey, long*, MG_hashstr, MG_eqstr> HashMap;
-typedef std::vector<std::pair<long, HashMapKey> > CounterVector;
+typedef google::dense_hash_map<HashMapKey, int64_t*, MG_hashstr, MG_eqstr> HashMap;
+typedef std::vector<std::pair<int64_t, HashMapKey> > CounterVector;
 
-typedef map<string, long> StringToNumberMap;
+typedef map<string, int64_t> StringToNumberMap;
 
 struct MG_CountSorter {
-    const std::pair<long, HashMapKey> *vector;
+    const std::pair<int64_t, HashMapKey> *vector;
 
-    MG_CountSorter(const std::pair<long, HashMapKey> *v) : vector(v) {
+    MG_CountSorter(const std::pair<int64_t, HashMapKey> *v) : vector(v) {
     }
 
     bool operator()(const size_t &el1, const size_t &el2) const {
@@ -92,11 +93,11 @@ struct MG_CountSorter {
 class MG {
 private:
     // Maximum size of the heap as defined earlier
-    const unsigned long heapSize;
+    const uint64_t heapSize;
 
     // Additional data structures during the adding of the heap
     HashMap lookupMap;
-    std::pair<long, HashMapKey> *counterVector;
+    std::pair<int64_t, HashMapKey> *counterVector;
     std::vector<size_t> idxCounterVector;
     char* stringPool;
 
@@ -104,7 +105,7 @@ private:
 
 public:
     // Constructor
-    MG(const unsigned long);
+    MG(const uint64_t);
 
     // Adds an element into the structure
     void add (const char*, unsigned int);

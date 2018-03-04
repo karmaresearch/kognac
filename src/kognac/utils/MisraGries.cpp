@@ -30,11 +30,11 @@
 #include <algorithm>
 #include <vector>
 
-MG :: MG (const unsigned long size) : heapSize(size) {
+MG :: MG (const uint64_t size) : heapSize(size) {
     lookupMap.set_empty_key(make_pair(0, MG_EMPTY_KEY));
     lookupMap.set_deleted_key(make_pair(0, MG_DELETED_KEY));
     stringPool = new char[STR_POOL_EL_SIZE * size];
-    counterVector = new std::pair<long, HashMapKey>[size];
+    counterVector = new std::pair<int64_t, HashMapKey>[size];
 }
 
 void MG::addElem(const char *key, unsigned int length) {
@@ -131,7 +131,7 @@ std::vector<string> MG::getPositiveTerms() const {
     return results;
 }
 
-bool pairCompare( pair<string, unsigned long> i, pair<string, unsigned long> j) {
+bool pairCompare( pair<string, uint64_t> i, pair<string, uint64_t> j) {
     return i.second < j.second;
 }
 
@@ -144,7 +144,7 @@ void MG :: merge (StringToNumberMap & heap) {
     StringToNumberMap my_heap = this->getHeapElements();
 
     // Get the minimum counter value of the current heap (heap[0])
-    std::pair<string, unsigned long> min = *min_element(my_heap.begin(), my_heap.end(), pairCompare);
+    std::pair<string, uint64_t> min = *min_element(my_heap.begin(), my_heap.end(), pairCompare);
     unsigned min_counter = min.second;
 
     for (; it != heap.end(); it ++) {
@@ -152,7 +152,7 @@ void MG :: merge (StringToNumberMap & heap) {
             if (my_heap.find(it->first) == my_heap.end()) {
                 StringToNumberMap::iterator myself = my_heap.begin();
                 bool flag = false;
-                unsigned long m = min_counter < (it->second) ? min_counter : it->second;
+                uint64_t m = min_counter < (it->second) ? min_counter : it->second;
 
                 string toRemove;
                 for (; myself != my_heap.end(); myself++) {
