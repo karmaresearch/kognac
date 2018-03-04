@@ -35,17 +35,17 @@ class Logger {
         };
 
 #if defined(_WIN32)
-public:
+    public:
 #if LOG_SHARED_LIB
-	__declspec(dllexport) static int minLevel;
-    __declspec(dllexport) static std::mutex mutex;
-    __declspec(dllexport) static std::unique_ptr<FileLogger> file;
+        __declspec(dllexport) static int minLevel;
+        __declspec(dllexport) static std::mutex mutex;
+        __declspec(dllexport) static std::unique_ptr<FileLogger> file;
 #else
-	__declspec(dllimport) static int minLevel;
-	__declspec(dllimport) static std::mutex mutex;
-	__declspec(dllimport) static std::unique_ptr<FileLogger> file;
+        __declspec(dllimport) static int minLevel;
+        __declspec(dllimport) static std::mutex mutex;
+        __declspec(dllimport) static std::unique_ptr<FileLogger> file;
 #endif
-private:
+    private:
 #else
         static int minLevel;
         static std::mutex mutex;
@@ -119,7 +119,7 @@ private:
             return *this;
         }
 
-        Logger& operator << (unsigned long long n) {
+        Logger& operator << (uint64_t n) {
             std::string s = std::to_string(n);
             return *this << s.c_str();
         }
@@ -134,11 +134,6 @@ private:
             return *this << s.c_str();
         }
 
-        Logger& operator << (unsigned long n) {
-            std::string s = std::to_string(n);
-            return *this << s.c_str();
-        }
-
         Logger& operator << (double n) {
             std::string s = std::to_string(n);
             return *this << s.c_str();
@@ -149,7 +144,12 @@ private:
             return *this << s.c_str();
         }
 
-        Logger& operator << (long long n) {
+        Logger& operator << (int64_t n) {
+            std::string s = std::to_string(n);
+            return *this << s.c_str();
+        }
+
+        Logger& operator << (unsigned long n) {
             std::string s = std::to_string(n);
             return *this << s.c_str();
         }
