@@ -825,7 +825,7 @@ void Compressor::extractCommonTerms(ParamsExtractCommonTermProcedure params) {
         pos = (pos + 1) % 3;
     }
 
-    LOG(DEBUGL) << "Hashtable size after extraction " << map->size() << ". Frequent terms " << countFrequent;
+    LOG(DEBUGL) << "Hashtable size after extraction " << (uint64_t)map->size() << ". Frequent terms " << countFrequent;
 
 }
 
@@ -1096,7 +1096,7 @@ vector<FileInfo> *Compressor::splitInputInChunks(const string &input, int nchunk
         infoAllFiles.push_back(i);
     }
 
-    LOG(INFOL) << "Going to parse " << infoAllFiles.size() << " files. Total size in bytes: " << totalSize << " bytes";
+    LOG(INFOL) << "Going to parse " << (uint64_t)infoAllFiles.size() << " files. Total size in bytes: " << totalSize << " bytes";
 
     /*** Sort the input files by size, and split the files through the multiple processors ***/
     std::sort(infoAllFiles.begin(), infoAllFiles.end(), cmpInfoFiles);
@@ -1152,7 +1152,7 @@ vector<FileInfo> *Compressor::splitInputInChunks(const string &input, int nchunk
                 itr < files[i].end(); ++itr) {
             totalSize += itr->size;
         }
-        LOG(DEBUGL) << "Files in split " << i << ": " << files[i].size() << " size " << totalSize;
+        LOG(DEBUGL) << "Files in split " << i << ": " << (uint64_t)files[i].size() << " size " << totalSize;
     }
     return files;
 }
@@ -1539,7 +1539,7 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
         }
 
         /*** Sort the list and keep the highest n ***/
-        LOG(DEBUGL) << "There are " << listFrequentTerms.size() << " potential frequent terms";
+        LOG(DEBUGL) << "There are " << (uint64_t)listFrequentTerms.size() << " potential frequent terms";
         std::sort(listFrequentTerms.begin(), listFrequentTerms.end(),
                 lessTermFrequenciesDesc);
 
@@ -1579,7 +1579,7 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
         LOG(DEBUGL) << "Merge the local common term maps";
         mergeCommonTermsMaps(finalMap, commonTermsMaps, parallelProcesses);
     }
-    LOG(DEBUGL) << "Size hashtable with common terms " << finalMap->size();
+    LOG(DEBUGL) << "Size hashtable with common terms " << (uint64_t)finalMap->size();
 
     delete[] threads;
 }
@@ -1642,7 +1642,7 @@ void Compressor::do_sample(const int dictPartitions, const int sampleArg,
     }
 
     /*** Sort all the pairs by term ***/
-    LOG(DEBUGL) << "Sorting the sample of " << sampledTerms.size();
+    LOG(DEBUGL) << "Sorting the sample of " << (uint64_t)sampledTerms.size();
     std::sort(sampledTerms.begin(), sampledTerms.end(), &sampledTermsSorter1);
 
     /*** Merge sample ***/
@@ -1666,7 +1666,7 @@ void Compressor::do_sample(const int dictPartitions, const int sampleArg,
             &sampledTermsSorter2);
 
     /*** Pick the top n and copy them in finalMap ***/
-    LOG(DEBUGL) << "Copy in the hashmap the top k. The sorted sample contains " << sampledTermsUniq.size();
+    LOG(DEBUGL) << "Copy in the hashmap the top k. The sorted sample contains " << (uint64_t)sampledTermsUniq.size();
     finalMap->set_empty_key(EMPTY_KEY);
     finalMap->set_deleted_key(DELETED_KEY);
     char supportTerm[MAX_TERM_SIZE];
@@ -1679,7 +1679,7 @@ void Compressor::do_sample(const int dictPartitions, const int sampleArg,
         finalMap->insert(make_pair(newkey, sampledTermsUniq[i].second));
     }
 
-    LOG(DEBUGL) << "Size hashtable with common terms " << finalMap->size();
+    LOG(DEBUGL) << "Size hashtable with common terms " << (uint64_t)finalMap->size();
 }
 
 bool Compressor::areFilesToCompress(int parallelProcesses, string *tmpFileNames) {
@@ -1940,9 +1940,9 @@ std::vector<string> Compressor::getPartitionBoundaries(const string kbdir,
 
     std::vector<string> output;
     size_t sizePartition = sample.size() / partitions;
-    LOG(DEBUGL) << "sample.size()=" << sample.size()
-        << " sizePartition=" << sizePartition
-        << " remainder=" << (sample.size() % partitions);
+    LOG(DEBUGL) << "sample.size()=" << (uint64_t)sample.size()
+        << " sizePartition=" << (uint64_t)sizePartition
+        << " remainder=" << (uint64_t)(sample.size() % partitions);
     for (size_t i = 0; i < sample.size(); ++i) {
         if ((i + 1) % sizePartition == 0 && output.size() < partitions - 1) {
             //Add element in the partition
@@ -2127,7 +2127,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
                 >= maxMem) {
             //if (bytesAllocated > 800000) {
             LOG(DEBUGL) << "Dumping file " << idx << " with "
-                << tuples.size() << " tuples ...";
+                << (uint64_t)tuples.size() << " tuples ...";
             string ofile = outputFile + string(".") + to_string(idx);
             idx++;
             sortAndDumpToFile(tuples, ofile, false);
@@ -2174,11 +2174,11 @@ void Compressor::sortPartition(ParamsSortPartition params) {
         for (auto file : filesToSort) {
             Utils::remove(file);
         }
-        LOG(DEBUGL) << "Number of prefixes " << prefixset.size();
+        LOG(DEBUGL) << "Number of prefixes " << (uint64_t)prefixset.size();
 
         if (idx == 0) {
             //All data fit in main memory. Do not need to write it down
-            LOG(DEBUGL) << "All terms (" << tuples.size() << ") fit in main memory";
+            LOG(DEBUGL) << "All terms (" << (uint64_t)tuples.size() << ") fit in main memory";
             std::sort(tuples.begin(), tuples.end(), SimplifiedAnnotatedTerm::sless);
 
             //The following code is replicated below.
@@ -2239,7 +2239,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
                 sortedFiles.push_back(ofile);
             }
 
-            LOG(DEBUGL) << "Merge " << sortedFiles.size()
+            LOG(DEBUGL) << "Merge " << (uint64_t)sortedFiles.size()
                 << " files in order to sort the partition";
 
             while (sortedFiles.size() >= 4) {
@@ -2970,7 +2970,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
         }
 
         /*** Assign a number to the popular entries ***/
-        LOG(DEBUGL) << "Assign a number to " << finalMap->size() <<
+        LOG(DEBUGL) << "Assign a number to " << (uint64_t)finalMap->size() <<
             " popular terms in the dictionary";
         assignNumbersToCommonTermsMap(finalMap, counters, writers, NULL, ndicts, true);
 

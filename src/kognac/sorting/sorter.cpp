@@ -149,7 +149,7 @@ void Sorter::mergeSort(string inputDir, int nThreads, bool initialSorting,
             return; //No need to do sorting
         }
 
-        LOG(DEBUGL) << "(Sorted) files to merge: " << files.size() << " maxLimit: " << nThreads;
+        LOG(DEBUGL) << "(Sorted) files to merge: " << (uint64_t)files.size() << " maxLimit: " << nThreads;
 
         //Split the files in nThreads splits
         vector<string> *splits = new vector<string> [nThreads];

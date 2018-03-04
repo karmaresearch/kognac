@@ -55,7 +55,7 @@ void Kognac::sample(const int sampleMethod, const int sampleArg1,
                     make_pair(string(itr->first + 2, sizeString), itr->second));
         }
     }
-    LOG(INFOL) << "Detected " << mostFrequentTerms.size() <<
+    LOG(INFOL) << "Detected " << (uint64_t)mostFrequentTerms.size() <<
         " frequent terms";
 
     //3- Get the temporary files if they exists
@@ -240,7 +240,7 @@ void Kognac::loadDictionaryMap(std::istream &in,
         }
     }
     LOG(DEBUGL) << "The hashmap contains " <<
-        map.size() << " terms";
+        (uint64_t)map.size() << " terms";
 }
 
 int64_t Kognac::getIDOrText(DiskLZ4Reader *reader, int idReader, int &size, char *text,
@@ -541,7 +541,7 @@ void Kognac::sortCompressedGraph(string inputDir, string outputFile, int v) {
         } else {
             cmp c;
             std::sort(inmemorytriples.begin(), inmemorytriples.end(), c);
-            LOG(DEBUGL) << "inmemorytriples = " << inmemorytriples.size();
+            LOG(DEBUGL) << "inmemorytriples = " << (uint64_t)inmemorytriples.size();
             int64_t prevs = -1;
             int64_t prevp = -1;
             int64_t prevo = -1;

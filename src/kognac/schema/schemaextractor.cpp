@@ -433,7 +433,7 @@ void SchemaExtractor::processClasses(SchemaMap &map, NumericNPSchemaMap &omap) {
     //There should be only one root: <Class>. If there are more then issue a
     //warning
     if (roots.size() > 1) {
-        LOG(ERRORL) << "There should be only one root! Found (" << roots.size() << ")";
+        LOG(ERRORL) << "There should be only one root! Found (" << (uint64_t)roots.size() << ")";
         throw 10;
     }
 
@@ -456,7 +456,7 @@ void SchemaExtractor::processClasses(SchemaMap &map, NumericNPSchemaMap &omap) {
         std::sort(itr->second.begin(), itr->second.end());
     }
 
-    LOG(DEBUGL) << "Members of " << omap.size() <<
+    LOG(DEBUGL) << "Members of " << (uint64_t)omap.size() <<
         " classes have a clustering ID";
 }
 
@@ -476,7 +476,7 @@ void SchemaExtractor::prepare() {
 
     //Print some stats
     //printTree(0, root);
-    LOG(DEBUGL) << "There are " << outputSubclasses.size() << " subclasses to cluster the terms";
+    LOG(DEBUGL) << "There are " << (uint64_t)outputSubclasses.size() << " subclasses to cluster the terms";
 }
 
 void SchemaExtractor::retrieveInstances(const int64_t term, const vector<int64_t> **output) const {
@@ -617,7 +617,7 @@ void rearrangeChildrenWithPatterns(ExtNode *node,
                 } else {
                     LOG(DEBUGL) << "I was"
                         "unable to rearrange a list of " <<
-                        (childrenToRearrange.size() +
+                        (uint64_t)(childrenToRearrange.size() +
                          rearrangedChildren.size()) <<
                         " nodes";
                 }

@@ -124,10 +124,6 @@ class Logger {
             return *this << s.c_str();
         }
 
-        Logger& operator << (size_t n) {
-            std::string s = std::to_string(n);
-            return *this << s.c_str();
-        }
         Logger& operator << (uint32_t n) {
             std::string s = std::to_string(n);
             return *this << s.c_str();
