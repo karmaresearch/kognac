@@ -62,10 +62,10 @@ struct hashstr {
     }
 };
 
-typedef google::sparse_hash_map<const char *, long, hashstr, eqstr> CompressedByteArrayToNumberMap;
-typedef google::dense_hash_map<const char *, long, hashstr, eqstr> ByteArrayToNumberMap;
-typedef google::dense_hash_map<long, const char *> NumberToByteArrayMap;
-typedef google::dense_hash_map<string, long> GStringToNumberMap;
+typedef google::sparse_hash_map<const char *, int64_t, hashstr, eqstr> CompressedByteArrayToNumberMap;
+typedef google::dense_hash_map<const char *, int64_t, hashstr, eqstr> ByteArrayToNumberMap;
+typedef google::dense_hash_map<int64_t, const char *> NumberToByteArrayMap;
+typedef google::dense_hash_map<string, int64_t> GStringToNumberMap;
 typedef google::dense_hash_set<const char *, hashstr, eqstr> ByteArraySet;
 
 class LRUByteArraySet {
