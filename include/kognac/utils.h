@@ -53,7 +53,7 @@ class Utils {
         static vector<string> getFilesWithSuffix(string dir, string suffix);
         static vector<string> getFiles(string dir, bool ignoreExtension = false);
         static vector<string> getSubdirs(string dir);
-        static long getNBytes(std::string input);
+        static uint64_t getNBytes(std::string input);
         static bool isCompressed(std::string input);
         static bool exists(std::string file);
         static uint64_t fileSize(string file);
@@ -69,7 +69,7 @@ class Utils {
         static void rmlink(string link);
         //End file utils
 
-        static int numberOfLeadingZeros(unsigned int number) {
+        static int numberOfLeadingZeros(uint32_t number) {
             if (number == 0)
                 return 32;
             unsigned int n = 1;
@@ -93,7 +93,7 @@ class Utils {
             return n;
         }
 
-        static int numberOfLeadingZeros(unsigned long i) {
+        static int numberOfLeadingZeros(uint64_t i) {
             if (i == 0)
                 return 64;
             int n = 1;
@@ -138,43 +138,43 @@ class Utils {
         static int decode_intLE(char* buffer, int offset);
         static void encode_intLE(char* buffer, int offset, int n);
 
-        static long decode_long(char* buffer, int offset);
-        static long decode_long(const char* buffer);
-        static long decode_longFixedBytes(const char* buffer, const uint8_t nbytes);
+        static int64_t decode_long(char* buffer, int offset);
+        static int64_t decode_long(const char* buffer);
+        static int64_t decode_longFixedBytes(const char* buffer, const uint8_t nbytes);
 
-        static void encode_long(char* buffer, int offset, long n);
-        static void encode_long(char* buffer, long n);
+        static void encode_long(char* buffer, int offset, int64_t n);
+        static void encode_long(char* buffer, int64_t n);
         static void encode_longNBytes(char* buffer, const uint8_t nbytes,
                 const uint64_t n);
 
-        static long decode_longWithHeader(char* buffer);
-        static void encode_longWithHeader0(char* buffer, long n);
-        static void encode_longWithHeader1(char* buffer, long n);
+        static int64_t decode_longWithHeader(char* buffer);
+        static void encode_longWithHeader0(char* buffer, int64_t n);
+        static void encode_longWithHeader1(char* buffer, int64_t n);
 
-        static long decode_vlong(char* buffer, int *offset);
-        static int encode_vlong(char* buffer, int offset, long n);
-        static uint16_t encode_vlong(char* buffer, long n);
-        static int numBytes(long number);
+        static int64_t decode_vlong(char* buffer, int *offset);
+        static int encode_vlong(char* buffer, int offset, int64_t n);
+        static uint16_t encode_vlong(char* buffer, int64_t n);
+        static int numBytes(int64_t number);
 
-        static int numBytesFixedLength(long number);
+        static int numBytesFixedLength(int64_t number);
 
         static int decode_vint2(char* buffer, int *offset);
         static int encode_vint2(char* buffer, int offset, int n);
 
-        static long decode_vlong2(const char* buffer, int *offset);
+        static int64_t decode_vlong2(const char* buffer, int *offset);
 
         static int encode_vlong2_fast(uint8_t *out, uint64_t x);
         static uint64_t decode_vlong2_fast(uint8_t *out);
 
-        static void encode_vlong2_fixedLen(char* buffer, long n, const uint8_t len);
-        static int encode_vlong2(char* buffer, int offset, long n);
-        static uint16_t encode_vlong2(char* buffer, long n);
-        static int numBytes2(long number);
+        static void encode_vlong2_fixedLen(char* buffer, int64_t n, const uint8_t len);
+        static int encode_vlong2(char* buffer, int offset, int64_t n);
+        static uint16_t encode_vlong2(char* buffer, int64_t n);
+        static int numBytes2(int64_t number);
 
-        static long decode_vlongWithHeader0(char* buffer, const int end, int *pos);
-        static long decode_vlongWithHeader1(char* buffer, const int end, int *pos);
-        static int encode_vlongWithHeader0(char* buffer, long n);
-        static int encode_vlongWithHeader1(char* buffer, long n);
+        static int64_t decode_vlongWithHeader0(char* buffer, const int end, int *pos);
+        static int64_t decode_vlongWithHeader1(char* buffer, const int end, int *pos);
+        static int encode_vlongWithHeader0(char* buffer, int64_t n);
+        static int encode_vlongWithHeader1(char* buffer, int64_t n);
 
         static int compare(const char* string1, int s1, int e1, const char* string2,
                 int s2, int e2);
@@ -198,19 +198,19 @@ class Utils {
 
         static double get_max_mem();
 
-        static long getSystemMemory();
+        static uint64_t getSystemMemory();
 
-        static long getUsedMemory();
+        static uint64_t getUsedMemory();
 
-        static long getIOReadBytes();
+        static uint64_t getIOReadBytes();
 
-        static long getIOReadChars();
+        static uint64_t getIOReadChars();
 
         static int getNumberPhysicalCores();
 
-        static long quickSelect(long *vector, int size, int k);
+        static int64_t quickSelect(int64_t *vector, int size, int k);
 
-        static long long unsigned getCPUCounter();
+        static uint64_t getCPUCounter();
 
         static int getPartition(const char *key, const int size,
                 const int partitions) {

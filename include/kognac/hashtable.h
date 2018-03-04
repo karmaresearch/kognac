@@ -27,35 +27,36 @@
 #include <string>
 #include <iostream>
 #include <math.h>
+#include <inttypes.h>
 
 using namespace std;
 
 class Hashtable {
 private:
     const size_t size;
-    long *table;
-    long (*hash)(const char*, const int);
+    int64_t *table;
+    int64_t (*hash)(const char*, const int);
 public:
-    Hashtable(const size_t size, long (*hash)(const char*, const int));
+    Hashtable(const size_t size, int64_t (*hash)(const char*, const int));
 
-    long add(const char *el, const int l) {
-        long hashcode = hash(el, l);
-        size_t idx = abs((long)(hashcode % size));
+    int64_t add(const char *el, const int l) {
+        int64_t hashcode = hash(el, l);
+        size_t idx = abs((int64_t)(hashcode % size));
         table[idx]++;
         return hashcode;
     }
 
-    long get(const char *el, const int l) {
-        size_t idx = abs((long)(hash(el, l) % size));
+    int64_t get(const char *el, const int l) {
+        size_t idx = abs((int64_t)(hash(el, l) % size));
         return table[idx];
     }
 
-    long get(const string &el) {
-        size_t idx = abs((long)(hash(el.c_str(), el.size()) % size));
+    int64_t get(const string &el) {
+        size_t idx = abs((int64_t)(hash(el.c_str(), el.size()) % size));
         return table[idx];
     }
 
-    long get(size_t idx) {
+    int64_t get(size_t idx) {
         return table[idx];
     }
 
@@ -65,12 +66,12 @@ public:
         }
     }
 
-    long getThreshold(size_t highestN) {
+    int64_t getThreshold(size_t highestN) {
         return Utils::quickSelect(table, size, highestN);
     }
 
-    long getTotalCount() {
-        long count = 0;
+    int64_t getTotalCount() {
+        int64_t count = 0;
         for (size_t i = 0; i < size; ++i) {
             count += table[i];
         }

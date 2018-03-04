@@ -26,21 +26,22 @@
 
 #include <cstring>
 #include <functional>
+#include <inttypes.h>
 
 using namespace std;
 
 class Hashes {
 public:
-    static long murmur3_56(const char* s, const int size) {
+    static int64_t murmur3_56(const char* s, const int size) {
         char output[16];
         MurmurHash3_x64_128(s, size, 0, output);
-        long number = output[0];
+        int64_t number = output[0];
         number += output[1] << 8;
         number += output[2] << 16;
         number += output[3] << 24;
-        number += (long)output[8] << 32;
-        number += (long)output[9] << 40;
-        number += (long)output[10] << 48;
+        number += (int64_t)output[8] << 32;
+        number += (int64_t)output[9] << 40;
+        number += (int64_t)output[10] << 48;
         return number & 0xFFFFFFFFFFFFFFl;
     }
 
@@ -65,8 +66,8 @@ public:
         return hval;
     }
 
-    static long fnv1a_56(const char *s, int size) {
-        long hval = 0;
+    static int64_t fnv1a_56(const char *s, int size) {
+        int64_t hval = 0;
         int i = 0;
         while (i < size) {
             hval ^= (int) s[i++];
@@ -85,7 +86,7 @@ public:
     }
 
     static int dbj2(const char* s) {
-        unsigned long hash = 5381;
+        uint64_t hash = 5381;
         int c;
         while ((c = *s++))
             hash = ((hash << 5) + hash) + c;
@@ -93,7 +94,7 @@ public:
     }
 
     static int dbj2s(const char* s, const int size) {
-        unsigned long hash = 5381;
+        uint64_t hash = 5381;
         int i = 0;
         while (i < size) {
             hash = ((hash << 5) + hash) + s[i++];
@@ -101,8 +102,8 @@ public:
         return hash;
     }
 
-    static long dbj2s_56(const char* s, const int size) {
-        unsigned long hash = 5381;
+    static int64_t dbj2s_56(const char* s, const int size) {
+        uint64_t hash = 5381;
         int i = 0;
         while (i < size) {
             hash = ((hash << 5) + hash) + s[i++];
@@ -110,7 +111,7 @@ public:
         return hash & 0xFFFFFFFFFFFFFFl;
     }
 
-    static long getCodeWithDefaultFunction(const char *term, const int size) {
+    static int64_t getCodeWithDefaultFunction(const char *term, const int size) {
         return Hashes::murmur3_56(term, size);
     }
 

@@ -49,7 +49,7 @@ void DiskLZ4Writer::writeVLong(const int id, const long value) {
         writeByte(id, n);
         return;
     } else {
-        int bytesToStore = 64 - Utils::numberOfLeadingZeros((unsigned long) n);
+        int bytesToStore = 64 - Utils::numberOfLeadingZeros((uint64_t) n);
         while (bytesToStore > 7) {
             i++;
             writeByte(id, (n & 127) + 128);

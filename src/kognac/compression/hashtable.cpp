@@ -23,8 +23,8 @@
 
 #include <cstring>
 
-Hashtable::Hashtable(const size_t size, long (*hash)(const char*, const int size)) :
+Hashtable::Hashtable(const size_t size, int64_t (*hash)(const char*, const int size)) :
     size(size), hash(hash) {
-    table = new long[size];
-    memset(table, 0, sizeof(long) * size);
+    table = new int64_t[size];
+    memset(table, 0, sizeof(int64_t) * size);
 }

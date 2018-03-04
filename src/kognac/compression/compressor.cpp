@@ -1291,10 +1291,10 @@ unsigned int Compressor::getThresholdForUncommon(
         nTerms = max(nTerms, distinctValues[i]);
     }
     LOG(DEBUGL) << "Estimated number of terms per partition: " << nTerms;
-    long termsPerBlock = max((long)1, (long)(nTerms / sizeHashTable)); //Terms per block
-    long tu1 = max((long) 1, tables1[0]->getThreshold(sizeHashTable - sampleArg));
-    long tu2 = max((long) 1, tables2[0]->getThreshold(sizeHashTable - sampleArg));
-    long tu3 = max((long) 1, tables3[0]->getThreshold(sizeHashTable - sampleArg));
+    int64_t termsPerBlock = max((int64_t)1, (int64_t)(nTerms / sizeHashTable)); //Terms per block
+    int64_t tu1 = max((int64_t) 1, tables1[0]->getThreshold(sizeHashTable - sampleArg));
+    int64_t tu2 = max((int64_t) 1, tables2[0]->getThreshold(sizeHashTable - sampleArg));
+    int64_t tu3 = max((int64_t) 1, tables3[0]->getThreshold(sizeHashTable - sampleArg));
     return max(4 * termsPerBlock, min(min(tu1, tu2), tu3));
 }
 

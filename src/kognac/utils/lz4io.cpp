@@ -145,7 +145,7 @@ void LZ4Writer::writeVLong(long n) {
         writeByte(n);
         return;
     } else {
-        int bytesToStore = 64 - Utils::numberOfLeadingZeros((unsigned long) n);
+        int bytesToStore = 64 - Utils::numberOfLeadingZeros((uint64_t) n);
         while (bytesToStore > 7) {
             i++;
             writeByte((n & 127) + 128);

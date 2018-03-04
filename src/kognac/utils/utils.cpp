@@ -24,11 +24,11 @@
 /**** MEMORY STATISTICS ****/
 #if defined(_WIN32)
 #include <io.h>
-#include <fcntl.h> 
+#include <fcntl.h>
 #include <windows.h>
 #include <psapi.h>
 #include <tchar.h>
-#include <direct.h> 
+#include <direct.h>
 #elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
 #include <unistd.h>
 #include <sys/resource.h>
@@ -89,36 +89,36 @@ string Utils::getFullPathExec() {
 
 //Return only the files or the entire path?
 vector<string> Utils::getFilesWithPrefix(string dirname, string prefix) {
-	vector<string> files;
-	vector<string> allfiles = Utils::getFiles(dirname);
-	for (long i = 0; i < files.size(); ++i) {
-		string fn = filename(files[i]);
-		if (Utils::starts_with(fn, prefix))
-			files.push_back(files[i]);
-	}
-  return files;
+    vector<string> files;
+    vector<string> allfiles = Utils::getFiles(dirname);
+    for (uint64_t i = 0; i < files.size(); ++i) {
+        string fn = filename(files[i]);
+        if (Utils::starts_with(fn, prefix))
+            files.push_back(files[i]);
+    }
+    return files;
 }
 
 vector<string> Utils::getSubdirs(string dirname) {
     vector<string> files;
 #if defined(_WIN32)
-	WIN32_FIND_DATA ffd;
-	TCHAR szDir[MAX_PATH];
-	HANDLE hFind = INVALID_HANDLE_VALUE;
-	DWORD dwError = 0;
-	hFind = FindFirstFile(dirname.c_str(), &ffd);
-	if (INVALID_HANDLE_VALUE == hFind) {
-		return std::vector<string>();
-	}
-	// List all the files in the directory with some info about them.
-	do {
-		if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-			string fileFullPath = dirname + "/" + ffd.cFileName;
-			files.push_back(fileFullPath);
-		}	
-} while (FindNextFile(hFind, &ffd) != 0);
+    WIN32_FIND_DATA ffd;
+    TCHAR szDir[MAX_PATH];
+    HANDLE hFind = INVALID_HANDLE_VALUE;
+    DWORD dwError = 0;
+    hFind = FindFirstFile(dirname.c_str(), &ffd);
+    if (INVALID_HANDLE_VALUE == hFind) {
+        return std::vector<string>();
+    }
+    // List all the files in the directory with some info about them.
+    do {
+        if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+            string fileFullPath = dirname + "/" + ffd.cFileName;
+            files.push_back(fileFullPath);
+        }
+    } while (FindNextFile(hFind, &ffd) != 0);
 #else
-	DIR *d = opendir(dirname.c_str());
+    DIR *d = opendir(dirname.c_str());
     struct dirent *dir;
     if (d) {
         while ((dir = readdir(d)) != NULL) {
@@ -134,49 +134,49 @@ vector<string> Utils::getSubdirs(string dirname) {
 }
 
 vector<string> Utils::getFiles(string dirname, bool ignoreExtension) {
-	std::set<string> sfiles;
+    std::set<string> sfiles;
 #if defined(_WIN32)
-	WIN32_FIND_DATA ffd;
-	TCHAR szDir[MAX_PATH];
-	HANDLE hFind = INVALID_HANDLE_VALUE;
-	DWORD dwError = 0;
-	hFind = FindFirstFile(dirname.c_str(), &ffd);
-	if (INVALID_HANDLE_VALUE == hFind) {
-		return std::vector<string>();
-	}
-	// List all the files in the directory with some info about them.
-	do {
-		if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-			//ignore the subdirectories
-		}
-		else if (ffd.cFileName[0] != '.') {
-			string fileFullPath = dirname + "/" + ffd.cFileName;
-			if (ignoreExtension) {
-				sfiles.insert(Utils::removeExtension(fileFullPath));
-			}
-			else {
-				sfiles.insert(fileFullPath);
-			}
-		}
-	} while (FindNextFile(hFind, &ffd) != 0);
+    WIN32_FIND_DATA ffd;
+    TCHAR szDir[MAX_PATH];
+    HANDLE hFind = INVALID_HANDLE_VALUE;
+    DWORD dwError = 0;
+    hFind = FindFirstFile(dirname.c_str(), &ffd);
+    if (INVALID_HANDLE_VALUE == hFind) {
+        return std::vector<string>();
+    }
+    // List all the files in the directory with some info about them.
+    do {
+        if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+            //ignore the subdirectories
+        }
+        else if (ffd.cFileName[0] != '.') {
+            string fileFullPath = dirname + "/" + ffd.cFileName;
+            if (ignoreExtension) {
+                sfiles.insert(Utils::removeExtension(fileFullPath));
+            }
+            else {
+                sfiles.insert(fileFullPath);
+            }
+        }
+    } while (FindNextFile(hFind, &ffd) != 0);
 #else
-	DIR *d = opendir(dirname.c_str());
-	struct dirent *dir;
-	if (d) {
-		while ((dir = readdir(d)) != NULL) {
-			if (dir->d_name[0] != '.') {
-				string fileFullPath = dirname + "/" + string(dir->d_name);
-				if (ignoreExtension) {
-					sfiles.insert(Utils::removeExtension(fileFullPath));
-				}
-				else {
-					sfiles.insert(fileFullPath);
-				}
-			}
-		}
-		closedir(d);
-	}
-#endif  
+    DIR *d = opendir(dirname.c_str());
+    struct dirent *dir;
+    if (d) {
+        while ((dir = readdir(d)) != NULL) {
+            if (dir->d_name[0] != '.') {
+                string fileFullPath = dirname + "/" + string(dir->d_name);
+                if (ignoreExtension) {
+                    sfiles.insert(Utils::removeExtension(fileFullPath));
+                }
+                else {
+                    sfiles.insert(fileFullPath);
+                }
+            }
+        }
+        closedir(d);
+    }
+#endif
     std::vector<string> files;
     for(auto s : sfiles) {
         files.push_back(s);
@@ -185,14 +185,14 @@ vector<string> Utils::getFiles(string dirname, bool ignoreExtension) {
 }
 vector<string> Utils::getFilesWithSuffix(string dirname, string suffix) {
     vector<string> files;
-	vector<string> allfiles = Utils::getFiles(dirname);
-	for (long i = 0; i < allfiles.size(); ++i) {
-		string f = allfiles[i];
-		if (Utils::ends_with(f, suffix)) {
-			files.push_back(f);
-		}
-	}
-	return files;
+    vector<string> allfiles = Utils::getFiles(dirname);
+    for (uint64_t i = 0; i < allfiles.size(); ++i) {
+        string f = allfiles[i];
+        if (Utils::ends_with(f, suffix)) {
+            files.push_back(f);
+        }
+    }
+    return files;
 }
 bool Utils::hasExtension(const string &file){
     string fn = filename(file);
@@ -242,7 +242,7 @@ void Utils::create_directories(string newdir) {
     }
     if (!Utils::exists(newdir)) {
 #if defined(_WIN32)
-		_mkdir(newdir.c_str());
+        _mkdir(newdir.c_str());
 #else
         if (mkdir(newdir.c_str(), 0777) != 0) {
             LOG(ERRORL) << "Error creating dir " << newdir;
@@ -269,14 +269,14 @@ void Utils::remove(string file) {
 }
 void Utils::remove_all(string path) {
     if (isDirectory(path)) {
-		std::vector<std::string> filechildren = Utils::getFiles(path);
-		for (long i = 0; i < filechildren.size(); ++i) {
-			remove(filechildren[i]);
-		}
-		std::vector<std::string> subdirs = Utils::getSubdirs(path);
-		for (long i = 0; i < subdirs.size(); ++i) {
-			remove_all(subdirs[i]);
-		}
+        std::vector<std::string> filechildren = Utils::getFiles(path);
+        for (uint64_t i = 0; i < filechildren.size(); ++i) {
+            remove(filechildren[i]);
+        }
+        std::vector<std::string> subdirs = Utils::getSubdirs(path);
+        for (uint64_t i = 0; i < subdirs.size(); ++i) {
+            remove_all(subdirs[i]);
+        }
     } else {
         remove(path);
     }
@@ -320,13 +320,13 @@ void Utils::resizeFile(string file, uint64_t newsize) {
     uint64_t oldsize = Utils::fileSize(file);
     if (oldsize != newsize) {
 #if defined(_WIN32)
-		int fd = _sopen_s(&fd, file.c_str(), _O_RDWR | _O_CREAT, _SH_DENYNO,
-			_S_IREAD | _S_IWRITE);
-		_chsize(fd, newsize);
+        int fd = _sopen_s(&fd, file.c_str(), _O_RDWR | _O_CREAT, _SH_DENYNO,
+                _S_IREAD | _S_IWRITE);
+        _chsize(fd, newsize);
 #else
         truncate(file.c_str(), newsize);
 #endif
-	}
+    }
 }
 /**** END FILE UTILS ****/
 /**** START STRING UTILS ****/
@@ -343,8 +343,8 @@ bool Utils::contains(const string s, const string substr) {
 }
 /**** END STRING UTILS ****/
 
-int Utils::numBytes(long number) {
-    long max = 32;
+int Utils::numBytes(int64_t number) {
+    int64_t max = 32;
     if (number < 0) {
         LOG(ERRORL) << "Negative number " << number;
     }
@@ -358,7 +358,7 @@ int Utils::numBytes(long number) {
     return -1;
 }
 
-int Utils::numBytesFixedLength(long number) {
+int Utils::numBytesFixedLength(int64_t number) {
     uint8_t bytes = 0;
     do {
         bytes++;
@@ -367,7 +367,7 @@ int Utils::numBytesFixedLength(long number) {
     return bytes;
 }
 
-int Utils::numBytes2(long number) {
+int Utils::numBytes2(int64_t number) {
     int nbytes = 0;
     do {
         number >>= 7;
@@ -421,21 +421,21 @@ void Utils::encode_intLE(char* buffer, int offset, int n) {
     buffer[offset++] = (n >> 24) & 0xFF;
 }
 
-long Utils::decode_long(char* buffer, int offset) {
-    long n = (long) (buffer[offset++]) << 56;
-    n += (long) (buffer[offset++] & 0xFF) << 48;
-    n += (long) (buffer[offset++] & 0xFF) << 40;
-    n += (long) (buffer[offset++] & 0xFF) << 32;
-    n += (long) (buffer[offset++] & 0xFF) << 24;
+int64_t Utils::decode_long(char* buffer, int offset) {
+    int64_t n = (int64_t) (buffer[offset++]) << 56;
+    n += (int64_t) (buffer[offset++] & 0xFF) << 48;
+    n += (int64_t) (buffer[offset++] & 0xFF) << 40;
+    n += (int64_t) (buffer[offset++] & 0xFF) << 32;
+    n += (int64_t) (buffer[offset++] & 0xFF) << 24;
     n += (buffer[offset++] & 0xFF) << 16;
     n += (buffer[offset++] & 0xFF) << 8;
     n += buffer[offset] & 0xFF;
     return n;
 }
 
-long Utils::decode_longFixedBytes(const char* buffer, const uint8_t nbytes) {
+int64_t Utils::decode_longFixedBytes(const char* buffer, const uint8_t nbytes) {
     uint8_t offset = 0;
-    long n = 0;
+    int64_t n = 0;
     switch (nbytes) {
         case 1:
             n += buffer[offset] & 0xFF;
@@ -450,41 +450,41 @@ long Utils::decode_longFixedBytes(const char* buffer, const uint8_t nbytes) {
             n += buffer[offset] & 0xFF;
             break;
         case 4:
-            n += (long) (buffer[offset++] & 0xFF) << 24;
+            n += (int64_t) (buffer[offset++] & 0xFF) << 24;
             n += (buffer[offset++] & 0xFF) << 16;
             n += (buffer[offset++] & 0xFF) << 8;
             n += buffer[offset] & 0xFF;
             break;
         case 5:
-            n += (long) (buffer[offset++] & 0xFF) << 32;
-            n += (long) (buffer[offset++] & 0xFF) << 24;
+            n += (int64_t) (buffer[offset++] & 0xFF) << 32;
+            n += (int64_t) (buffer[offset++] & 0xFF) << 24;
             n += (buffer[offset++] & 0xFF) << 16;
             n += (buffer[offset++] & 0xFF) << 8;
             n += buffer[offset] & 0xFF;
             break;
         case 6:
-            n += (long) (buffer[offset++] & 0xFF) << 40;
-            n += (long) (buffer[offset++] & 0xFF) << 32;
-            n += (long) (buffer[offset++] & 0xFF) << 24;
+            n += (int64_t) (buffer[offset++] & 0xFF) << 40;
+            n += (int64_t) (buffer[offset++] & 0xFF) << 32;
+            n += (int64_t) (buffer[offset++] & 0xFF) << 24;
             n += (buffer[offset++] & 0xFF) << 16;
             n += (buffer[offset++] & 0xFF) << 8;
             n += buffer[offset] & 0xFF;
             break;
         case 7:
-            n += (long) (buffer[offset++] & 0xFF) << 48;
-            n += (long) (buffer[offset++] & 0xFF) << 40;
-            n += (long) (buffer[offset++] & 0xFF) << 32;
-            n += (long) (buffer[offset++] & 0xFF) << 24;
+            n += (int64_t) (buffer[offset++] & 0xFF) << 48;
+            n += (int64_t) (buffer[offset++] & 0xFF) << 40;
+            n += (int64_t) (buffer[offset++] & 0xFF) << 32;
+            n += (int64_t) (buffer[offset++] & 0xFF) << 24;
             n += (buffer[offset++] & 0xFF) << 16;
             n += (buffer[offset++] & 0xFF) << 8;
             n += buffer[offset] & 0xFF;
             break;
         case 8:
-            n += (long) (buffer[offset++]) << 56;
-            n += (long) (buffer[offset++] & 0xFF) << 48;
-            n += (long) (buffer[offset++] & 0xFF) << 40;
-            n += (long) (buffer[offset++] & 0xFF) << 32;
-            n += (long) (buffer[offset++] & 0xFF) << 24;
+            n += (int64_t) (buffer[offset++]) << 56;
+            n += (int64_t) (buffer[offset++] & 0xFF) << 48;
+            n += (int64_t) (buffer[offset++] & 0xFF) << 40;
+            n += (int64_t) (buffer[offset++] & 0xFF) << 32;
+            n += (int64_t) (buffer[offset++] & 0xFF) << 24;
             n += (buffer[offset++] & 0xFF) << 16;
             n += (buffer[offset++] & 0xFF) << 8;
             n += buffer[offset] & 0xFF;
@@ -493,19 +493,19 @@ long Utils::decode_longFixedBytes(const char* buffer, const uint8_t nbytes) {
     return n;
 }
 
-long Utils::decode_long(const char* buffer) {
-    long n = (long) (buffer[0]) << 56;
-    n += (long) (buffer[1] & 0xFF) << 48;
-    n += (long) (buffer[2] & 0xFF) << 40;
-    n += (long) (buffer[3] & 0xFF) << 32;
-    n += (long) (buffer[4] & 0xFF) << 24;
+int64_t Utils::decode_long(const char* buffer) {
+    int64_t n = (int64_t) (buffer[0]) << 56;
+    n += (int64_t) (buffer[1] & 0xFF) << 48;
+    n += (int64_t) (buffer[2] & 0xFF) << 40;
+    n += (int64_t) (buffer[3] & 0xFF) << 32;
+    n += (int64_t) (buffer[4] & 0xFF) << 24;
     n += (buffer[5] & 0xFF) << 16;
     n += (buffer[6] & 0xFF) << 8;
     n += buffer[7] & 0xFF;
     return n;
 }
 
-void Utils::encode_long(char* buffer, int offset, long n) {
+void Utils::encode_long(char* buffer, int offset, int64_t n) {
     buffer[offset++] = (n >> 56) & 0xFF;
     buffer[offset++] = (n >> 48) & 0xFF;
     buffer[offset++] = (n >> 40) & 0xFF;
@@ -516,7 +516,7 @@ void Utils::encode_long(char* buffer, int offset, long n) {
     buffer[offset++] = n & 0xFF;
 }
 
-void Utils::encode_long(char* buffer, long n) {
+void Utils::encode_long(char* buffer, int64_t n) {
     buffer[0] = (n >> 56) & 0xFF;
     buffer[1] = (n >> 48) & 0xFF;
     buffer[2] = (n >> 40) & 0xFF;
@@ -588,19 +588,19 @@ void Utils::encode_longNBytes(char* buffer, const uint8_t nbytes,
     }
 }
 
-long Utils::decode_longWithHeader(char* buffer) {
-    long n = (long) (buffer[0] & 0x7F) << 49;
-    n += (long) (buffer[1] & 0x7F) << 42;
-    n += (long) (buffer[2] & 0x7F) << 35;
-    n += (long) (buffer[3] & 0x7F) << 28;
-    n += (long) (buffer[4] & 0x7F) << 21;
+int64_t Utils::decode_longWithHeader(char* buffer) {
+    int64_t n = (int64_t) (buffer[0] & 0x7F) << 49;
+    n += (int64_t) (buffer[1] & 0x7F) << 42;
+    n += (int64_t) (buffer[2] & 0x7F) << 35;
+    n += (int64_t) (buffer[3] & 0x7F) << 28;
+    n += (int64_t) (buffer[4] & 0x7F) << 21;
     n += (buffer[5] & 0x7F) << 14;
     n += (buffer[6] & 0x7F) << 7;
     n += buffer[7] & 0x7F;
     return n;
 }
 
-void Utils::encode_longWithHeader0(char* buffer, long n) {
+void Utils::encode_longWithHeader0(char* buffer, int64_t n) {
 
     if (n < 0) {
         LOG(ERRORL) << "Number is negative";
@@ -617,7 +617,7 @@ void Utils::encode_longWithHeader0(char* buffer, long n) {
     buffer[7] = n & 0x7F;
 }
 
-void Utils::encode_longWithHeader1(char* buffer, long n) {
+void Utils::encode_longWithHeader1(char* buffer, int64_t n) {
 
     if (n < 0) {
         LOG(ERRORL) << "Number is negative";
@@ -656,11 +656,11 @@ void Utils::encode_short(char* buffer, int n) {
     buffer[1] = n & 0xFF;
 }
 
-long Utils::decode_vlong(char* buffer, int *offset) {
+int64_t Utils::decode_vlong(char* buffer, int *offset) {
     int pos = *offset;
     int first = buffer[pos++];
     int nbytes = ((first & 255) >> 5) + 1;
-    long retval = (first & 31);
+    int64_t retval = (first & 31);
 
     switch (nbytes) {
         case 2:
@@ -679,38 +679,38 @@ long Utils::decode_vlong(char* buffer, int *offset) {
             retval += (buffer[pos++] & 255) << 5;
             retval += (buffer[pos++] & 255) << 13;
             retval += (buffer[pos++] & 255) << 21;
-            retval += (long) (buffer[pos++] & 255) << 29;
+            retval += (int64_t) (buffer[pos++] & 255) << 29;
             break;
         case 6:
             retval += (buffer[pos++] & 255) << 5;
             retval += (buffer[pos++] & 255) << 13;
             retval += (buffer[pos++] & 255) << 21;
-            retval += (long) (buffer[pos++] & 255) << 29;
-            retval += (long) (buffer[pos++] & 255) << 37;
+            retval += (int64_t) (buffer[pos++] & 255) << 29;
+            retval += (int64_t) (buffer[pos++] & 255) << 37;
             break;
         case 7:
             retval += (buffer[pos++] & 255) << 5;
             retval += (buffer[pos++] & 255) << 13;
             retval += (buffer[pos++] & 255) << 21;
-            retval += (long) (buffer[pos++] & 255) << 29;
-            retval += (long) (buffer[pos++] & 255) << 37;
-            retval += (long) (buffer[pos++] & 255) << 45;
+            retval += (int64_t) (buffer[pos++] & 255) << 29;
+            retval += (int64_t) (buffer[pos++] & 255) << 37;
+            retval += (int64_t) (buffer[pos++] & 255) << 45;
             break;
         case 8:
             retval += (buffer[pos++] & 255) << 5;
             retval += (buffer[pos++] & 255) << 13;
             retval += (buffer[pos++] & 255) << 21;
-            retval += (long) (buffer[pos++] & 255) << 29;
-            retval += (long) (buffer[pos++] & 255) << 37;
-            retval += (long) (buffer[pos++] & 255) << 45;
-            retval += (long) (buffer[pos++] & 255) << 53;
+            retval += (int64_t) (buffer[pos++] & 255) << 29;
+            retval += (int64_t) (buffer[pos++] & 255) << 37;
+            retval += (int64_t) (buffer[pos++] & 255) << 45;
+            retval += (int64_t) (buffer[pos++] & 255) << 53;
             break;
     }
     *offset = pos;
     return retval;
 }
 
-int Utils::encode_vlong(char* buffer, int offset, long n) {
+int Utils::encode_vlong(char* buffer, int offset, int64_t n) {
     int nbytes = numBytes(n);
     buffer[offset++] = (((nbytes - 1) << 5) + ((int) n & 31));
     n >>= 5;
@@ -721,7 +721,7 @@ int Utils::encode_vlong(char* buffer, int offset, long n) {
     return offset;
 }
 
-uint16_t Utils::encode_vlong(char* buffer, long n) {
+uint16_t Utils::encode_vlong(char* buffer, int64_t n) {
     int nbytes = numBytes(n);
     int offset = 0;
     buffer[offset++] = (((nbytes - 1) << 5) + ((int) n & 31));
@@ -786,7 +786,7 @@ int Utils::decode_vint2(char* buffer, int *offset) {
     }
 }
 
-int Utils::encode_vlong2(char* buffer, int offset, long n) {
+int Utils::encode_vlong2(char* buffer, int offset, int64_t n) {
     if (n < 0) {
         LOG(ERRORL) << "Number is negative. This is not allowed with vlong2";
         throw 10;
@@ -796,7 +796,7 @@ int Utils::encode_vlong2(char* buffer, int offset, long n) {
         buffer[offset++] = n;
         return offset;
     } else {
-        int bytesToStore = 64 - numberOfLeadingZeros((unsigned long)n);
+        int bytesToStore = 64 - numberOfLeadingZeros((uint64_t)n);
         while (bytesToStore > 7) {
             buffer[offset++] = ((n & 127) + 128);
             n >>= 7;
@@ -807,7 +807,7 @@ int Utils::encode_vlong2(char* buffer, int offset, long n) {
     return offset;
 }
 
-uint16_t Utils::encode_vlong2(char* buffer, long n) {
+uint16_t Utils::encode_vlong2(char* buffer, int64_t n) {
     if (n < 0) {
         LOG(ERRORL) << "Number is negative. This is not allowed with vlong2";
         throw 10;
@@ -817,7 +817,7 @@ uint16_t Utils::encode_vlong2(char* buffer, long n) {
         buffer[0] = n;
         return 1;
     } else {
-        int bytesToStore = 64 - numberOfLeadingZeros((unsigned long)n);
+        int bytesToStore = 64 - numberOfLeadingZeros((uint64_t)n);
         uint16_t offset = 0;
         while (bytesToStore > 7) {
             buffer[offset++] = ((n & 127) + 128);
@@ -829,13 +829,13 @@ uint16_t Utils::encode_vlong2(char* buffer, long n) {
     }
 }
 
-void Utils::encode_vlong2_fixedLen(char* buffer, long n, const uint8_t len) {
+void Utils::encode_vlong2_fixedLen(char* buffer, int64_t n, const uint8_t len) {
     char *beginbuffer = buffer;
 
     if (n < 128) { // One byte is enough
         *buffer = n;
     } else {
-        int neededBits = 64 - numberOfLeadingZeros((unsigned long)n);
+        int neededBits = 64 - numberOfLeadingZeros((uint64_t)n);
         while (neededBits > 7) {
             *buffer = ((n & 127) + 128);
             n >>= 7;
@@ -877,43 +877,43 @@ uint64_t Utils::decode_vlong2_fast(uint8_t *in) {
     return r;
 }
 
-long Utils::decode_vlong2(const char* buffer, int *offset) {
+int64_t Utils::decode_vlong2(const char* buffer, int *offset) {
     int pos = *offset;
     int shift = 7;
-    long n = buffer[pos] & 127;
+    int64_t n = buffer[pos] & 127;
     while (buffer[pos++] < 0) {
-        n += (long) (buffer[pos] & 127) << shift;
+        n += (int64_t) (buffer[pos] & 127) << shift;
         shift += 7;
     }
     *offset = pos;
     return n;
 }
 
-long Utils::decode_vlongWithHeader0(char* buffer, const int end, int *p) {
+int64_t Utils::decode_vlongWithHeader0(char* buffer, const int end, int *p) {
     int pos = 0;
     int shift = 7;
-    long n = buffer[pos++] & 127;
+    int64_t n = buffer[pos++] & 127;
     while (pos < end && ((buffer[pos] & 128) == 0)) {
-        n += (long) (buffer[pos++] & 127) << shift;
+        n += (int64_t) (buffer[pos++] & 127) << shift;
         shift += 7;
     }
     *p = pos;
     return n;
 }
 
-long Utils::decode_vlongWithHeader1(char* buffer, const int end, int *p) {
+int64_t Utils::decode_vlongWithHeader1(char* buffer, const int end, int *p) {
     int pos = 0;
     int shift = 7;
-    long n = buffer[pos++] & 127;
+    int64_t n = buffer[pos++] & 127;
     while (pos < end && buffer[pos] < 0) {
-        n += (long) (buffer[pos++] & 127) << shift;
+        n += (int64_t) (buffer[pos++] & 127) << shift;
         shift += 7;
     }
     *p = pos;
     return n;
 }
 
-int Utils::encode_vlongWithHeader0(char* buffer, long n) {
+int Utils::encode_vlongWithHeader0(char* buffer, int64_t n) {
     if (n < 0) {
         LOG(ERRORL) << "Number is negative";
         return -1;
@@ -927,7 +927,7 @@ int Utils::encode_vlongWithHeader0(char* buffer, long n) {
     return i;
 }
 
-int Utils::encode_vlongWithHeader1(char* buffer, long n) {
+int Utils::encode_vlongWithHeader1(char* buffer, int64_t n) {
     if (n < 0) {
         LOG(ERRORL) << "Number is negative";
         return -1;
@@ -1008,24 +1008,24 @@ int Utils::prefixEquals(char* o1, int len, char* o2) {
 
 double Utils::get_max_mem() {
     double memory = 0.0;
-	struct rusage rusage;
-	getrusage(RUSAGE_SELF, &rusage);
+    struct rusage rusage;
+    getrusage(RUSAGE_SELF, &rusage);
 #if defined(__APPLE__) && defined(__MACH__)
     memory = (double) rusage.ru_maxrss / 1024 / 1024;
 #else
     memory = (double)rusage.ru_maxrss / 1024;
 #endif
 #if defined(_WIN32)
-	HANDLE hProcess;
-	PROCESS_MEMORY_COUNTERS pmc;
-	bool result = GetProcessMemoryInfo(GetCurrentProcess(),
-		&pmc, sizeof(PPROCESS_MEMORY_COUNTERS));
-	memory = pmc.PeakWorkingSetSize / 1024 / 1024;
+    HANDLE hProcess;
+    PROCESS_MEMORY_COUNTERS pmc;
+    bool result = GetProcessMemoryInfo(GetCurrentProcess(),
+            &pmc, sizeof(PPROCESS_MEMORY_COUNTERS));
+    memory = pmc.PeakWorkingSetSize / 1024 / 1024;
 #endif
     return memory;
 }
 
-long Utils::getSystemMemory() {
+uint64_t Utils::getSystemMemory() {
 #if defined(__APPLE__) && defined(__MACH__)
     int mib[2];
     mib[0] = CTL_HW;
@@ -1035,18 +1035,18 @@ long Utils::getSystemMemory() {
     sysctl(mib, 2, &size, &len, NULL, 0);
     return size;
 #elif defined(__unix__) || defined(__unix) || defined(unix)
-    long pages = sysconf(_SC_PHYS_PAGES);
-    long page_size = sysconf(_SC_PAGE_SIZE);
+    uint64_t pages = sysconf(_SC_PHYS_PAGES);
+    uint64_t page_size = sysconf(_SC_PAGE_SIZE);
     return pages * page_size;
 #elif defined(_WIN32)
-	MEMORYSTATUSEX memInfo;
-	memInfo.dwLength = sizeof(MEMORYSTATUSEX);
-	GlobalMemoryStatusEx(&memInfo);
-	return memInfo.ullTotalPhys;
+    MEMORYSTATUSEX memInfo;
+    memInfo.dwLength = sizeof(MEMORYSTATUSEX);
+    GlobalMemoryStatusEx(&memInfo);
+    return memInfo.ullTotalPhys;
 #endif
 }
 
-long Utils::getUsedMemory() {
+uint64_t Utils::getUsedMemory() {
 #if defined(_WIN32)
     /* Windows -------------------------------------------------- */
     PROCESS_MEMORY_COUNTERS info;
@@ -1064,7 +1064,7 @@ long Utils::getUsedMemory() {
 
 #elif defined(__linux__) || defined(__linux) || defined(linux) || defined(__gnu_linux__)
     /* Linux ---------------------------------------------------- */
-    long rss = 0L;
+    uint64_t rss = 0L;
     FILE* fp = NULL;
     if ( (fp = fopen( "/proc/self/statm", "r" )) == NULL )
         return (size_t)0L; /* Can't open? */
@@ -1081,7 +1081,7 @@ long Utils::getUsedMemory() {
 #endif
 }
 
-long Utils::getIOReadChars() {
+uint64_t Utils::getIOReadChars() {
 #if defined(__linux__) || defined(__linux) || defined(linux) || defined(__gnu_linux__)
     std::ifstream file("/proc/self/io");
     std::string line;
@@ -1098,7 +1098,7 @@ long Utils::getIOReadChars() {
 #endif
 }
 
-long Utils::getIOReadBytes() {
+uint64_t Utils::getIOReadBytes() {
 #if defined(__linux__) || defined(__linux) || defined(linux) || defined(__gnu_linux__)
     std::ifstream file("/proc/self/io");
     std::string line;
@@ -1117,13 +1117,13 @@ long Utils::getIOReadBytes() {
 
 
 
-long long unsigned Utils::getCPUCounter() {
+uint64_t Utils::getCPUCounter() {
 #if defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
-	unsigned a, d;
+    unsigned a, d;
     __asm__ volatile("rdtsc" : "=a" (a), "=d" (d));
-    return ((unsigned long long)a) | (((unsigned long long)d) << 32);
+    return ((uint64_t)a) | (((uint64_t)d) << 32);
 #else
-	return 0; //unsupported
+    return 0; //unsupported
 #endif
 }
 
@@ -1131,14 +1131,14 @@ int Utils::getNumberPhysicalCores() {
 #if defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
     return sysconf( _SC_NPROCESSORS_ONLN);
 #else
-	SYSTEM_INFO sysinfo;
-	GetSystemInfo(&sysinfo);
-	return sysinfo.dwNumberOfProcessors;
+    SYSTEM_INFO sysinfo;
+    GetSystemInfo(&sysinfo);
+    return sysinfo.dwNumberOfProcessors;
 #endif
 }
 
-long Utils::quickSelect(long *vector, int size, int k) {
-    std::vector<long> supportVector(vector, vector + size);
+int64_t Utils::quickSelect(int64_t *vector, int size, int k) {
+    std::vector<int64_t> supportVector(vector, vector + size);
     std::nth_element(supportVector.begin(), supportVector.begin() + k,
             supportVector.end());
     return supportVector[k];
@@ -1154,14 +1154,14 @@ long Utils::quickSelect(long *vector, int size, int k) {
     //          return quickSelect(vector, j + 1, end, k - length);
 }
 
-long Utils::getNBytes(std::string input) {
+uint64_t Utils::getNBytes(std::string input) {
     if (Utils::isDirectory(input)) {
-        long size = 0;
-		std::vector<std::string> files = Utils::getFiles(input);
-		for (long i = 0; i < files.size(); ++i) {
-			if (isFile(files[i]))
-				size += Utils::fileSize(files[i]);
-		}
+        uint64_t size = 0;
+        std::vector<std::string> files = Utils::getFiles(input);
+        for (uint64_t i = 0; i < files.size(); ++i) {
+            if (isFile(files[i]))
+                size += Utils::fileSize(files[i]);
+        }
         /*for (fs::directory_iterator itr(input); itr != fs::directory_iterator();
           ++itr) {
           if (fs::is_regular(itr->path())) {
@@ -1177,13 +1177,13 @@ long Utils::getNBytes(std::string input) {
 bool Utils::isCompressed(std::string input) {
     if (Utils::isDirectory(input)) {
         bool isCompressed = false;
-		std::vector<std::string> files = Utils::getFiles(input);
-		for (long i = 0; i < files.size(); ++i) {
-			string &f = files[i];
-			if (Utils::extension(f) == string(".gz")) {
-				isCompressed = true;
-			}
-		}
+        std::vector<std::string> files = Utils::getFiles(input);
+        for (uint64_t i = 0; i < files.size(); ++i) {
+            string &f = files[i];
+            if (Utils::extension(f) == string(".gz")) {
+                isCompressed = true;
+            }
+        }
         /*for (fs::directory_iterator itr(input); itr != fs::directory_iterator();
           ++itr) {
           if (fs::is_regular(itr->path())) {
