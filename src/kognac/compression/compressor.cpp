@@ -41,8 +41,8 @@
 
 using namespace std;
 
-bool lessTermFrequenciesDesc(const std::pair<string, long> &p1,
-        const std::pair<string, long> &p2) {
+bool lessTermFrequenciesDesc(const std::pair<string, int64_t> &p1,
+        const std::pair<string, int64_t> &p2) {
     return p1.second > p2.second || (p1.second == p2.second && p1.first > p2.first);
 }
 
@@ -107,13 +107,13 @@ void Compressor::uncompressTriples(ParamsUncompressTriples params) {
     Hashtable *table2 = params.table2;
     Hashtable *table3 = params.table3;
     SchemaExtractor *extractor = params.extractor;
-    long *distinctValues = params.distinctValues;
+    int64_t *distinctValues = params.distinctValues;
     std::vector<string> *resultsMGS = params.resultsMGS;
     size_t sizeHeap = params.sizeHeap;
     const bool ignorePredicates = params.ignorePredicates;
 
-    long count = 0;
-    long countNotValid = 0;
+    int64_t count = 0;
+    int64_t countNotValid = 0;
     const char *supportBuffer = NULL;
 
     char *supportBuffers[3];
@@ -154,9 +154,9 @@ void Compressor::uncompressTriples(ParamsUncompressTriples params) {
                     Utils::encode_short(supportBuffers[0], length);
                     memcpy(supportBuffers[0] + 2, supportBuffer, length);
                 }
-                long h1 = table1->add(supportBuffer, length);
-                long h2 = table2->add(supportBuffer, length);
-                long h3 = table3->add(supportBuffer, length);
+                int64_t h1 = table1->add(supportBuffer, length);
+                int64_t h2 = table2->add(supportBuffer, length);
+                int64_t h3 = table3->add(supportBuffer, length);
                 fileswriter->writeByte(idwriter, 0);
                 estimator.addElement(h1, h2, h3);
 
@@ -270,10 +270,10 @@ void Compressor::sampleTerm(const char *term, int sizeTerm, int sampleArg,
 #ifdef COUNTSKETCH
 
 void Compressor :: uncompressTriplesForMGCS (vector<FileInfo> &files, MG *heap, CountSketch *cs, string outFile,
-        SchemaExtractor *extractor, long *distinctValues) {
+        SchemaExtractor *extractor, int64_t *distinctValues) {
     LZ4Writer out(outFile);
-    long count = 0;
-    long countNotValid = 0;
+    int64_t count = 0;
+    int64_t countNotValid = 0;
     const char *supportBuffer = NULL;
 
     char *supportBuffers[3];
@@ -303,7 +303,7 @@ void Compressor :: uncompressTriplesForMGCS (vector<FileInfo> &files, MG *heap, 
                 heap->add(supportBuffer, length);
 
                 // Add to Count Sketch and get the 3 keys for estimation
-                long h1, h2, h3;
+                int64_t h1, h2, h3;
                 cs->add(supportBuffer, length, h1, h2, h3);
 
 
@@ -381,7 +381,7 @@ void Compressor :: extractTermsForMGCS (ParamsExtractCommonTermProcedure params,
     string *dictFileName = params.dictFileName;
     //int maxMapSize = params.maxMapSize;
 
-    long tripleId = params.idProcess;
+    int64_t tripleId = params.idProcess;
     int pos = 0;
     int parallelProcesses = params.parallelProcesses;
     string *udictFileName = params.singleTerms;
@@ -399,7 +399,7 @@ void Compressor :: extractTermsForMGCS (ParamsExtractCommonTermProcedure params,
         udictFile[i] = new LZ4Writer(udictFileName[i]);
     }
 
-    unsigned long countInfrequent = 0, countFrequent = 0;
+    uint64_t countInfrequent = 0, countFrequent = 0;
 
 
     char *prevEntries[3];
@@ -465,8 +465,8 @@ void Compressor :: extractTermsForMGCS (ParamsExtractCommonTermProcedure params,
 }
 
 
-void Compressor :: extractTermForMGCS(const char *term, const int sizeTerm, unsigned long& countFreq, unsigned long& countInfrequent,
-        const int dictPartition, const bool copyHashes, const long tripleId, const int pos,
+void Compressor :: extractTermForMGCS(const char *term, const int sizeTerm, uint64_t& countFreq, uint64_t& countInfrequent,
+        const int dictPartition, const bool copyHashes, const int64_t tripleId, const int pos,
         char **prevEntries, int *sPrevEntries, LZ4Writer **dictFile, LZ4Writer **udictFile,
         const set<string>& freq, const CountSketch *cs) {
     char *trm = new char[sizeTerm - 1];
@@ -480,7 +480,7 @@ void Compressor :: extractTermForMGCS(const char *term, const int sizeTerm, unsi
         AnnotatedTerm t;
         t.size = sizeTerm;
         t.term = term;
-        t.tripleIdAndPosition = (long) (tripleId << 2) + (pos & 0x3);
+        t.tripleIdAndPosition = (int64_t) (tripleId << 2) + (pos & 0x3);
 
         if (!copyHashes) {
             //Add it into the file
@@ -489,19 +489,19 @@ void Compressor :: extractTermForMGCS(const char *term, const int sizeTerm, unsi
             //Output the three pairs
             t.useHashes = true;
             if (pos == 0) {
-                long hashp = Hashes::murmur3_56(prevEntries[1] + 2, sPrevEntries[1] - 2);
-                long hasho = Hashes::murmur3_56(prevEntries[2] + 2, sPrevEntries[2] - 2);
+                int64_t hashp = Hashes::murmur3_56(prevEntries[1] + 2, sPrevEntries[1] - 2);
+                int64_t hasho = Hashes::murmur3_56(prevEntries[2] + 2, sPrevEntries[2] - 2);
                 t.hashT1 = hashp;
                 t.hashT2 = hasho;
             } else if (pos == 1) {
-                long hashs = Hashes::murmur3_56(prevEntries[0] + 2, sPrevEntries[0] - 2);
-                long hasho = Hashes::murmur3_56(prevEntries[2] + 2, sPrevEntries[2] - 2);
+                int64_t hashs = Hashes::murmur3_56(prevEntries[0] + 2, sPrevEntries[0] - 2);
+                int64_t hasho = Hashes::murmur3_56(prevEntries[2] + 2, sPrevEntries[2] - 2);
                 t.hashT1 = hashs;
                 t.hashT2 = hasho;
             } else {
                 //pos = 2
-                long hashs = Hashes::murmur3_56(prevEntries[0] + 2, sPrevEntries[0] - 2);
-                long hashp = Hashes::murmur3_56(prevEntries[1] + 2, sPrevEntries[1] - 2);
+                int64_t hashs = Hashes::murmur3_56(prevEntries[0] + 2, sPrevEntries[0] - 2);
+                int64_t hashp = Hashes::murmur3_56(prevEntries[1] + 2, sPrevEntries[1] - 2);
                 t.hashT1 = hashs;
                 t.hashT2 = hashp;
             }
@@ -526,8 +526,8 @@ void Compressor::uncompressAndSampleTriples(vector<FileInfo> &files,
         supportBuffers[2] = new char[MAX_TERM_SIZE + 2];
     }
 
-    long count = 0;
-    long countNotValid = 0;
+    int64_t count = 0;
+    int64_t countNotValid = 0;
     const char *supportBuffer = NULL;
     char *supportBuffer2 = new char[MAX_TERM_SIZE];
     for (int i = 0; i < files.size(); ++i) {
@@ -601,7 +601,7 @@ void Compressor::extractUncommonTerm(const char *term, const int sizeTerm,
         ByteArrayToNumberMap *map,
         const int idwriter,
         DiskLZ4Writer *writer,
-        const long tripleId,
+        const int64_t tripleId,
         const int pos,
         const int partitions,
         const bool copyHashes,
@@ -613,28 +613,28 @@ void Compressor::extractUncommonTerm(const char *term, const int sizeTerm,
             SimplifiedAnnotatedTerm t;
             t.size = sizeTerm - 2;
             t.term = term + 2;
-            t.tripleIdAndPosition = (long) (tripleId << 2) + (pos & 0x3);
+            t.tripleIdAndPosition = (int64_t) (tripleId << 2) + (pos & 0x3);
             t.writeTo(idwriter, writer);
         } else {
             AnnotatedTerm t;
             t.size = sizeTerm;
             t.term = term;
-            t.tripleIdAndPosition = (long) (tripleId << 2) + (pos & 0x3);
+            t.tripleIdAndPosition = (int64_t) (tripleId << 2) + (pos & 0x3);
             //Output the three pairs
             t.useHashes = true;
             if (pos == 0) {
-                long hashp = Hashes::murmur3_56(prevEntries[1] + 2, sPrevEntries[1] - 2);
-                long hasho = Hashes::murmur3_56(prevEntries[2] + 2, sPrevEntries[2] - 2);
+                int64_t hashp = Hashes::murmur3_56(prevEntries[1] + 2, sPrevEntries[1] - 2);
+                int64_t hasho = Hashes::murmur3_56(prevEntries[2] + 2, sPrevEntries[2] - 2);
                 t.hashT1 = hashp;
                 t.hashT2 = hasho;
             } else if (pos == 1) {
-                long hashs = Hashes::murmur3_56(prevEntries[0] + 2, sPrevEntries[0] - 2);
-                long hasho = Hashes::murmur3_56(prevEntries[2] + 2, sPrevEntries[2] - 2);
+                int64_t hashs = Hashes::murmur3_56(prevEntries[0] + 2, sPrevEntries[0] - 2);
+                int64_t hasho = Hashes::murmur3_56(prevEntries[2] + 2, sPrevEntries[2] - 2);
                 t.hashT1 = hashs;
                 t.hashT2 = hasho;
             } else { //pos = 2
-                long hashs = Hashes::murmur3_56(prevEntries[0] + 2, sPrevEntries[0] - 2);
-                long hashp = Hashes::murmur3_56(prevEntries[1] + 2, sPrevEntries[1] - 2);
+                int64_t hashs = Hashes::murmur3_56(prevEntries[0] + 2, sPrevEntries[0] - 2);
+                int64_t hashp = Hashes::murmur3_56(prevEntries[1] + 2, sPrevEntries[1] - 2);
                 t.hashT1 = hashs;
                 t.hashT2 = hashp;
             }
@@ -645,29 +645,29 @@ void Compressor::extractUncommonTerm(const char *term, const int sizeTerm,
     }
 }
 
-unsigned long Compressor::getEstimatedFrequency(const string &e) const {
-    long v1 = table1 ? table1->get(e.c_str(), e.size()) : 0;
-    long v2 = table2 ? table2->get(e.c_str(), e.size()) : 0;
-    long v3 = table3 ? table3->get(e.c_str(), e.size()) : 0;
+uint64_t Compressor::getEstimatedFrequency(const string &e) const {
+    int64_t v1 = table1 ? table1->get(e.c_str(), e.size()) : 0;
+    int64_t v2 = table2 ? table2->get(e.c_str(), e.size()) : 0;
+    int64_t v3 = table3 ? table3->get(e.c_str(), e.size()) : 0;
     return min(v1, min(v2, v3));
 }
 
 void Compressor::extractCommonTerm(const char* term, const int sizeTerm,
-        long &countFrequent,
-        const long thresholdForUncommon, Hashtable *table1,
+        int64_t &countFrequent,
+        const int64_t thresholdForUncommon, Hashtable *table1,
         Hashtable *table2, Hashtable *table3,
         const int dictPartitions,
-        long &minValueToBeAdded,
-        const long maxMapSize,  GStringToNumberMap *map,
-        std::priority_queue<std::pair<string, long>,
-        std::vector<std::pair<string, long> >,
+        int64_t &minValueToBeAdded,
+        const int64_t maxMapSize,  GStringToNumberMap *map,
+        std::priority_queue<std::pair<string, int64_t>,
+        std::vector<std::pair<string, int64_t> >,
         priorityQueueOrder> &queue) {
 
-    long v1, v2, v3;
+    int64_t v1, v2, v3;
 
     bool valueHighEnough = false;
     v1 = table1->get(term + 2, sizeTerm - 2);
-    long minValue = -1;
+    int64_t minValue = -1;
     if (v1 < thresholdForUncommon) {
         //termInfrequent = true;
     } else {
@@ -688,13 +688,13 @@ void Compressor::extractCommonTerm(const char* term, const int sizeTerm,
     bool mapTooSmall = map->size() < maxMapSize;
     if ((mapTooSmall || valueHighEnough)
             && map->find(string(term + 2, sizeTerm - 2)) == map->end()) {
-        std::pair<string, long> pair = std::make_pair(string(term + 2, sizeTerm - 2),
+        std::pair<string, int64_t> pair = std::make_pair(string(term + 2, sizeTerm - 2),
                 minValue);
         map->insert(pair);
         queue.push(pair);
         if (map->size() > maxMapSize) {
             //Replace term and minCount with values to be added
-            std::pair<string, long> elToRemove = queue.top();
+            std::pair<string, int64_t> elToRemove = queue.top();
             queue.pop();
             map->erase(elToRemove.first);
             minValueToBeAdded = queue.top().second;
@@ -718,7 +718,7 @@ void Compressor::extractUncommonTerms(const int dictPartitions,
     } else {
         prevEntries[0] = prevEntries[1] = NULL;
     }
-    long tripleId = idProcess;
+    int64_t tripleId = idProcess;
     int pos = 0;
 
     while (!reader->isEOF(inputFileId)) {
@@ -805,11 +805,11 @@ void Compressor::extractCommonTerms(ParamsExtractCommonTermProcedure params) {
     map->set_empty_key(EMPTY_KEY);
     map->set_deleted_key(DELETED_KEY);
 
-    long minValueToBeAdded = 0;
-    std::priority_queue<std::pair<string, long>,
-        std::vector<std::pair<string, long> >, priorityQueueOrder> queue;
+    int64_t minValueToBeAdded = 0;
+    std::priority_queue<std::pair<string, int64_t>,
+        std::vector<std::pair<string, int64_t> >, priorityQueueOrder> queue;
 
-    long countFrequent = 0;
+    int64_t countFrequent = 0;
 
     while (!reader->isEOF(idReader)) {
         int sizeTerm = 0;
@@ -849,8 +849,8 @@ void Compressor::mergeCommonTermsMaps(ByteArrayToNumberMap *finalMap,
     }
 }
 
-bool comparePairs(std::pair<const char *, long> i,
-        std::pair<const char *, long> j) {
+bool comparePairs(std::pair<const char *, int64_t> i,
+        std::pair<const char *, int64_t> j) {
     if (i.second > j.second) {
         return true;
     } else if (i.second == j.second) {
@@ -863,19 +863,19 @@ bool comparePairs(std::pair<const char *, long> i,
 }
 
 void Compressor::assignNumbersToCommonTermsMap(ByteArrayToNumberMap *map,
-        long *counters, LZ4Writer **writers, LZ4Writer **invWriters,
+        int64_t *counters, LZ4Writer **writers, LZ4Writer **invWriters,
         int ndictionaries, bool preserveMapping) {
-    std::vector<std::pair<const char *, long> > pairs;
+    std::vector<std::pair<const char *, int64_t> > pairs;
     for (ByteArrayToNumberMap::iterator itr = map->begin(); itr != map->end();
             ++itr) {
-        std::pair<const char *, long> pair;
+        std::pair<const char *, int64_t> pair;
         pair.first = itr->first;
         pair.second = itr->second;
         pairs.push_back(pair);
 
 #ifdef DEBUG
         /*        const char* text = SchemaExtractor::support.addNew(itr->first, Utils::decode_short(itr->first) + 2);
-                  long hash = Hashes::murmur3_56(itr->first + 2, Utils::decode_short(itr->first));
+                  int64_t hash = Hashes::murmur3_56(itr->first + 2, Utils::decode_short(itr->first));
                   SchemaExtractor::properties.insert(make_pair(hash, text));*/
 #endif
     }
@@ -911,9 +911,9 @@ void Compressor::assignNumbersToCommonTermsMap(ByteArrayToNumberMap *map,
 }
 
 void Compressor::newCompressTriples(ParamsNewCompressProcedure params) {
-    long compressedTriples = 0;
-    long compressedTerms = 0;
-    long uncompressedTerms = 0;
+    int64_t compressedTriples = 0;
+    int64_t compressedTerms = 0;
+    int64_t uncompressedTerms = 0;
     DiskLZ4Reader *uncommonTermsReader = params.readerUncommonTerms;
     DiskLZ4Reader *r = params.reader;
     const int idReader = params.idReader;
@@ -925,12 +925,12 @@ void Compressor::newCompressTriples(ParamsNewCompressProcedure params) {
     int detailPerms[6];
     Compressor::parsePermutationSignature(params.signaturePerms, detailPerms);
 
-    long nextTripleId = -1;
+    int64_t nextTripleId = -1;
     int nextPos = -1;
-    long nextTerm = -1;
+    int64_t nextTerm = -1;
 
     if (!uncommonTermsReader->isEOF(idReader)) {
-        long tripleId = uncommonTermsReader->readLong(idReader);
+        int64_t tripleId = uncommonTermsReader->readLong(idReader);
         nextTripleId = tripleId >> 2;
         nextPos = tripleId & 0x3;
         nextTerm = uncommonTermsReader->readLong(idReader);
@@ -938,10 +938,10 @@ void Compressor::newCompressTriples(ParamsNewCompressProcedure params) {
         LOG(DEBUGL) << "No uncommon file is provided";
     }
 
-    long currentTripleId = params.part;
+    int64_t currentTripleId = params.part;
     int increment = params.parallelProcesses;
 
-    long triple[3];
+    int64_t triple[3];
     char *tTriple = new char[MAX_TERM_SIZE * 3];
     bool valid[3];
 
@@ -962,10 +962,10 @@ void Compressor::newCompressTriples(ParamsNewCompressProcedure params) {
                     triple[i] = nextTerm;
                     valid[i] = true;
                     if (!uncommonTermsReader->isEOF(idReader)) {
-                        long tripleId = uncommonTermsReader->readLong(idReader);
+                        int64_t tripleId = uncommonTermsReader->readLong(idReader);
                         nextTripleId = tripleId >> 2;
                         nextPos = tripleId & 0x3;
-                        long n2 = uncommonTermsReader->readLong(idReader);
+                        int64_t n2 = uncommonTermsReader->readLong(idReader);
                         nextTerm = n2;
                     } else {
                         //BOOST_LOG_TRIVIAL(debug) << "File " << idReader << " is finished";
@@ -1203,7 +1203,7 @@ void Compressor::parse(int dictPartitions, int sampleMethod, int sampleArg,
                 maxReadingThreads, copyHashes,
                 extractors, files, commonTermsMaps, true, ignorePredicates);
     } else if (sampleMethod == PARSE_MGCS) {
-        LOG(ERRORL) << "No longer supported";
+        LOG(ERRORL) << "No int64_ter supported";
         throw 10;
         do_mcgs();
     } else { //PARSE_SAMPLE
@@ -1282,7 +1282,7 @@ unsigned int Compressor::getThresholdForUncommon(
         const int parallelProcesses,
         const int sizeHashTable,
         const int sampleArg,
-        long *distinctValues,
+        int64_t *distinctValues,
         Hashtable **tables1,
         Hashtable **tables2,
         Hashtable **tables3) {
@@ -1307,7 +1307,7 @@ void Compressor::do_countmin_secondpass(const int dictPartitions,
         Hashtable **tables1,
         Hashtable **tables2,
         Hashtable **tables3,
-        long *distinctValues,
+        int64_t *distinctValues,
         GStringToNumberMap *commonTermsMaps,
         bool ignorePredicates) {
 
@@ -1377,8 +1377,8 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
     Hashtable **tables1 = new Hashtable*[parallelProcesses];
     Hashtable **tables2 = new Hashtable*[parallelProcesses];
     Hashtable **tables3 = new Hashtable*[parallelProcesses];
-    long *distinctValues = new long[parallelProcesses];
-    memset(distinctValues, 0, sizeof(long)*parallelProcesses);
+    int64_t *distinctValues = new int64_t[parallelProcesses];
+    memset(distinctValues, 0, sizeof(int64_t)*parallelProcesses);
 
     /*** If we intend to use Misra to store the popular terms, then we must init
      * it ***/
@@ -1388,24 +1388,24 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
     }
 
     /*** Calculate size of the hash table ***/
-    long nBytesInput = Utils::getNBytes(input);
+    int64_t nBytesInput = Utils::getNBytes(input);
     bool isInputCompressed = Utils::isCompressed(input);
-    long maxSize;
+    int64_t maxSize;
     if (!isInputCompressed) {
         maxSize = nBytesInput / 1000;
     } else {
         maxSize = nBytesInput / 100;
     }
     // Fixed: maxSize for very small inputs
-    maxSize = std::max((long)sampleArg, maxSize);
+    maxSize = std::max((int64_t)sampleArg, maxSize);
     LOG(DEBUGL) << "Size Input: " << nBytesInput <<
         " bytes. Max table size=" << maxSize;
-    long memForHashTables = (long)(Utils::getSystemMemory() * 0.5)
+    int64_t memForHashTables = (int64_t)(Utils::getSystemMemory() * 0.5)
         / (1 + parallelProcesses) / 3;
     //Divided numer hash tables
-    const unsigned int sizeHashTable = std::min((long)maxSize,
-            (long)std::max((unsigned int)1000000,
-                (unsigned int)(memForHashTables / sizeof(long))));
+    const unsigned int sizeHashTable = std::min((int64_t)maxSize,
+            (int64_t)std::max((unsigned int)1000000,
+                (unsigned int)(memForHashTables / sizeof(int64_t))));
 
     LOG(DEBUGL) << "Size hash table " << sizeHashTable;
 
@@ -1516,7 +1516,7 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
     } else {
         /*** Determine a minimum threshold value from the count_min tables to
          * mark the element has common ***/
-        long minFreq = getThresholdForUncommon(
+        int64_t minFreq = getThresholdForUncommon(
                 parallelProcesses, sizeHashTable,
                 sampleArg, distinctValues,
                 tables1, tables2, tables3);
@@ -1524,15 +1524,15 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
 
         /*** Then go through all elements and take the frequency from the
          * count_min tables ***/
-        std::vector<std::pair<string, long>> listFrequentTerms;
+        std::vector<std::pair<string, int64_t>> listFrequentTerms;
         for (int i = 0; i < parallelProcesses; ++i) {
             for (vector<string>::const_iterator itr = resultsMGS[i].begin();
                     itr != resultsMGS[i].end(); ++itr) {
                 //Get the frequency and add it
-                long v1 = tables1[0]->get(*itr);
-                long v2 = tables2[0]->get(*itr);
-                long v3 = tables3[0]->get(*itr);
-                long freq = min(v1, min(v2, v3));
+                int64_t v1 = tables1[0]->get(*itr);
+                int64_t v2 = tables2[0]->get(*itr);
+                int64_t v3 = tables3[0]->get(*itr);
+                int64_t freq = min(v1, min(v2, v3));
                 if (freq >= minFreq)
                     listFrequentTerms.push_back(make_pair(*itr, freq));
             }
@@ -1548,7 +1548,7 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
         finalMap->set_empty_key(EMPTY_KEY);
         finalMap->set_deleted_key(DELETED_KEY);
         for (int i = 0; finalMap->size() < sampleArg && i < listFrequentTerms.size(); ++i) {
-            std::pair<string, long> pair = listFrequentTerms[i];
+            std::pair<string, int64_t> pair = listFrequentTerms[i];
             if (i == 0 || pair.first != listFrequentTerms[i - 1].first) {
                 memcpy(supportBuffer + 2, pair.first.c_str(), pair.first.size());
                 Utils::encode_short(supportBuffer, 0, pair.first.size());
@@ -1714,7 +1714,7 @@ void Compressor::sortAndDumpToFile(vector<SimplifiedAnnotatedTerm> &terms,
     LZ4Writer *outputSegment = new LZ4Writer(outputFile);
     //const char *prevTerm = NULL;
     //int sizePrevTerm = 0;
-    long countOutput = 0;
+    int64_t countOutput = 0;
     for (vector<SimplifiedAnnotatedTerm>::iterator itr = terms.begin();
             itr != terms.end();
             ++itr) {
@@ -1754,11 +1754,11 @@ void Compressor::immemorysort(string **inputFiles,
         int parallelProcesses,
         string outputFile, //int *noutputFiles,
         bool removeDuplicates,
-        const long maxSizeToSort, bool sample) {
+        const int64_t maxSizeToSort, bool sample) {
     //std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
 
     //Split maxSizeToSort in n threads
-    const long maxMemPerThread = maxSizeToSort / parallelProcesses;
+    const int64_t maxMemPerThread = maxSizeToSort / parallelProcesses;
 
     DiskLZ4Reader **readers = new DiskLZ4Reader*[maxReadingThreads];
     memset(readers, 0, sizeof(DiskLZ4Reader*)*maxReadingThreads);
@@ -1840,18 +1840,18 @@ void Compressor::inmemorysort_seq(DiskLZ4Reader *reader,
         MultiDiskLZ4Writer *sampleWriter,
         const int idReader,
         int idx,
-        const long maxMemPerThread,
+        const int64_t maxMemPerThread,
         bool removeDuplicates,
         bool sample) {
 
     vector<SimplifiedAnnotatedTerm> terms;
     //vector<string> outputfiles;
     StringCollection supportCollection(BLOCK_SUPPORT_BUFFER_COMPR);
-    long bytesAllocated = 0;
+    int64_t bytesAllocated = 0;
 
     //BOOST_LOG_TRIVIAL(DEBUG) << "Start immemory_seq method. MaxMemPerThread=" << maxMemPerThread;
 
-    //long count = 0;
+    //int64_t count = 0;
     int sampleCount = 0;
     int sampleAdded = 0;
     while (!reader->isEOF(idReader)) {
@@ -1970,8 +1970,8 @@ void Compressor::sortRangePartitionedTuples(DiskLZ4Reader *reader,
     } else {
         isLast = true;
     }
-    long counter = 0;
-    long countFile = 0;
+    int64_t counter = 0;
+    int64_t countFile = 0;
     while (!reader->isEOF(idReader)) {
         if (countFile == 0) {
             countFile = reader->readLong(idReader);
@@ -2077,7 +2077,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
     string prefixIntFiles = params.prefixIntFiles;
     int part = params.part;
     uint64_t *counter = params.counter;
-    long maxMem = params.maxMem;
+    int64_t maxMem = params.maxMem;
 
     std::vector<string> filesToSort;
 
@@ -2110,7 +2110,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
     StringCollection col(128 * 1024 * 1024);
     std::vector<SimplifiedAnnotatedTerm> tuples;
     std::vector<string> sortedFiles;
-    long bytesAllocated = 0;
+    int64_t bytesAllocated = 0;
     int idx = 0;
     std::unique_ptr<char[]> tmpprefix = std::unique_ptr<char[]>(new char[MAX_TERM_SIZE]);
 
@@ -2182,8 +2182,8 @@ void Compressor::sortPartition(ParamsSortPartition params) {
             std::sort(tuples.begin(), tuples.end(), SimplifiedAnnotatedTerm::sless);
 
             //The following code is replicated below.
-            long counterTerms = -1;
-            long counterPairs = 0;
+            int64_t counterTerms = -1;
+            int64_t counterPairs = 0;
             {
                 //LZ4Writer writer(outputfile);
                 //LZ4Writer dictWriter(dictfile);
@@ -2208,7 +2208,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
                             dictWriter->writeString(idDictWriter, t.term, t.size);
                         } else {
                             int lenprefix = Utils::decode_short(t.prefix);
-                            long len = lenprefix + t.size;
+                            int64_t len = lenprefix + t.size;
                             dictWriter->writeVLong(idDictWriter, len);
                             dictWriter->writeRawArray(idDictWriter, t.prefix + 2,
                                     lenprefix);
@@ -2291,8 +2291,8 @@ void Compressor::sortPartition(ParamsSortPartition params) {
             const char *prevPrefix = NULL;
             char *previousTerm = new char[MAX_TERM_SIZE];
             int previousTermSize = 0;
-            long counterTerms = -1;
-            long counterPairs = 0;
+            int64_t counterTerms = -1;
+            int64_t counterPairs = 0;
             //Sort the files
             for (int i = 0; i < sortedFiles.size(); ++i) {
                 std::vector<string> cont1;
@@ -2316,7 +2316,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
                         dictWriter->writeString(idDictWriter, t.term, t.size);
                     } else {
                         int lenprefix = Utils::decode_short(t.prefix);
-                        long len = lenprefix + t.size;
+                        int64_t len = lenprefix + t.size;
                         dictWriter->writeVLong(idDictWriter, len);
                         dictWriter->writeRawArray(idDictWriter, t.prefix + 2,
                                 lenprefix);
@@ -2410,7 +2410,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
     void Compressor::sortPartitionsAndAssignCounters(string prefixInputFile,
             string dictfile,
             string outputfile, int partitions,
-            long & counter, int parallelProcesses, int maxReadingThreads) {
+            int64_t & counter, int parallelProcesses, int maxReadingThreads) {
 
         //Before I start sorting the files, I concatenate files together
         concatenateFiles(prefixInputFile, parallelProcesses, maxReadingThreads);
@@ -2418,8 +2418,8 @@ void Compressor::sortPartition(ParamsSortPartition params) {
         std::vector<std::thread> threads(partitions);
         std::vector<string> outputfiles;
         std::vector<uint64_t> counters(partitions);
-        long maxMem = max((long) 128 * 1024 * 1024,
-                (long) (Utils::getSystemMemory() * 0.7)) / partitions;
+        int64_t maxMem = max((int64_t) 128 * 1024 * 1024,
+                (int64_t) (Utils::getSystemMemory() * 0.7)) / partitions;
         LOG(DEBUGL) << "Max memory per thread " << maxMem;
 
         DiskLZ4Writer **writers = new DiskLZ4Writer*[maxReadingThreads];
@@ -2503,7 +2503,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
             twriters[i] = new MultiDiskLZ4Writer(filesForThread, filesToPart, 3);
         }
 
-        long startCounter = counter;
+        int64_t startCounter = counter;
         for (int i = 0; i < partitions; ++i) {
             threads[i] = std::thread(std::bind(
                         &Compressor::assignCountersAndPartByTripleID,
@@ -2534,7 +2534,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
         delete[] twriters;
     }
 
-    void Compressor::assignCountersAndPartByTripleID(long startCounter,
+    void Compressor::assignCountersAndPartByTripleID(int64_t startCounter,
             DiskLZ4Reader *r, int idReader, MultiDiskLZ4Writer **writers,
             std::mutex *locks,
             int partitions,
@@ -2544,15 +2544,15 @@ void Compressor::sortPartition(ParamsSortPartition params) {
         //for (int i = 0; i < parallelProcesses; ++i) {
         //    outputs[i] = new LZ4Writer(outfile + string(".") + to_string(i));
         //}
-        std::vector<std::vector<std::pair<long, long>>> buffers;
+        std::vector<std::vector<std::pair<int64_t, int64_t>>> buffers;
         buffers.resize(partitions);
 
-        const long maxNProcessedTuples = 10000000;
-        long counter = 0;
+        const int64_t maxNProcessedTuples = 10000000;
+        int64_t counter = 0;
         while (!r->isEOF(idReader)) {
-            const long c = r->readLong(idReader);
-            const long tid = r->readLong(idReader);
-            const  int idx = (long) (tid >> 2) % partitions;
+            const int64_t c = r->readLong(idReader);
+            const int64_t tid = r->readLong(idReader);
+            const  int idx = (int64_t) (tid >> 2) % partitions;
             if (counter == maxNProcessedTuples) {
                 int nProcessedParts = 0;
                 int currentPart = 0;
@@ -2647,7 +2647,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
     void Compressor::mergeNotPopularEntries(string prefixInputFile,
             string dictOutput,
             string outputFile2,
-            long * startCounter, int increment,
+            int64_t * startCounter, int increment,
             int parallelProcesses,
             int maxReadingThreads) {
 
@@ -2677,13 +2677,13 @@ void Compressor::sortPartition(ParamsSortPartition params) {
             DiskLZ4Writer * writer,
             const int idWriter,
             string tmpfileprefix,
-            const long maxMemory) {
+            const int64_t maxMemory) {
 
         //First sort the input files in chunks of x elements
         int idx = 0;
         vector<string> filesToMerge;
         vector<TriplePair> pairs;
-        long count = 0;
+        int64_t count = 0;
         while (!reader->isEOF(idWriter)) {
             if (sizeof(TriplePair) * pairs.size() * 2 >= maxMemory) {
                 string file = tmpfileprefix + string(".") + to_string(idx++);
@@ -2875,8 +2875,8 @@ void Compressor::sortPartition(ParamsSortPartition params) {
         LOG(DEBUGL) << "Start threads ...";
 
         std::thread *threads = new std::thread[parallelProcesses - 1];
-        const long maxMem = max((long) MIN_MEM_SORT_TRIPLES,
-                (long) (Utils::getSystemMemory() * 0.6) / parallelProcesses);
+        const int64_t maxMem = max((int64_t) MIN_MEM_SORT_TRIPLES,
+                (int64_t) (Utils::getSystemMemory() * 0.6) / parallelProcesses);
         for (int i = 1; i < parallelProcesses; ++i) {
             threads[i - 1] = std::thread(
                     std::bind(&Compressor::sortByTripleID,
@@ -2915,8 +2915,8 @@ void Compressor::sortPartition(ParamsSortPartition params) {
             ByteArrayToNumberMap * map,
             bool filterDuplicates,
             bool sample) {
-        long maxMemAllocate = max((long) (BLOCK_SUPPORT_BUFFER_COMPR * 2),
-                (long) (Utils::getSystemMemory() * 0.70 / ndicts));
+        int64_t maxMemAllocate = max((int64_t) (BLOCK_SUPPORT_BUFFER_COMPR * 2),
+                (int64_t) (Utils::getSystemMemory() * 0.70 / ndicts));
         LOG(DEBUGL) << "Max memory to use to sort inmemory a number of terms: " << maxMemAllocate << " bytes";
         immemorysort(input, maxReadingThreads, parallelProcesses, prefixOutputFiles[0],
                 filterDuplicates, maxMemAllocate, sample);
@@ -2958,7 +2958,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
         /*** Create the final dictionaries to be written and initialize the
          * counters and other data structures ***/
         LZ4Writer **writers = new LZ4Writer*[ndicts];
-        long *counters = new long[ndicts];
+        int64_t *counters = new int64_t[ndicts];
         vector<string> notSoUncommonFiles;
         vector<string> uncommonFiles;
 
@@ -3040,13 +3040,13 @@ void Compressor::sortPartition(ParamsSortPartition params) {
             delete poolForMap;
     }
 
-    unsigned long Compressor::calculateSizeHashmapCompression() {
-        long memoryAvailable = Utils::getSystemMemory() * 0.70;
+    uint64_t Compressor::calculateSizeHashmapCompression() {
+        int64_t memoryAvailable = Utils::getSystemMemory() * 0.70;
         return memoryAvailable;
     }
 
-    unsigned long Compressor::calculateMaxEntriesHashmapCompression() {
-        long memoryAvailable = min((int)(Utils::getSystemMemory() / 3 / 50), 90000000);
+    uint64_t Compressor::calculateMaxEntriesHashmapCompression() {
+        int64_t memoryAvailable = min((int)(Utils::getSystemMemory() / 3 / 50), 90000000);
         return memoryAvailable;
     }
 

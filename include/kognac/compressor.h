@@ -103,7 +103,7 @@ struct ParamsUncompressTriples {
     DiskLZ4Writer *writer;
     int idwriter;
     SchemaExtractor *extractor;
-    long *distinctValues;
+    int64_t *distinctValues;
     std::vector<string> *resultsMGS;
     size_t sizeHeap;
     bool ignorePredicates;
@@ -121,12 +121,12 @@ struct ParamsSortPartition {
     string prefixIntFiles;
     int part;
     uint64_t *counter;
-    long maxMem;
+    int64_t maxMem;
 };
 
 struct TriplePair {
-    long tripleIdAndPosition;
-    long term;
+    int64_t tripleIdAndPosition;
+    int64_t term;
 
     void readFrom(LZ4Reader *reader) {
         tripleIdAndPosition = reader->parseLong();
@@ -155,7 +155,7 @@ struct TriplePair {
 
 struct SimplifiedAnnotatedTerm {
     const char *term;
-    long tripleIdAndPosition;
+    int64_t tripleIdAndPosition;
     //int prefixid;
     const char *prefix;
     int size;
@@ -178,7 +178,7 @@ struct SimplifiedAnnotatedTerm {
     void writeTo(LZ4Writer *writer) {
         if (prefix != NULL) {
             int lenprefix = Utils::decode_short(prefix);
-            long len = lenprefix + size;
+            int64_t len = lenprefix + size;
             writer->writeVLong(len);
             writer->writeRawArray(prefix + 2, lenprefix);
             writer->writeRawArray(term, size);
@@ -193,7 +193,7 @@ struct SimplifiedAnnotatedTerm {
                  DiskLZ4Writer *writer) {
         if (prefix != NULL) {
             int lenprefix = Utils::decode_short(prefix);
-            long len = lenprefix + size;
+            int64_t len = lenprefix + size;
             writer->writeVLong(id, len);
             writer->writeRawArray(id, prefix + 2, lenprefix);
             writer->writeRawArray(id, term, size);
@@ -374,10 +374,10 @@ struct SimplifiedAnnotatedTerm {
 struct AnnotatedTerm {
     const char *term;
     int size;
-    long tripleIdAndPosition;
+    int64_t tripleIdAndPosition;
 
     bool useHashes;
-    long hashT1, hashT2;
+    int64_t hashT1, hashT2;
 
     AnnotatedTerm() {
         term = NULL;
@@ -504,8 +504,8 @@ struct AnnotatedTerm {
 };
 
 struct priorityQueueOrder {
-    bool operator()(const std::pair<string, long> &lhs,
-                    const std::pair<string, long>&rhs) const {
+    bool operator()(const std::pair<string, int64_t> &lhs,
+                    const std::pair<string, int64_t>&rhs) const {
         return lhs.second > rhs.second;
     }
 };
@@ -518,8 +518,8 @@ class Compressor {
 private:
     const string input;
     const string kbPath;
-    long totalCount;
-    long nTerms;
+    int64_t totalCount;
+    int64_t nTerms;
     std::shared_ptr<Hashtable> table1;
     std::shared_ptr<Hashtable> table2;
     std::shared_ptr<Hashtable> table3;
@@ -549,7 +549,7 @@ private:
                                 Hashtable **tables1,
                                 Hashtable **tables2,
                                 Hashtable **tables3,
-                                long *distinctValues,
+                                int64_t *distinctValues,
                                 GStringToNumberMap *commonTermsMaps,
                                 bool ignorePredicates);
 
@@ -557,7 +557,7 @@ private:
         const int parallelProcesses,
         const int sizeHashTable,
         const int sampleArg,
-        long *distinctValues,
+        int64_t *distinctValues,
         Hashtable **tables1,
         Hashtable **tables2,
         Hashtable **tables3);
@@ -583,9 +583,9 @@ private:
 
     static void sortPartitionsAndAssignCounters(string prefixInputFile,
             string dictfile, string outputfile, int partitions,
-            long &counter, int parallelProcesses, int maxReadingThreads);
+            int64_t &counter, int parallelProcesses, int maxReadingThreads);
 
-    static void assignCountersAndPartByTripleID(long startCounter,
+    static void assignCountersAndPartByTripleID(int64_t startCounter,
             DiskLZ4Reader *reader, int idReader,
             MultiDiskLZ4Writer **writers,
             std::mutex *locks,
@@ -607,13 +607,13 @@ protected:
 
 #ifdef COUNTSKETCH
     void uncompressTriplesForMGCS(vector<FileInfo> &files, MG * heap, CountSketch * cs, string outFile,
-                                  SchemaExtractor * extractor, long * distinctValues);
+                                  SchemaExtractor * extractor, int64_t * distinctValues);
 
     void extractTermsForMGCS(ParamsExtractCommonTermProcedure params, const set<string>& freq,
                              const CountSketch * cs);
 
-    void extractTermForMGCS(const char *term, const int sizeTerm, unsigned long & countFreq, unsigned long & countInfrequent,
-                            const int dictPartition, const bool copyHashes, const long tripleId, const int pos,
+    void extractTermForMGCS(const char *term, const int sizeTerm, uint64_t & countFreq, uint64_t & countInfrequent,
+                            const int dictPartition, const bool copyHashes, const int64_t tripleId, const int pos,
                             char **prevEntries, int *sPrevEntries, LZ4Writer **dictFile, LZ4Writer **udictFile,
                             const set<string>& freq, const CountSketch * cs);
 #endif
@@ -628,19 +628,19 @@ protected:
                              ByteArrayToNumberMap * map,
                              const int idwriter,
                              DiskLZ4Writer *writer,
-                             const long tripleId,
+                             const int64_t tripleId,
                              const int pos,
                              const int dictPartitions,
                              const bool copyHashes,
                              char **prevEntries, int *sPrevEntries);
 
-    void extractCommonTerm(const char* term, const int sizeTerm, long & countFrequent,
-                           const long thresholdForUncommon, Hashtable * table1,
+    void extractCommonTerm(const char* term, const int sizeTerm, int64_t & countFrequent,
+                           const int64_t thresholdForUncommon, Hashtable * table1,
                            Hashtable * table2, Hashtable * table3, const int dictPartitions,
-                           long & minValueToBeAdded,
-                           const long maxMapSize, GStringToNumberMap * map,
-                           std::priority_queue<std::pair<string, long>,
-                           std::vector<std::pair<string, long> >, priorityQueueOrder> &queue);
+                           int64_t & minValueToBeAdded,
+                           const int64_t maxMapSize, GStringToNumberMap * map,
+                           std::priority_queue<std::pair<string, int64_t>,
+                           std::vector<std::pair<string, int64_t> >, priorityQueueOrder> &queue);
 
     void extractCommonTerms(ParamsExtractCommonTermProcedure params);
 
@@ -656,12 +656,12 @@ protected:
 
     void mergeNotPopularEntries(string prefixInputFile,
                                 string globalDictOutput, string outputFile2,
-                                long * startCounter, int increment,
+                                int64_t * startCounter, int increment,
                                 int parallelProcesses,
                                 int maxReadingThreads);
 
     void assignNumbersToCommonTermsMap(ByteArrayToNumberMap * finalMap,
-                                       long * counters, LZ4Writer **writers,
+                                       int64_t * counters, LZ4Writer **writers,
                                        LZ4Writer **invWriters, int ndictionaries,
                                        bool preserveMapping);
 
@@ -682,7 +682,7 @@ protected:
                         DiskLZ4Writer *writer,
                         const int idWriter,
                         string tmpfileprefix,
-                        const long maxMemory);
+                        const int64_t maxMemory);
 
     static void immemorysort(string **inputFiles,
                              int maxReadingThreads,
@@ -690,20 +690,20 @@ protected:
                              string outputFile,
                              //int *noutputFiles,
                              bool removeDuplicates,
-                             const long maxSizeToSort, bool sample);
+                             const int64_t maxSizeToSort, bool sample);
 
     static void inmemorysort_seq(DiskLZ4Reader *reader,
                                  DiskLZ4Writer *writer,
                                  MultiDiskLZ4Writer *sampleWriter,
                                  const int idReader,
                                  int idx,
-                                 const long maxMemPerThread,
+                                 const int64_t maxMemPerThread,
                                  bool removeDuplicates,
                                  bool sample);
 
-    static unsigned long calculateSizeHashmapCompression();
+    static uint64_t calculateSizeHashmapCompression();
 
-    static unsigned long calculateMaxEntriesHashmapCompression();
+    static uint64_t calculateMaxEntriesHashmapCompression();
 
 public:
     Compressor(string input, string kbPath);
@@ -712,7 +712,7 @@ public:
 
     static void parsePermutationSignature(int signature, int *output);
 
-    unsigned long getEstimatedFrequency(const string & el) const;
+    uint64_t getEstimatedFrequency(const string & el) const;
 
     static vector<FileInfo> *splitInputInChunks(const string & input, int nchunks, string prefix = "");
 
@@ -740,11 +740,11 @@ public:
     StringCollection *poolForMap;
     ByteArrayToNumberMap *finalMap;
 
-    long getTotalCount() {
+    int64_t getTotalCount() {
         return totalCount;
     }
 
-    long getEstimateNumberTerms() {
+    int64_t getEstimateNumberTerms() {
         return nTerms;
     }
 

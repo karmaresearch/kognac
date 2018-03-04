@@ -173,42 +173,42 @@ private:
     std::unique_ptr<int[]> partitionCounters;
     std::unique_ptr<std::unique_ptr<StringCollection>[]> stringBuffers;
     std::unique_ptr<std::vector<Kognac_TextClassID>[]> elementsBuffers;
-    long maxMemoryPerBuffer;
+    int64_t maxMemoryPerBuffer;
 
     //Used to store a cache of hashes
-    std::map<long, long> cacheClassAssignments;
-    std::list<long> queueElements;
-    //long memReservedForCache;
+    std::map<int64_t, int64_t> cacheClassAssignments;
+    std::list<int64_t> queueElements;
+    //int64_t memReservedForCache;
 
-    long count;
-    long countWritten;
+    int64_t count;
+    int64_t countWritten;
 
     void dumpBuffer(const int partition);
 
 public:
-    Kognac_TermBufferWriter(const long maxMem, const int npartitions,
+    Kognac_TermBufferWriter(const int64_t maxMem, const int npartitions,
                             string outputfile, const bool onlyMinClass);
 
     void write(const Kognac_TextClassID &pair);
 
-    long getClassFromCache(const long hashTerm) {
-        long cacheId = LONG_MAX;
+    int64_t getClassFromCache(const int64_t hashTerm) {
+        int64_t cacheId = LONG_MAX;
         if (cacheClassAssignments.count(hashTerm)) {
             cacheId = cacheClassAssignments.find(hashTerm)->second;
         }
         return cacheId;
     }
 
-    /*long getClassFromCache2(const char *key, const size_t sizekey) {
-        long cacheId = LONG_MAX;
+    /*int64_t getClassFromCache2(const char *key, const size_t sizekey) {
+        int64_t cacheId = LONG_MAX;
         //TODO
         return cacheId;
     }*/
 
 
-    void insertInCache(const long key, const long hashClass);
+    void insertInCache(const int64_t key, const int64_t hashClass);
 
-    //void insertInCache2(const char *textKey, const size_t size, const long hashClass);
+    //void insertInCache2(const char *textKey, const size_t size, const int64_t hashClass);
 
     void flush();
 
@@ -233,22 +233,22 @@ private:
     SchemaExtractor extractor;
 
     //Contains the frequent patterns that we will mine from the input
-    std::shared_ptr<FPTree<unsigned long> > frequentPatterns;
-    std::map<unsigned long, unsigned long> classesWithFrequency;
-    std::map<string, unsigned long> classesHash; //Used only for debugging
-    std::map<unsigned long, string> classesHash2; //Used only for debugging
+    std::shared_ptr<FPTree<uint64_t> > frequentPatterns;
+    std::map<uint64_t, uint64_t> classesWithFrequency;
+    std::map<string, uint64_t> classesHash; //Used only for debugging
+    std::map<uint64_t, string> classesHash2; //Used only for debugging
     std::mutex mut; //Used for atomic inserts in frequentPatterns
     const int maxPatternLength;
 
     //The procedure sample populates this list with the most frequent terms
-    std::vector<std::pair<string, unsigned long> > mostFrequentTerms;
+    std::vector<std::pair<string, uint64_t> > mostFrequentTerms;
 
-    //std::vector<std::pair<string, unsigned long>> getTermFrequencies(
+    //std::vector<std::pair<string, uint64_t>> getTermFrequencies(
     //            const std::set<string> &elements) const;
 
     void assignIdsToMostPopularTerms(StringCollection &col,
                                      ByteArrayToNumberMap &map,
-                                     long &counter,
+                                     int64_t &counter,
                                      std::ostream &out);
 
     void extractAllTermsWithClassIDs(const int nthreads,
@@ -256,24 +256,24 @@ private:
                                      const bool useFP,
                                      string outputdir,
                                      ByteArrayToNumberMap &frequentTermsMap,
-                                     std::map<unsigned long, unsigned long> &c);
+                                     std::map<uint64_t, uint64_t> &c);
 
-    void extractAllTermsWithClassIDs_int(const long maxMem,
+    void extractAllTermsWithClassIDs_int(const int64_t maxMem,
                                          DiskLZ4Reader *reader,
                                          const int idReader,
                                          string outputfile,
                                          ByteArrayToNumberMap *frequentTermsMap,
-                                         std::map<unsigned long,
-                                         unsigned long> *frequencyClasses,
+                                         std::map<uint64_t,
+                                         uint64_t> *frequencyClasses,
                                          const int nthreads);
 
-    void extractAllTermsWithClassIDsNOFP_int(const long maxMem,
+    void extractAllTermsWithClassIDsNOFP_int(const int64_t maxMem,
             DiskLZ4Reader *reader,
             int idReader,
             string outputfile,
             ByteArrayToNumberMap *frequentTermsMap,
-            std::map<unsigned long,
-            unsigned long> *frequencyClasses,
+            std::map<uint64_t,
+            uint64_t> *frequencyClasses,
             const int nthreads);
 
     void mergeAllTermsWithClassIDs(const int nthreads, string inputDir);
@@ -290,31 +290,31 @@ private:
     void processTerm(Kognac_TermBufferWriter &writer, const int pos,
                      const char* term, const char* otherterm1,
                      const char* otherterm2,
-                     std::map<unsigned long, unsigned long> *freqsClasses,
+                     std::map<uint64_t, uint64_t> *freqsClasses,
                      const bool useFP) const;
 
     void sortTermsByClassId(string inputdir, string outputdir);
 
-    void assignIdsToAllTerms(string inputdir, long &counter,
+    void assignIdsToAllTerms(string inputdir, int64_t &counter,
                              std::ostream &out);
 
     void loadDictionaryMap(std::istream &in,
                            CompressedByteArrayToNumberMap &map,
                            StringCollection &supportDictionaryMap);
 
-    long getIDOrText(DiskLZ4Reader *reader, const int idReader,
+    int64_t getIDOrText(DiskLZ4Reader *reader, const int idReader,
                      int &size, char *text,
                      const CompressedByteArrayToNumberMap &map);
 
     void addTransactionToFrequentPatterns(
-        std::vector<std::pair<unsigned long,
-        unsigned long> > &classes);
+        std::vector<std::pair<uint64_t,
+        uint64_t> > &classes);
 
     void compressGraph_seq(DiskLZ4Reader *reader,
                            int idReader, string outputUncompressed,
                            const bool firstPass,
                            CompressedByteArrayToNumberMap *map,
-                           long *countCompressedTriples,
+                           int64_t *countCompressedTriples,
                            LZ4Writer *finalWriter);
 
 public:
