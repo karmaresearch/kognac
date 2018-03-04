@@ -23,6 +23,7 @@
 #define STRINGSCOL_H_
 
 #include <vector>
+#include <inttypes.h>
 
 class StringCollection {
 private:
