@@ -91,15 +91,15 @@ typedef struct Triple {
 
     static Triple max() {
         Triple t;
-        t.s = ~0l;
-        t.p = ~0l;
-        t.o = ~0l;
-        t.count = ~0l;
+        t.s = INT64_C(-1);
+        t.p = INT64_C(-1);
+        t.o = INT64_C(-1);
+        t.count = INT64_C(-1);
         return t;
     }
 
     static bool ismax(const Triple &t) {
-        return t.s == ~0l;
+        return t.s == INT64_C(-1);
     }
 
 } Triple;
