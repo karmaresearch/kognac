@@ -25,8 +25,8 @@
 #include <stdint.h>
 
 #if defined(_WIN32)
-#define DIR_SEP string("\")
-#define CDIR_SEP '\'
+#define DIR_SEP string("\\")
+#define CDIR_SEP '\\'
 #else
 #define DIR_SEP string("/")
 #define CDIR_SEP '/'
