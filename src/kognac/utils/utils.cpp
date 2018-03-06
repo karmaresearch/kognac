@@ -140,7 +140,8 @@ vector<string> Utils::getFiles(string dirname, bool ignoreExtension) {
     TCHAR szDir[MAX_PATH];
     HANDLE hFind = INVALID_HANDLE_VALUE;
     DWORD dwError = 0;
-    hFind = FindFirstFile(dirname.c_str(), &ffd);
+	std::string toSearch = dirname + DIR_SEP + "*";
+    hFind = FindFirstFile(toSearch.c_str(), &ffd);
     if (INVALID_HANDLE_VALUE == hFind) {
         return std::vector<string>();
     }

@@ -23,8 +23,8 @@
 #include <kognac/filemerger.h>
 #include <kognac/disklz4reader.h>
 #include <kognac/logs.h>
+#include <kognac/consts.h>
 #include <zstr/zstr.hpp>
-
 #include <algorithm>
 #include <string>
 #include <mutex>

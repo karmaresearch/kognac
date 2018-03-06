@@ -26,7 +26,7 @@ DiskLZ4Writer::DiskLZ4Writer(string file,
                              int nbuffersPerFile) :
     DiskLZ4Writer(npartitions, nbuffersPerFile) {
     inputfile = file;
-    stream.open(file);
+    stream.open(file, std::ofstream::binary);
     currentthread = thread(std::bind(&DiskLZ4Writer::run, this));
     processStarted = true;
     startpositions.resize(npartitions);
@@ -266,7 +266,7 @@ void DiskLZ4Writer::run() {
             Utils::encode_int(el, it->sizebuffer);
             stream.write(el, 4);
             stream.write(it->buffer, it->sizebuffer);
-            it++;
+			it++;
         }
         time_rawwriting += std::chrono::system_clock::now() - start;
 

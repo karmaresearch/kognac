@@ -34,6 +34,7 @@
 #include <kognac/filemerger.h>
 #include <kognac/filemerger2.h>
 #include <kognac/logs.h>
+#include <kognac/consts.h>
 
 #include <iostream>
 #include <utility>
@@ -1599,7 +1600,7 @@ void Compressor::do_sample(const int dictPartitions, const int sampleArg,
                 i < maxReadingThreads
                 && (chunksToProcess + i) < parallelProcesses;
                 ++i) {
-            tmpFileNames[chunksToProcess + i] = kbPath + string(DIR_SEP + "tmp-")
+            tmpFileNames[chunksToProcess + i] = kbPath + DIR_SEP + string("tmp-")
                 + to_string(chunksToProcess + i);
             threads[i - 1] = std::thread(
                     std::bind(&Compressor::uncompressAndSampleTriples,
@@ -1612,7 +1613,7 @@ void Compressor::do_sample(const int dictPartitions, const int sampleArg,
                         &commonTermsMaps[chunksToProcess + i],
                         copyHashes ? extractors + i : NULL));
         }
-        tmpFileNames[chunksToProcess] = kbPath + string(DIR_SEP + "tmp-" + to_string(chunksToProcess));
+        tmpFileNames[chunksToProcess] = kbPath + DIR_SEP + string("tmp-" + to_string(chunksToProcess));
         uncompressAndSampleTriples(files[chunksToProcess],
                 tmpFileNames[chunksToProcess],
                 dictFileNames[chunksToProcess],
