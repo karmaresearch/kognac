@@ -63,7 +63,7 @@ DiskLZ4Reader::DiskLZ4Reader(string inputfile,
     }
 
     //Open the input file
-    reader.open(inputfile);
+    reader.open(inputfile, std::ifstream::binary);
 
     beginningBlocks.resize(npartitions);
     readBlocks.resize(npartitions);
@@ -75,7 +75,7 @@ DiskLZ4Reader::DiskLZ4Reader(string inputfile,
     }
 
     ifstream idxreader;
-    idxreader.open(idxfile);
+    idxreader.open(idxfile, std::ifstream::binary);
     char buffer[8];
     idxreader.read(buffer, 8);
     int64_t n = Utils::decode_long(buffer);

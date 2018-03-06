@@ -285,7 +285,7 @@ void DiskLZ4Writer::run() {
     stream.close();
 
     //write down the beginning of the blocks for each file
-    stream.open(inputfile + string(".idx"));
+    stream.open(inputfile + string(".idx"), std::ofstream::binary);
     char buffer[8];
     Utils::encode_long(buffer, startpositions.size());
     stream.write(buffer, 8);
