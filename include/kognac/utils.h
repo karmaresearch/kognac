@@ -47,6 +47,7 @@ class Utils {
         static bool hasExtension(const string &file);
         static string extension(const string &file);
         static string removeExtension(string file);
+        static string removeLastExtension(string file);
         static bool isDirectory(string dirname);
         static bool isFile(string dirname);
         static vector<string> getFilesWithPrefix(string dir, string prefix);

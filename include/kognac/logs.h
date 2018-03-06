@@ -119,17 +119,17 @@ class Logger {
             return *this;
         }
 
-        Logger& operator << (uint64_t n) {
+        Logger& operator << (unsigned long long n) {
             std::string s = std::to_string(n);
             return *this << s.c_str();
         }
 
-        Logger& operator << (uint32_t n) {
+        Logger& operator << (unsigned long n) {
             std::string s = std::to_string(n);
             return *this << s.c_str();
         }
 
-        Logger& operator << (uint16_t n) {
+        Logger& operator << (unsigned n) {
             std::string s = std::to_string(n);
             return *this << s.c_str();
         }
@@ -144,17 +144,17 @@ class Logger {
             return *this << s.c_str();
         }
 
-        Logger& operator << (int64_t n) {
+        Logger& operator << (long long n) {
             std::string s = std::to_string(n);
             return *this << s.c_str();
         }
 
-        Logger& operator << (int32_t n) {
+        Logger& operator << (long n) {
             std::string s = std::to_string(n);
             return *this << s.c_str();
         }
 
-        Logger& operator << (int16_t n) {
+        Logger& operator << (int n) {
             std::string s = std::to_string(n);
             return *this << s.c_str();
         }

@@ -213,6 +213,15 @@ string Utils::removeExtension(string file) {
         return fn;
     }
 }
+string Utils::removeLastExtension(string file) {
+    string fn = filename(file);
+    auto pos = fn.find_last_of('.');
+    if (pos != std::string::npos) {
+        return fn.substr(0, pos);
+    } else {
+        return fn;
+    }
+}
 bool Utils::isDirectory(string dirname) {
     struct stat st;
     if(stat(dirname.c_str(), &st) == 0)
