@@ -74,7 +74,7 @@ void MultiDiskLZ4Writer::run() {
             }
             //LOG(DEBUGL) << "Open file " << files[idFile];
             string path = files[idFile].filestowrite[currentfileidx];
-            streams[idFile].open(path, ios_base::ate | ios_base::app);
+            streams[idFile].open(path, ios_base::ate | ios_base::app | ios_base::binary);
             if (!streams[idFile].good()) {
                 LOG(ERRORL) << "Problems opening file " << idFile;
             }
@@ -89,7 +89,7 @@ void MultiDiskLZ4Writer::run() {
                 currentfileidx = files[idFile].currentopenedfile = it->idxfile;
                 string path = files[idFile].filestowrite[currentfileidx];
                 streams[idFile].close();
-                streams[idFile].open(path, ios_base::ate | ios_base::app);
+                streams[idFile].open(path, ios_base::ate | ios_base::app | ios_base::binary);
                 if (!streams[idFile].good()) {
                     LOG(ERRORL) << "Problems opening file " << idFile;
                 }

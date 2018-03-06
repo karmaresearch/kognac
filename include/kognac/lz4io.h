@@ -48,7 +48,7 @@ private:
 public:
 
     LZ4Writer(string file) :
-        os(file) {
+        os(file, std::ofstream::binary) {
         this->path = file;
         if (!os.good()) {
             LOG(ERRORL) << "Failed to open the file " << file;
@@ -135,7 +135,7 @@ private:
 
 public:
     LZ4Reader(string file) :
-        is(file) {
+        is(file, std::ifstream::binary) {
 
         if (!is.good()) {
             LOG(ERRORL) << "Failed to open the file " << file;

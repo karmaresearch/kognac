@@ -67,7 +67,7 @@ void MultiDiskLZ4Reader::readbuffer(int partitionToRead,
     }
     if (!part.opened) {
         //Open the file
-        part.stream.open(part.files[part.idxfile]);
+        part.stream.open(part.files[part.idxfile], std::ifstream::binary);
         part.stream.seekg(part.positionfile);
         nopenedstreams++;
         historyopenedfiles.push_back(partitionToRead);
