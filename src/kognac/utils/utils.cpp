@@ -211,18 +211,20 @@ string Utils::removeExtension(string file) {
     string fn = filename(file);
     auto pos = fn.find('.');
     if (pos != std::string::npos) {
-        return fn.substr(0, pos);
+	pos += file.size() - fn.size();
+        return file.substr(0, pos);
     } else {
-        return fn;
+        return file;
     }
 }
 string Utils::removeLastExtension(string file) {
     string fn = filename(file);
     auto pos = fn.find_last_of('.');
     if (pos != std::string::npos) {
-        return fn.substr(0, pos);
+	pos += file.size() - fn.size();
+        return file.substr(0, pos);
     } else {
-        return fn;
+        return file;
     }
 }
 bool Utils::isDirectory(string dirname) {
