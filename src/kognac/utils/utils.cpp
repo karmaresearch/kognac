@@ -106,13 +106,16 @@ vector<string> Utils::getSubdirs(string dirname) {
     TCHAR szDir[MAX_PATH];
     HANDLE hFind = INVALID_HANDLE_VALUE;
     DWORD dwError = 0;
-    hFind = FindFirstFile(dirname.c_str(), &ffd);
+	std::string toSearch = dirname + DIR_SEP + "*";
+    hFind = FindFirstFile(toSearch.c_str(), &ffd);
     if (INVALID_HANDLE_VALUE == hFind) {
         return std::vector<string>();
     }
     // List all the files in the directory with some info about them.
     do {
         if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+			if (string(ffd.cFileName) == "." || string(ffd.cFileName) == "..")
+				continue;
             string fileFullPath = dirname + DIR_SEP + ffd.cFileName;
             files.push_back(fileFullPath);
         }
@@ -223,11 +226,22 @@ string Utils::removeLastExtension(string file) {
     }
 }
 bool Utils::isDirectory(string dirname) {
-    struct stat st;
-    if(stat(dirname.c_str(), &st) == 0)
-        if((st.st_mode & S_IFDIR) != 0)
-            return true;
+#if defined(_WIN32)
+	DWORD d = GetFileAttributes(dirname.c_str());
+	if (d &FILE_ATTRIBUTE_DIRECTORY) {
+		return true;
+	} else {
+		return false;
+	}
+#else
+	struct stat st;
+	auto resp = stat(dirname.c_str(), &st);
+	if (resp == 0) {
+		if ((st.st_mode & S_IFDIR) != 0)
+			return true;
+	}
     return false;
+#endif
 }
 bool Utils::isFile(string dirname) {
     struct stat st;
@@ -266,15 +280,44 @@ void Utils::create_directories(string newdir) {
 }
 void Utils::remove(string file) {
     if (isDirectory(file)) {
+#if defined(_WIN32)
+		auto resp = RemoveDirectory(file.c_str());
+		if (resp == 0) {
+			DWORD errorMessageID = ::GetLastError();
+			LPSTR messageBuffer = nullptr;
+			size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+				NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+			std::string message(messageBuffer, size);
+			LocalFree(messageBuffer);
+			LOG(ERRORL) << "Error deleting directory " << file << " " << message;
+			abort();
+		}
+#else
         if (rmdir(file.c_str()) != 0) {
             LOG(ERRORL) << "Error removing dir " << file;
             abort();
         }
-    } else {
-        if (std::remove(file.c_str()) != 0 ) {
-            LOG(ERRORL) << "Error deleting file " << file;
-            abort();
-        }
+#endif
+	} else {
+#if defined(_WIN32)
+		auto resp = DeleteFile(file.c_str());
+		if (resp == 0) {
+			DWORD errorMessageID = ::GetLastError();
+			LPSTR messageBuffer = nullptr;
+			size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+				NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+			std::string message(messageBuffer, size);
+			LocalFree(messageBuffer);
+			LOG(ERRORL) << "Error deleting file " << file << " " << message;
+			abort();
+		}
+#else
+		int resp = ::remove(file.c_str());
+		if (resp != 0) {
+			LOG(ERRORL) << "Error deleting file " << file;
+			abort();
+		}
+#endif
     }
 }
 void Utils::remove_all(string path) {

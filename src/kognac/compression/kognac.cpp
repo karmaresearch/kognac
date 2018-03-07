@@ -719,90 +719,94 @@ void Kognac::pickSmallestClassID(const int npartitions, string inputDir,
 
 void Kognac::pickSmallestClassIDPart(string inputFile, const bool useFP) {
     //Read the file
-    LZ4Reader reader(inputFile);
-    LZ4Writer writer(inputFile + ".min");
+	{
+		LZ4Reader reader(inputFile);
+		LZ4Writer writer(inputFile + ".min");
 
+		if (useFP) {
+			char supportBuffer[MAX_TERM_SIZE + 2];
+			size_t sSupportBuffer = 0;
+			int64_t minClass = INT64_MAX;
+			const std::vector<int64_t> *taxonomyClasses;
 
-    if (useFP) {
-        char supportBuffer[MAX_TERM_SIZE + 2];
-        size_t sSupportBuffer = 0;
-        int64_t minClass = INT64_MAX;
-        const std::vector<int64_t> *taxonomyClasses;
+			bool first = true;
+			while (!reader.isEof()) {
+				Kognac_TextClassID el;
+				el.readFrom(&reader);
 
-        bool first = true;
-        while (!reader.isEof()) {
-            Kognac_TextClassID el;
-            el.readFrom(&reader);
+				if (first) {
+					first = false;
+					memcpy(supportBuffer, el.term, el.size);
+					sSupportBuffer = el.size;
+				}
+				else if (!el.eqText(supportBuffer, sSupportBuffer)) {
+					Kognac_TextClassID lastEl;
+					lastEl.term = supportBuffer;
+					lastEl.size = sSupportBuffer;
+					lastEl.classID = minClass;
+					lastEl.classID2 = 0;
+					lastEl.writeTo(&writer);
+					memcpy(supportBuffer, el.term, el.size);
+					sSupportBuffer = el.size;
+					minClass = INT64_MAX;
+				}
 
-            if (first) {
-                first = false;
-                memcpy(supportBuffer, el.term, el.size);
-                sSupportBuffer = el.size;
-            } else if (!el.eqText(supportBuffer, sSupportBuffer)) {
-                Kognac_TextClassID lastEl;
-                lastEl.term = supportBuffer;
-                lastEl.size = sSupportBuffer;
-                lastEl.classID = minClass;
-                lastEl.classID2 = 0;
-                lastEl.writeTo(&writer);
-                memcpy(supportBuffer, el.term, el.size);
-                sSupportBuffer = el.size;
-                minClass = INT64_MAX;
-            }
+				extractor.retrieveInstances(el.classID, &taxonomyClasses);
+				if (taxonomyClasses && taxonomyClasses->at(0) < minClass) {
+					minClass = taxonomyClasses->at(0);
+				}
+			}
 
-            extractor.retrieveInstances(el.classID, &taxonomyClasses);
-            if (taxonomyClasses && taxonomyClasses->at(0) < minClass) {
-                minClass = taxonomyClasses->at(0);
-            }
-        }
+			//write last element
+			Kognac_TextClassID lastEl;
+			lastEl.term = supportBuffer;
+			lastEl.size = sSupportBuffer;
+			lastEl.classID = minClass;
+			lastEl.classID2 = 0;
+			lastEl.writeTo(&writer);
+		}
+		else { //No FP support
+			char supportBuffer[MAX_TERM_SIZE + 2];
+			size_t sSupportBuffer = 0;
+			int64_t minClass = INT64_MAX;
+			const std::vector<int64_t> *taxonomyClasses;
+			bool first = true;
+			while (!reader.isEof()) {
+				Kognac_TextClassID el;
+				el.readFrom(&reader);
 
-        //write last element
-        Kognac_TextClassID lastEl;
-        lastEl.term = supportBuffer;
-        lastEl.size = sSupportBuffer;
-        lastEl.classID = minClass;
-        lastEl.classID2 = 0;
-        lastEl.writeTo(&writer);
-    } else { //No FP support
-        char supportBuffer[MAX_TERM_SIZE + 2];
-        size_t sSupportBuffer = 0;
-        int64_t minClass = INT64_MAX;
-        const std::vector<int64_t> *taxonomyClasses;
-        bool first = true;
-        while (!reader.isEof()) {
-            Kognac_TextClassID el;
-            el.readFrom(&reader);
+				if (first) {
+					first = false;
+					memcpy(supportBuffer, el.term, el.size);
+					sSupportBuffer = el.size;
+					minClass = el.classID;
+				}
+				else if (!el.eqText(supportBuffer, sSupportBuffer)) {
+					Kognac_TextClassID lastEl;
+					lastEl.term = supportBuffer;
+					lastEl.size = sSupportBuffer;
+					lastEl.classID = minClass;
+					lastEl.classID2 = 0;
+					lastEl.writeTo(&writer);
+					memcpy(supportBuffer, el.term, el.size);
+					sSupportBuffer = el.size;
+					minClass = el.classID;
+				}
+				extractor.retrieveInstances(el.classID, &taxonomyClasses);
+				if (taxonomyClasses && taxonomyClasses->at(0) < minClass) {
+					minClass = taxonomyClasses->at(0);
+				}
+			}
 
-            if (first) {
-                first = false;
-                memcpy(supportBuffer, el.term, el.size);
-                sSupportBuffer = el.size;
-                minClass = el.classID;
-            } else if (!el.eqText(supportBuffer, sSupportBuffer)) {
-                Kognac_TextClassID lastEl;
-                lastEl.term = supportBuffer;
-                lastEl.size = sSupportBuffer;
-                lastEl.classID = minClass;
-                lastEl.classID2 = 0;
-                lastEl.writeTo(&writer);
-                memcpy(supportBuffer, el.term, el.size);
-                sSupportBuffer = el.size;
-                minClass = el.classID;
-            }
-            extractor.retrieveInstances(el.classID, &taxonomyClasses);
-            if (taxonomyClasses && taxonomyClasses->at(0) < minClass) {
-                minClass = taxonomyClasses->at(0);
-            }
-        }
-
-        //write last element
-        Kognac_TextClassID lastEl;
-        lastEl.term = supportBuffer;
-        lastEl.size = sSupportBuffer;
-        lastEl.classID = minClass;
-        lastEl.classID2 = 0;
-        lastEl.writeTo(&writer);
-    }
+			//write last element
+			Kognac_TextClassID lastEl;
+			lastEl.term = supportBuffer;
+			lastEl.size = sSupportBuffer;
+			lastEl.classID = minClass;
+			lastEl.classID2 = 0;
+			lastEl.writeTo(&writer);
+		}
+	}
 
     //Remove input file
     Utils::remove(inputFile);
