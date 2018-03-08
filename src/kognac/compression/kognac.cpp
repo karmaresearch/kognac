@@ -311,7 +311,7 @@ void Kognac::compressGraph(const int nthreads, const int nReadingThreads) {
         Utils::getUsedMemory();
 
     //The dictionary
-    zstr::ifstream in(outputPath + DIR_SEP + string("dict.gz"), ios_base::binary);
+    zstr::ifstream in(outputPath + DIR_SEP + string("dict.gz"), ios_base::in);
     //Create a temporary directory where to store the partially compr. files
     string workingDir = outputPath + DIR_SEP + "tmp_graph_compr";
     Utils::create_directories(workingDir);
