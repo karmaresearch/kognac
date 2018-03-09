@@ -246,13 +246,35 @@ bool Utils::isDirectory(string dirname) {
 #endif
 }
 bool Utils::isFile(string dirname) {
-    struct stat st;
-    if(stat(dirname.c_str(), &st) == 0)
-        if((st.st_mode & S_IFREG) != 0)
-            return true;
-    return false;
+#if defined(_WIN32)
+	DWORD d = GetFileAttributes(dirname.c_str());
+	if (!(d & FILE_ATTRIBUTE_DIRECTORY)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+#else
+	struct stat st;
+	if (stat(dirname.c_str(), &st) == 0)
+		if ((st.st_mode & S_IFREG) != 0)
+			return true;
+	return false;
+#endif
 }
 uint64_t Utils::fileSize(string file) {
+#if defined(_WIN32)
+	LARGE_INTEGER size;
+	HANDLE fd = CreateFile(file.c_str(), GENERIC_READ,
+		FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+		FILE_ATTRIBUTE_NORMAL, NULL);
+	bool res = GetFileSizeEx(fd, &size);
+	CloseHandle(fd);
+	if (!res) {
+		throw 10;
+	}
+	return size.QuadPart;
+#else
     struct stat stat_buf;
     int rc = stat(file.c_str(), &stat_buf);
     if (rc == 0) {
@@ -260,6 +282,7 @@ uint64_t Utils::fileSize(string file) {
     } else {
         throw 10;
     }
+#endif
 }
 void Utils::create_directories(string newdir) {
     string pd = parentDir(newdir);
