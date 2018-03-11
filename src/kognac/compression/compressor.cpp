@@ -1405,8 +1405,8 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
         / (1 + parallelProcesses) / 3;
     //Divided numer hash tables
     const unsigned int sizeHashTable = std::min((int64_t)maxSize,
-            (int64_t)std::max((unsigned int)1000000,
-                (unsigned int)(memForHashTables / sizeof(int64_t))));
+            std::max((int64_t)1000000,
+                (int64_t)(memForHashTables / sizeof(int64_t))));
 
     LOG(DEBUGL) << "Size hash table " << sizeHashTable;
 

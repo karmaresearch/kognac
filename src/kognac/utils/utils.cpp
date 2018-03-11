@@ -1120,10 +1120,19 @@ double Utils::get_max_mem() {
     memory = (double)rusage.ru_maxrss / 1024;
 #endif
 #if defined(_WIN32)
-    HANDLE hProcess;
-    PROCESS_MEMORY_COUNTERS pmc;
+    PROCESS_MEMORY_COUNTERS_EX pmc;
+	pmc.cb = sizeof(pmc);
     bool result = GetProcessMemoryInfo(GetCurrentProcess(),
-            &pmc, sizeof(PPROCESS_MEMORY_COUNTERS));
+		(PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(PROCESS_MEMORY_COUNTERS_EX));
+	if (!result) {
+		DWORD errorMessageID = ::GetLastError();
+		LPSTR messageBuffer = nullptr;
+		size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+			NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+		std::string message(messageBuffer, size);
+		LocalFree(messageBuffer);
+		LOG(ERRORL) << "Error  getting peak memory " << message;
+	}
     memory = pmc.PeakWorkingSetSize / 1024 / 1024;
 #endif
     return memory;
