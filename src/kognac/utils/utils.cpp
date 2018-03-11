@@ -397,11 +397,33 @@ void Utils::resizeFile(string file, uint64_t newsize) {
         throw 10;
     }
     uint64_t oldsize = Utils::fileSize(file);
-    if (oldsize != newsize) {
+	if (oldsize != newsize) {
 #if defined(_WIN32)
-        int fd = _sopen_s(&fd, file.c_str(), _O_RDWR | _O_CREAT, _SH_DENYNO,
-                _S_IREAD | _S_IWRITE);
-        _chsize(fd, newsize);
+		HANDLE fd = CreateFile(file.c_str(),
+			GENERIC_WRITE,
+			FILE_SHARE_WRITE,
+			NULL,
+			CREATE_NEW | OPEN_EXISTING,
+			FILE_ATTRIBUTE_NORMAL,
+			NULL);
+		LARGE_INTEGER liSize;
+		liSize.QuadPart = newsize;
+		int res = SetFilePointerEx(fd, liSize, NULL, FILE_BEGIN);
+		if (res == 0) {
+			LOG(ERRORL) << "Wronged setting the file pointer of " << file;
+		}
+		res = SetEndOfFile(fd);
+		if (res == 0) {
+			DWORD errorMessageID = ::GetLastError();
+			LPSTR messageBuffer = nullptr;
+			size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+				NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+			std::string message(messageBuffer, size);
+			LocalFree(messageBuffer);
+			LOG(ERRORL) << "Error truncating the file " << file << " " << message;
+			abort();
+		}
+		CloseHandle(fd);
 #else
         truncate(file.c_str(), newsize);
 #endif
