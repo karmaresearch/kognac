@@ -47,16 +47,10 @@ file(GLOB kognac_SRC
     "src/kognac/schema/*.cpp"
     "src/kognac/sorting/*.cpp"
     "src/kognac/utils/*.cpp"
-)
-file(GLOB kognac_log_SRC
     "src/kognac/log/*.cpp"
 )
 
-#Create both a library and the executable program
-add_library(kognac-log SHARED ${kognac_log_SRC})
-add_library(kognac STATIC ${kognac_SRC})
-add_executable(kognac_exec src/launcher/main.cpp)
-
+message("CMAKE_CXX_COMPILER_ID = ${CMAKE_CXX_COMPILER_ID}")
 #Set compiler options
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")
@@ -64,8 +58,12 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" ST
   set(COMPILE_FLAGS "-c -fPIC -std=c++11")
 endif()
 
-set_target_properties(kognac-log PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS}")
-set_target_properties(kognac PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS}")
+#Create both a library and the executable program
+add_library(kognac-o OBJECT ${kognac_SRC})
+add_library(kognac SHARED $<TARGET_OBJECTS:kognac-o>)
+add_executable(kognac_exec src/launcher/main.cpp)
+
+set_target_properties(kognac-o PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS}")
 set_target_properties(kognac_exec PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS}")
 
 #ZLIB
@@ -92,7 +90,7 @@ IF (${sparsehash} STREQUAL "sparsehash-NOTFOUND")
     )
     ExternalProject_Get_Property(git-sparsehash SOURCE_DIR)
     include_directories(${SOURCE_DIR}/src/)
-    add_dependencies(kognac git-sparsehash)
+    add_dependencies(kognac-o git-sparsehash)
 ELSE()
     message("Found sparsehash")
 ENDIF()
@@ -116,7 +114,7 @@ IF ((${lz4h} STREQUAL "lz4h-NOTFOUND"))
     add_library(lz4 STATIC IMPORTED)
     set_property(TARGET lz4 PROPERTY IMPORTED_LOCATION external/lz4/lib/liblz4.a)
     add_dependencies(lz4 git-lz4)
-    add_dependencies(kognac lz4)
+    add_dependencies(kognac-o lz4)
 ELSE()
     include_directories(lz4h)
     message("Found LZ4")
@@ -124,9 +122,10 @@ ENDIF()
 
 #standard include
 include_directories(include/)
-TARGET_LINK_LIBRARIES(kognac lz4 kognac-log)
-TARGET_LINK_LIBRARIES(kognac_exec kognac kognac-log)
-target_link_libraries(kognac_exec "${ZLIB_LIBRARIES}")
+TARGET_LINK_LIBRARIES(kognac lz4)
+TARGET_LINK_LIBRARIES(kognac "${ZLIB_LIBRARIES}")
+TARGET_LINK_LIBRARIES(kognac_exec kognac lz4)
+TARGET_LINK_LIBRARIES(kognac_exec "${ZLIB_LIBRARIES}")
 if (CMAKE_THREAD_LIBS_INIT)
-    target_link_libraries(kognac_exec "${CMAKE_THREAD_LIBS_INIT}")
+    TARGET_LINK_LIBRARIES(kognac_exec "${CMAKE_THREAD_LIBS_INIT}")
 endif()
