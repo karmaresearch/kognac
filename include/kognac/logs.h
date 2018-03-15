@@ -1,6 +1,8 @@
 #ifndef _LOG_H
 #define _LOG_H
 
+#include <kognac/consts.h>
+
 #include <fstream>
 #include <thread>
 #include <sstream>
@@ -34,24 +36,11 @@ class Logger {
                 }
         };
 
-#if defined(_WIN32)
-    public:
-#if LOG_SHARED_LIB
-        __declspec(dllexport) static int minLevel;
-        __declspec(dllexport) static std::mutex mutex;
-        __declspec(dllexport) static std::unique_ptr<FileLogger> file;
-#else
-        __declspec(dllimport) static int minLevel;
-        __declspec(dllimport) static std::mutex mutex;
-        __declspec(dllimport) static std::unique_ptr<FileLogger> file;
-#endif
-    private:
-#else
-        static int minLevel;
-        static std::mutex mutex;
-        static std::unique_ptr<FileLogger> file;
-#endif
+	KLIBEXP static int minLevel;
+	KLIBEXP static std::mutex mutex;
+	KLIBEXP static std::unique_ptr<FileLogger> file;
 
+    private:
         const int level;
 
         std::string toprint;

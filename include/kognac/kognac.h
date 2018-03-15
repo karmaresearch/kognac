@@ -311,22 +311,22 @@ private:
                            LZ4Writer *finalWriter);
 
 public:
-    Kognac(string input, string output, const int maxPatternLength);
+    KLIBEXP Kognac(string input, string output, const int maxPatternLength);
 
-    void sample(const int sampleMethod, const int sampleArg1,
+    KLIBEXP void sample(const int sampleMethod, const int sampleArg1,
                 const int sampleArg2, const int parallelThreads,
                 const int maxConcurrentThreads);
 
-    void compress(const int nthreads,
+    KLIBEXP void compress(const int nthreads,
                   const int nReadingThreads,
                   const bool useFP,
                   const int minSupport,
                   const bool serializeTaxonomy,
                   const int64_t startCounter = 0);
 
-    void compressGraph(const int nthreads, const int nReadingThreads);
+    KLIBEXP void compressGraph(const int nthreads, const int nReadingThreads);
 
     static void sortCompressedGraph(string inputFile, string outputFile, int v = 0);
 
-    ~Kognac();
+    KLIBEXP ~Kognac();
 };

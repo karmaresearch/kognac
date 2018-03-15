@@ -6,6 +6,7 @@ private
 *.vs*
 *.obj
 *.tlog
+*.exe
 *.pdb
 *.exp
 *.dll

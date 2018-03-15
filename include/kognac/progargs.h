@@ -1,6 +1,7 @@
 #ifndef _PROGARGS_H
 #define _PROGARGS_H
 
+#include <kognac/consts.h>
 #include <kognac/logs.h>
 
 #include <vector>
@@ -35,7 +36,7 @@ class ProgramArgs {
                 template<class K>
                     bool check(string s);
                 template<class K>
-                    void convert(string s, K &v);
+                    KLIBEXP void convert(string s, K &v);
             public:
                 bool isRequired() {
                     return required;
@@ -254,7 +255,7 @@ class ProgramArgs {
                 }
             }
         }
-        void check() {
+        KLIBEXP void check() {
             for(auto pair : names) {
                 if (pair.second->isRequired() && !pair.second->isSet()) {
                     LOG(ERRORL) << "Param " << pair.second->getName() << " is required but no set";

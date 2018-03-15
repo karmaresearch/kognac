@@ -27,7 +27,14 @@
 #if defined(_WIN32)
 #define DIR_SEP std::string("\\")
 #define CDIR_SEP '\\'
+
+#if LOG_SHARED_LIB
+#define KLIBEXP __declspec(dllexport)
 #else
+#define KLIBEXP __declspec(dllimport)
+#endif
+#else
+#define KLIBEXP
 #define DIR_SEP string("/")
 #define CDIR_SEP '/'
 #endif
