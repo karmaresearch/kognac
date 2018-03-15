@@ -381,8 +381,12 @@ string Utils::filename(string path) {
     }
 }
 bool Utils::exists(std::string file) {
-    struct stat buffer;
+#if defined(_WIN32)
+	return isFile(file) || isDirectory(file);
+#else
+	struct stat buffer;
     return (stat(file.c_str(), &buffer) == 0);
+#endif
 }
 bool Utils::isEmpty(string dir) {
     if (!Utils::isDirectory(dir)) {

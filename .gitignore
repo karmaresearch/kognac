@@ -3,3 +3,16 @@ build/
 build_debug/
 .DS_Store
 private
+*.vs*
+*.obj
+*.tlog
+*.pdb
+*.exp
+*.dll
+*.ipdb
+*.lib
+*.user
+*.log
+*.ilk
+*.iobj
+*.idb
