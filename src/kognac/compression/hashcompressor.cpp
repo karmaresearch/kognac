@@ -155,7 +155,7 @@ void HashCompressor::mergeFiles(string tmpPrefixFile, int nInputFiles, string ou
     delete[] previousTerm;
 }
 
-void HashCompressor::inmemorysort(string **inputFiles, int dictID, int nFiles, string outputFile, int &noutputFiles, const int64_t maxSizeToSort) {
+void HashCompressor::inmemorysort(string **inputFiles, int dictID, int nFiles, string outputFile, int &noutputFiles, const uint64_t maxSizeToSort) {
 
     noutputFiles = 0;
     StringCollection supportCollection(BLOCK_SUPPORT_BUFFER_COMPR);

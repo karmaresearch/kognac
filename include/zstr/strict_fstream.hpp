@@ -86,9 +86,11 @@ struct static_method_holder
     {
         if (s_p->fail())
         {
+			char strout[100];
+			strerror_s(strout, 100, errno);
             throw Exception(std::string("strict_fstream: open('")
                             + filename + "'," + mode_to_string(mode) + "): open failed: "
-                            + std::strerror(errno));
+                            + strout);
         }
     }
     static void check_peek(std::istream * is_p, const std::string& filename, std::ios_base::openmode mode)
@@ -102,9 +104,11 @@ struct static_method_holder
         catch (std::ios_base::failure e) {}
         if (peek_failed)
         {
+			char strout[100];
+			strerror_s(strout, 100, errno);
             throw Exception(std::string("strict_fstream: open('")
                             + filename + "'," + mode_to_string(mode) + "): peek failed: "
-                            + std::strerror(errno));
+                            + strout);
         }
         is_p->clear();
     }

@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <iostream>
 #include <mutex>
+#include <time.h>
 
 #define TRACEL 0
 #define DEBUGL 1
@@ -73,7 +74,8 @@ class Logger {
         Logger& operator << (const char *msg) {
             if (first) {
                 auto t = std::time(NULL);
-                auto localtm = *std::localtime(&t);
+				struct tm localtm;
+				localtime_s(&localtm, &t);
                 std::stringstream ss;
                 char tmpbuf[128];
                 if(0 < strftime(tmpbuf, sizeof(tmpbuf), "%Y-%m-%d %H:%M:%S", &localtm)) {

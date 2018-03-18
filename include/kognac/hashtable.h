@@ -52,7 +52,7 @@ public:
     }
 
     int64_t get(const string &el) {
-        size_t idx = abs((int64_t)(hash(el.c_str(), el.size()) % size));
+        size_t idx = abs((int64_t)(hash(el.c_str(), static_cast<int>(el.size())) % size));
         return table[idx];
     }
 
@@ -67,7 +67,7 @@ public:
     }
 
     int64_t getThreshold(size_t highestN) {
-        return Utils::quickSelect(table, size, highestN);
+        return Utils::quickSelect(table, static_cast<int>(size), static_cast<int>(highestN));
     }
 
     int64_t getTotalCount() {

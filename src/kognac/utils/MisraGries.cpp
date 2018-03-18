@@ -64,8 +64,8 @@ void MG :: add (const char *elem, unsigned int length) {
             addElem(elem, length);
         } else {
             //Decrease all counters
-            int posFirstElementGreaterThanOne = idxCounterVector.size();
-            for (int idxVector = idxCounterVector.size() - 1;
+            size_t posFirstElementGreaterThanOne = idxCounterVector.size();
+            for (int idxVector = static_cast<int>(idxCounterVector.size()) - 1;
                     idxVector >= 0 &&
                     counterVector[idxCounterVector[idxVector]].first > 0;
                     idxVector--) {
@@ -120,7 +120,7 @@ const StringToNumberMap MG :: getHeapElements (void) const {
 
 std::vector<string> MG::getPositiveTerms() const {
     std::vector<string> results;
-    for (int idxVector = idxCounterVector.size() - 1;
+    for (int idxVector = static_cast<int>(idxCounterVector.size()) - 1;
             idxVector >= 0 &&
             counterVector[idxCounterVector[idxVector]].first > 0;
             idxVector--) {
@@ -145,14 +145,14 @@ void MG :: merge (StringToNumberMap & heap) {
 
     // Get the minimum counter value of the current heap (heap[0])
     std::pair<string, uint64_t> min = *min_element(my_heap.begin(), my_heap.end(), pairCompare);
-    unsigned min_counter = min.second;
+    uint64_t min_counter = min.second;
 
     for (; it != heap.end(); it ++) {
         while (it->second > 0) {
             if (my_heap.find(it->first) == my_heap.end()) {
                 StringToNumberMap::iterator myself = my_heap.begin();
                 bool flag = false;
-                uint64_t m = min_counter < (it->second) ? min_counter : it->second;
+                uint64_t m = static_cast<int64_t>(min_counter) < (it->second) ? min_counter : it->second;
 
                 string toRemove;
                 for (; myself != my_heap.end(); myself++) {
@@ -194,7 +194,7 @@ void MG :: merge (StringToNumberMap & heap) {
             ++itr) {
         counterVector[i].first = itr->second;
         memcpy(stringPool + i * STR_POOL_EL_SIZE, itr->first.c_str(), itr->first.size());
-        counterVector[i].second = make_pair(itr->first.size(), stringPool + i * STR_POOL_EL_SIZE);
+        counterVector[i].second = make_pair(static_cast<unsigned short>(itr->first.size()), stringPool + i * STR_POOL_EL_SIZE);
         lookupMap.insert(make_pair(counterVector[i].second, &counterVector[i].first));
         i++;
     }

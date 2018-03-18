@@ -43,8 +43,8 @@ protected:
 
     struct BlockToRead {
         char *buffer;
-        int sizebuffer;
-        int pivot;
+        size_t sizebuffer;
+        size_t pivot;
     };
 
     std::mutex m_diskbufferpool;

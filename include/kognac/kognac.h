@@ -46,7 +46,7 @@ struct Kognac_TextClassID {
     }
 
     void writeTo(LZ4Writer *writer) const {
-        writer->writeString(term, size);
+        writer->writeString(term, static_cast<int>(size));
         writer->writeLong(classID);
         writer->writeLong(classID2);
         //writer->writeLong(pred);
@@ -59,7 +59,7 @@ struct Kognac_TextClassID {
         return false;
     }
 
-    bool eqText(const char* t, const int s) const {
+    bool eqText(const char* t, const size_t s) const {
         if (size == s) {
             return memcmp(t, term, size) == 0;
         }

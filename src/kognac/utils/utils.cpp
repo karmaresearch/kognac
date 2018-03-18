@@ -103,7 +103,7 @@ vector<string> Utils::getSubdirs(string dirname) {
     vector<string> files;
 #if defined(_WIN32)
     WIN32_FIND_DATA ffd;
-    TCHAR szDir[MAX_PATH];
+    //TCHAR szDir[MAX_PATH];
     HANDLE hFind = INVALID_HANDLE_VALUE;
     DWORD dwError = 0;
 	std::string toSearch = dirname + DIR_SEP + "*";
@@ -140,7 +140,7 @@ vector<string> Utils::getFiles(string dirname, bool ignoreExtension) {
     std::set<string> sfiles;
 #if defined(_WIN32)
     WIN32_FIND_DATA ffd;
-    TCHAR szDir[MAX_PATH];
+    //TCHAR szDir[MAX_PATH];
     HANDLE hFind = INVALID_HANDLE_VALUE;
     DWORD dwError = 0;
 	std::string toSearch = dirname + DIR_SEP + "*";
@@ -436,7 +436,7 @@ void Utils::resizeFile(string file, uint64_t newsize) {
 /**** END FILE UTILS ****/
 /**** START STRING UTILS ****/
 bool Utils::starts_with(const string s, const string prefix) {
-    int m = min(s.size(), prefix.size());
+    size_t m = min(s.size(), prefix.size());
     return strncmp(s.c_str(), prefix.c_str(), m) == 0;
 }
 bool Utils::ends_with(const string s, const string suffix) {
@@ -898,7 +898,7 @@ int Utils::encode_vlong2(char* buffer, int offset, int64_t n) {
     }
 
     if (n < 128) { // One byte is enough
-        buffer[offset++] = n;
+        buffer[offset++] = static_cast<char>(n);
         return offset;
     } else {
         int bytesToStore = 64 - numberOfLeadingZeros((uint64_t)n);
@@ -919,7 +919,7 @@ uint16_t Utils::encode_vlong2(char* buffer, int64_t n) {
     }
 
     if (n < 128) { // One byte is enough
-        buffer[0] = n;
+        buffer[0] = static_cast<char>(n);
         return 1;
     } else {
         int bytesToStore = 64 - numberOfLeadingZeros((uint64_t)n);
@@ -938,7 +938,7 @@ void Utils::encode_vlong2_fixedLen(char* buffer, int64_t n, const uint8_t len) {
     char *beginbuffer = buffer;
 
     if (n < 128) { // One byte is enough
-        *buffer = n;
+        *buffer = static_cast<char>(n);
     } else {
         int neededBits = 64 - numberOfLeadingZeros((uint64_t)n);
         while (neededBits > 7) {
@@ -950,7 +950,7 @@ void Utils::encode_vlong2_fixedLen(char* buffer, int64_t n, const uint8_t len) {
         *buffer = n & 127;
     }
     buffer++;
-    int remBytes = len - (buffer - beginbuffer);
+    int64_t remBytes = len - (buffer - beginbuffer);
     while (--remBytes >= 0) {
         *buffer = (char)128;
         buffer++;
@@ -1137,7 +1137,7 @@ double Utils::get_max_mem() {
 		LocalFree(messageBuffer);
 		LOG(ERRORL) << "Error  getting peak memory " << message;
 	}
-    memory = pmc.PeakWorkingSetSize / 1024 / 1024;
+    memory = static_cast<double>(pmc.PeakWorkingSetSize / 1024 / 1024);
 #endif
     return memory;
 }

@@ -103,7 +103,7 @@ bool DiskLZ4Reader::availableDiskBuffer() {
 }
 
 bool DiskLZ4Reader::areNewBuffers(const int id) {
-    return !compressedbuffers[id].empty() || readBlocks[id] >= beginningBlocks[id].size();
+    return !compressedbuffers[id].empty() || readBlocks[id] >= static_cast<int>(beginningBlocks[id].size());
 }
 
 void DiskLZ4Reader::run() {
@@ -145,7 +145,7 @@ void DiskLZ4Reader::run() {
         int firstPotentialPart = -1;
         int skipped = 0;
         for(int i = 0; i < files.size(); ++i) {
-            if (beginningBlocks[currentFileIdx].size() <= readBlocks[currentFileIdx]) {
+            if (static_cast<int>(beginningBlocks[currentFileIdx].size()) <= readBlocks[currentFileIdx]) {
                 skipped++;
                 currentFileIdx = (currentFileIdx + 1) % files.size();
             } else if (sCompressedbuffers[currentFileIdx] >= nbuffersPerFile) {
@@ -169,7 +169,7 @@ void DiskLZ4Reader::run() {
         }
 
         int64_t blocknumber = readBlocks[currentFileIdx];
-        assert(blocknumber < beginningBlocks[currentFileIdx].size());
+        assert(blocknumber < static_cast<int>(beginningBlocks[currentFileIdx].size()));
         int64_t position = beginningBlocks[currentFileIdx][blocknumber];
         //LOG(DEBUGL) << "Read block " << blocknumber << " for file " << currentFileIdx << " at position " << position;
 
@@ -274,12 +274,12 @@ bool DiskLZ4Reader::uncompressBuffer(const int id) {
     int uncompressedLen = -1;
     if (pivot + 21 <= sizecomprbuffer) {
         token = comprb[pivot + 8] & 0xFF;
-        compressedLen = Utils::decode_intLE(comprb, pivot + 9);
-        uncompressedLen = Utils::decode_intLE(comprb, pivot + 13);
+        compressedLen = Utils::decode_intLE(comprb, static_cast<int>(pivot + 9));
+        uncompressedLen = Utils::decode_intLE(comprb, static_cast<int>(pivot + 13));
         pivot += 21;
     } else {
         char header[21];
-        int remsize = sizecomprbuffer - pivot;
+        size_t remsize = sizecomprbuffer - pivot;
         memcpy(header, comprb + pivot, remsize);
 
         if (!getNewCompressedBuffer(lk, id))
@@ -309,7 +309,7 @@ bool DiskLZ4Reader::uncompressBuffer(const int id) {
         pivot += compressedLen;
     } else {
         tmpbuffer = std::unique_ptr<char[]>(new char[SIZE_COMPRESSED_SEG]);
-        int copiedSize = sizecomprbuffer - pivot;
+        size_t copiedSize = sizecomprbuffer - pivot;
         memcpy(tmpbuffer.get(), comprb + pivot, copiedSize);
 
         //Get a new buffer
@@ -370,7 +370,7 @@ int64_t DiskLZ4Reader::readLong(const int id) {
         return n;
     } else {
         char header[8];
-        int copiedBytes = files[id].sizebuffer - files[id].pivot;
+        size_t copiedBytes = files[id].sizebuffer - files[id].pivot;
         memcpy(header, files[id].buffer + files[id].pivot, copiedBytes);
 #ifdef DEBUG
         bool resp = uncompressBuffer(id);
@@ -397,13 +397,13 @@ int64_t DiskLZ4Reader::readVLong(const int id) {
 }
 
 const char *DiskLZ4Reader::readString(const int id, int &size) {
-    size = readVLong(id);
+    size = static_cast<int>(readVLong(id));
 
     if (files[id].pivot + size <= files[id].sizebuffer) {
         memcpy(supportstringbuffers[id].get(), files[id].buffer + files[id].pivot, size);
         files[id].pivot += size;
     } else {
-        int remSize = files[id].sizebuffer - files[id].pivot;
+        size_t remSize = files[id].sizebuffer - files[id].pivot;
         memcpy(supportstringbuffers[id].get(), files[id].buffer + files[id].pivot, remSize);
 #ifdef DEBUG
         bool resp = uncompressBuffer(id);

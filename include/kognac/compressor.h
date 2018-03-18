@@ -75,7 +75,7 @@ struct ParamsExtractCommonTermProcedure {
     int maxMapSize;
     int idProcess;
     int parallelProcesses;
-    int thresholdForUncommon;
+    uint64_t thresholdForUncommon;
     bool copyHashes;
     bool ignorePredicates;
 };
@@ -215,13 +215,13 @@ struct SimplifiedAnnotatedTerm {
         if (size > 10 && memcmp(term, "<http://", 8) == 0) {
             const char *endprefix = (const char *) memchr(term + 8, '#', size - 8);
             if (endprefix) {
-                sizeprefix = endprefix - term;
+                sizeprefix = static_cast<int>(endprefix - term);
                 return term;
             } else {
                 //Try to get subdomain structures
                 endprefix = (const char *) memchr(term + 8, '/', size - 8);
                 if (endprefix) {
-                    sizeprefix = endprefix - term;
+                    sizeprefix = static_cast<int>(endprefix - term);
                     return term;
                 } else {
                     sizeprefix = 0;
@@ -545,7 +545,7 @@ private:
                                 const int maxReadingThreads,
                                 const int parallelProcesses,
                                 bool copyHashes,
-                                const unsigned int sizeHashTable,
+                                const uint64_t sizeHashTable,
                                 Hashtable **tables1,
                                 Hashtable **tables2,
                                 Hashtable **tables3,
@@ -553,9 +553,9 @@ private:
                                 GStringToNumberMap *commonTermsMaps,
                                 bool ignorePredicates);
 
-    unsigned int getThresholdForUncommon(
+    uint64_t getThresholdForUncommon(
         const int parallelProcesses,
-        const int sizeHashTable,
+        const uint64_t sizeHashTable,
         const int sampleArg,
         int64_t *distinctValues,
         Hashtable **tables1,
@@ -638,7 +638,7 @@ protected:
                            const int64_t thresholdForUncommon, Hashtable * table1,
                            Hashtable * table2, Hashtable * table3, const int dictPartitions,
                            int64_t & minValueToBeAdded,
-                           const int64_t maxMapSize, GStringToNumberMap * map,
+                           const uint64_t maxMapSize, GStringToNumberMap * map,
                            std::priority_queue<std::pair<string, int64_t>,
                            std::vector<std::pair<string, int64_t> >, priorityQueueOrder> &queue);
 
@@ -682,7 +682,7 @@ protected:
                         DiskLZ4Writer *writer,
                         const int idWriter,
                         string tmpfileprefix,
-                        const int64_t maxMemory);
+                        const uint64_t maxMemory);
 
     static void immemorysort(string **inputFiles,
                              int maxReadingThreads,
@@ -697,7 +697,7 @@ protected:
                                  MultiDiskLZ4Writer *sampleWriter,
                                  const int idReader,
                                  int idx,
-                                 const int64_t maxMemPerThread,
+                                 const uint64_t maxMemPerThread,
                                  bool removeDuplicates,
                                  bool sample);
 

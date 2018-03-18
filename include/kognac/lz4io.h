@@ -56,7 +56,7 @@ public:
 
         uncompressedBufferLen = 0;
         memset(compressedBuffer, 0, sizeof(char) * SIZE_COMPRESSED_SEG);
-        strcpy(compressedBuffer, "LZOBLOCK");
+        strcpy_s(compressedBuffer, SIZE_COMPRESSED_SEG, "LZOBLOCK");
     }
 
     void writeByte(char i);
@@ -65,7 +65,7 @@ public:
 
     void writeShort(short n);
 
-    void writeVLong(int64_t n);
+    void writeVLong(uint64_t n);
 
 //  void writeString(const char *el);
 
@@ -167,7 +167,7 @@ public:
     char parseByte();
 
     const char *parseString(int &size) {
-        size = parseVLong();
+        size = static_cast<int>(parseVLong());
 
         if (currentOffset + size <= uncompressedBufferLen) {
             memcpy(supportBuffer, uncompressedBuffer + currentOffset, size);

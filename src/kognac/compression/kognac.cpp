@@ -118,7 +118,7 @@ void Kognac::compress(const int nthreads,
         std::vector<uint64_t> hashedTerms;
         for (auto &cl : allClasses) {
             uint64_t hashClass = Hashes::murmur3_56(cl.c_str(),
-                    cl.size());
+                    static_cast<int>(cl.size()));
             hashedTerms.push_back(hashClass);
             if (!classesWithFrequency.count(hashClass)) {
                 classesWithFrequency.insert(make_pair(hashClass, 0));
@@ -185,7 +185,7 @@ void Kognac::loadDictionaryMap(std::istream &in,
         CompressedByteArrayToNumberMap &map,
         StringCollection &supportDictionaryMap) {
 
-    const uint64_t maxMem = Utils::getSystemMemory() * 0.8;
+    const uint64_t maxMem = static_cast<uint64_t>(Utils::getSystemMemory() * 0.8);
     LOG(DEBUGL) << "Max memory to use during the loading: " <<
         maxMem;
     char supportTerm[MAX_TERM_SIZE];
@@ -198,12 +198,12 @@ void Kognac::loadDictionaryMap(std::istream &in,
         stream >> sizeString;
         stream.get(); //blank space
         stream.read(supportTerm + 2, sizeString);
-        Utils::encode_short(supportTerm, sizeString);
+        Utils::encode_short(supportTerm, static_cast<int>(sizeString));
         const char* term = supportDictionaryMap.addNew(supportTerm,
-                sizeString + 2);
+			static_cast<int>(sizeString + 2));
         map.insert(make_pair(term, idTerm));
 
-        int64_t memEstimate = supportDictionaryMap.occupiedBytes() +
+        uint64_t memEstimate = supportDictionaryMap.occupiedBytes() +
             map.size() * 20;
         if (counter++ % 1000000 == 0) {
             LOG(DEBUGL) << "Added " << (counter - 1) <<
@@ -431,7 +431,7 @@ void Kognac::sortCompressedGraph(string inputDir, string outputFile, int v) {
         zstr::ofstream out(outputFile, ios_base::binary);
 
         //Sort and remove the duplicates
-        int64_t maxTriplesPerSegment = (int64_t)Utils::getSystemMemory() * 0.50 / sizeof(Triple);
+        uint64_t maxTriplesPerSegment = static_cast<uint64_t>(Utils::getSystemMemory() * 0.50 / sizeof(Triple));
         std::vector<Triple> inmemorytriples;
         std::vector<string> outputFiles;
         int id = 0;
@@ -507,7 +507,7 @@ void Kognac::sortCompressedGraph(string inputDir, string outputFile, int v) {
             while (!merger.isEmpty()) {
                 Triple t = merger.get();
                 if (t.s != prevs || t.p != prevp || t.o != prevo) {
-                    sprintf(tmpString, "%lld %lld %lld", t.s, t.p, t.o);
+                    sprintf_s(tmpString, 1024, "%lld %lld %lld", t.s, t.p, t.o);
                     out << tmpString << '\n';
                     countTriples++;
                 }
@@ -525,7 +525,7 @@ void Kognac::sortCompressedGraph(string inputDir, string outputFile, int v) {
             for (std::vector<Triple>::iterator itr = inmemorytriples.begin();
                     itr != inmemorytriples.end(); ++itr) {
                 if (itr->s != prevs || itr->p != prevp || itr->o != prevo) {
-                    sprintf(tmpString, "%lld %lld %lld", itr->s, itr->p, itr->o);
+                    sprintf_s(tmpString, 1024, "%lld %lld %lld", itr->s, itr->p, itr->o);
                     out << tmpString << '\n';
                     countTriples++;
                 }
@@ -543,8 +543,8 @@ void Kognac::sortTermsByClassId(string inputdir, string outputdir) {
     {
         std::vector<string> files = Utils::getFiles(inputdir);
         StringCollection col(10 * 1024 * 1024);
-        const int64_t maxMem = std::max((int64_t)(10 * 1024 * 1024),
-                (int64_t) (Utils::getSystemMemory() * 0.7));
+        const uint64_t maxMem = std::max((uint64_t)(10 * 1024 * 1024),
+                (uint64_t) (Utils::getSystemMemory() * 0.7));
         int idx = 0;
         std::vector<Kognac_TextClassID> elements;
         for (std::vector<string>::iterator itr = files.begin();
@@ -556,7 +556,7 @@ void Kognac::sortTermsByClassId(string inputdir, string outputdir) {
                 el.readFrom(&reader);
 
                 //Copy it in main mem.
-                const char *term = col.addNew(el.term, el.size);
+                const char *term = col.addNew(el.term, static_cast<int>(el.size));
                 el.term = term;
                 elements.push_back(el);
 
@@ -742,7 +742,7 @@ void Kognac::pickSmallestClassIDPart(string inputFile, const bool useFP) {
 				else if (!el.eqText(supportBuffer, sSupportBuffer)) {
 					Kognac_TextClassID lastEl;
 					lastEl.term = supportBuffer;
-					lastEl.size = sSupportBuffer;
+					lastEl.size = static_cast<int>(sSupportBuffer);
 					lastEl.classID = minClass;
 					lastEl.classID2 = 0;
 					lastEl.writeTo(&writer);
@@ -760,7 +760,7 @@ void Kognac::pickSmallestClassIDPart(string inputFile, const bool useFP) {
 			//write last element
 			Kognac_TextClassID lastEl;
 			lastEl.term = supportBuffer;
-			lastEl.size = sSupportBuffer;
+			lastEl.size = static_cast<int>(sSupportBuffer);
 			lastEl.classID = minClass;
 			lastEl.classID2 = 0;
 			lastEl.writeTo(&writer);
@@ -784,7 +784,7 @@ void Kognac::pickSmallestClassIDPart(string inputFile, const bool useFP) {
 				else if (!el.eqText(supportBuffer, sSupportBuffer)) {
 					Kognac_TextClassID lastEl;
 					lastEl.term = supportBuffer;
-					lastEl.size = sSupportBuffer;
+					lastEl.size = static_cast<int>(sSupportBuffer);
 					lastEl.classID = minClass;
 					lastEl.classID2 = 0;
 					lastEl.writeTo(&writer);
@@ -801,7 +801,7 @@ void Kognac::pickSmallestClassIDPart(string inputFile, const bool useFP) {
 			//write last element
 			Kognac_TextClassID lastEl;
 			lastEl.term = supportBuffer;
-			lastEl.size = sSupportBuffer;
+			lastEl.size = static_cast<int>(sSupportBuffer);
 			lastEl.classID = minClass;
 			lastEl.classID2 = 0;
 			lastEl.writeTo(&writer);
@@ -830,7 +830,7 @@ void Kognac::mergeAllTermsWithClassIDsPart(std::vector<string> inputFiles) {
                         file1, file2);
 
             char supportBuffer[MAX_TERM_SIZE + 2];
-            int sizeSupportBuffer = 0;
+            size_t sizeSupportBuffer = 0;
             int64_t classID = 0, classID2 = 0;
 
             while (!merger.isEmpty()) {
@@ -942,9 +942,9 @@ void Kognac::assignIdsToMostPopularTerms(StringCollection & col,
 
         //Copy it in the hashmap
         memcpy(tmpBuffer + 2, itr->first.c_str(), itr->first.size());
-        Utils::encode_short(tmpBuffer, itr->first.size());
+        Utils::encode_short(tmpBuffer, static_cast<int>(itr->first.size()));
         const char* text = col.addNew(tmpBuffer,
-                itr->first.size() + 2);
+			static_cast<int>(itr->first.size() + 2));
         map.insert(make_pair(text, counter));
         counter++;
     }
@@ -1272,7 +1272,7 @@ void Kognac_TermBufferWriter::write(const Kognac_TextClassID & pair) {
             npartitions);
 
     //Add it in the buffer
-    const char* text = stringBuffers[partition]->addNew(pair.term, pair.size);
+    const char* text = stringBuffers[partition]->addNew(pair.term, static_cast<int>(pair.size));
     Kognac_TextClassID newclass;
     newclass.term = text;
     newclass.size = pair.size;

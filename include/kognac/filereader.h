@@ -39,8 +39,8 @@ class ParseException: public exception {
 };
 
 typedef struct FileInfo {
-    int64_t size;
-    int64_t start;
+    uint64_t size;
+    uint64_t start;
     bool splittable;
     string path;
 } FileInfo;
