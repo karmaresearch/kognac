@@ -87,25 +87,25 @@ private:
     void compressAndQueue(const int id);
 
 public:
-    DiskLZ4Writer(string file, int npartitions, int nbuffersPerFile);
+	KLIBEXP DiskLZ4Writer(string file, int npartitions, int nbuffersPerFile);
 
-    void writeByte(const int id, const int value);
+	KLIBEXP void writeByte(const int id, const int value);
 
-    void writeVLong(const int id, const int64_t value);
+	KLIBEXP void writeVLong(const int id, const int64_t value);
 
-    void writeLong(const int id, const int64_t value);
+	KLIBEXP void writeLong(const int id, const int64_t value);
 
-    void writeRawArray(const int id, const char *buffer, const size_t sizebuffer);
+	KLIBEXP void writeRawArray(const int id, const char *buffer, const size_t sizebuffer);
 
-    void writeString(const int id, const char *buffer, const size_t sizebuffer);
+	KLIBEXP void writeString(const int id, const char *buffer, const size_t sizebuffer);
 
-    void writeShort(const int id, const int value);
+	KLIBEXP void writeShort(const int id, const int value);
 
-    void setTerminated(const int id);
+	KLIBEXP void setTerminated(const int id);
 
     virtual void run();
 
-    bool areBlocksToWrite();
+	KLIBEXP bool areBlocksToWrite();
 
     virtual ~DiskLZ4Writer();
 };

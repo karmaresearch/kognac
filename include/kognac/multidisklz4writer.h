@@ -23,15 +23,15 @@ private:
     std::list<int> historyopenedfiles;
 
 public:
-    MultiDiskLZ4Writer(std::vector<string> files,
+	KLIBEXP MultiDiskLZ4Writer(std::vector<string> files,
                        int nbuffersPerFile,
                        int maxopenedstreams);
 
-    void addFileToWrite(int idpart, string file);
+	KLIBEXP void addFileToWrite(int idpart, string file);
 
-    virtual void run();
+	KLIBEXP virtual void run();
 
-    virtual ~MultiDiskLZ4Writer();
+	KLIBEXP virtual ~MultiDiskLZ4Writer();
 };
 
 #endif

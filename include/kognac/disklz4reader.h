@@ -65,21 +65,21 @@ protected:
     std::chrono::duration<double> *time_files;
 
 public:
-    DiskLZ4Reader(string inputfile, int npartitions, int nbuffersPerFile);
+	KLIBEXP DiskLZ4Reader(string inputfile, int npartitions, int nbuffersPerFile);
 
-    DiskLZ4Reader(int npartitions, int nbuffersPerFile);
+	KLIBEXP DiskLZ4Reader(int npartitions, int nbuffersPerFile);
 
-    bool isEOF(const int id);
+	KLIBEXP bool isEOF(const int id);
 
-    int readByte(const int id);
+	KLIBEXP int readByte(const int id);
 
-    int64_t readVLong(const int id);
+	KLIBEXP int64_t readVLong(const int id);
 
-    int64_t readLong(const int id);
+	KLIBEXP int64_t readLong(const int id);
 
-    const char* readString(const int id, int &sizeTerm);
+	KLIBEXP const char* readString(const int id, int &sizeTerm);
 
-    bool availableDiskBuffer();
+	KLIBEXP bool availableDiskBuffer();
 
     virtual bool areNewBuffers(const int id);
 

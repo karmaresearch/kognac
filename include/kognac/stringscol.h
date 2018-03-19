@@ -22,6 +22,8 @@
 #ifndef STRINGSCOL_H_
 #define STRINGSCOL_H_
 
+#include <kognac/consts.h>
+
 #include <vector>
 #include <inttypes.h>
 
@@ -33,7 +35,7 @@ private:
     std::vector<char *> pool;
 
 public:
-    StringCollection(int segmentSize) :
+	KLIBEXP StringCollection(int segmentSize) :
         segmentSize(segmentSize) {
         currentPos = 0;
         currentIdx = 0;
@@ -45,13 +47,13 @@ public:
 
     void deallocate();
 
-    const char *addNew(const char *text, int size);
+	KLIBEXP const char *addNew(const char *text, int size);
 
     int64_t allocatedBytes();
 
     int64_t occupiedBytes();
 
-    ~StringCollection();
+	KLIBEXP ~StringCollection();
 };
 
 #endif /* STRINGSCOL_H_ */
