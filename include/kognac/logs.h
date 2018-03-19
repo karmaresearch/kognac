@@ -37,9 +37,9 @@ class Logger {
                 }
         };
 
-	KLIBEXP static int minLevel;
-	KLIBEXP static std::mutex mutex;
-	KLIBEXP static std::unique_ptr<FileLogger> file;
+        KLIBEXP static int minLevel;
+        KLIBEXP static std::mutex mutex;
+        KLIBEXP static std::unique_ptr<FileLogger> file;
 
     private:
         const int level;
@@ -74,8 +74,12 @@ class Logger {
         Logger& operator << (const char *msg) {
             if (first) {
                 auto t = std::time(NULL);
-				struct tm localtm;
-				localtime_s(&localtm, &t);
+                struct tm localtm;
+#if defined(WIN32)
+                localtime_s(&localtm, &t);
+#else
+                localtime_r(&t, &localtm);
+#endif
                 std::stringstream ss;
                 char tmpbuf[128];
                 if(0 < strftime(tmpbuf, sizeof(tmpbuf), "%Y-%m-%d %H:%M:%S", &localtm)) {

@@ -56,7 +56,11 @@ public:
 
         uncompressedBufferLen = 0;
         memset(compressedBuffer, 0, sizeof(char) * SIZE_COMPRESSED_SEG);
-        strcpy_s(compressedBuffer, SIZE_COMPRESSED_SEG, "LZOBLOCK");
+#if defined(WIN32)
+        strcpy_s(compressedBuffer, strlen("LZOBLOCK") + 1, "LZOBLOCK");
+#else
+        strlcpy(compressedBuffer, "LZOBLOCK", strlen("LZOBLOCK") + 1);
+#endif
     }
 
     void writeByte(char i);
