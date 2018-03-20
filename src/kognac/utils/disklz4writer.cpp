@@ -206,7 +206,7 @@ void DiskLZ4Writer::compressAndQueue(const int id) {
 #if defined(WIN32)
     strcpy_s(buffer, strlen("LZOBLOCK") + 1, "LZOBLOCK");
 #else
-    strlcpy(buffer, "LZOBLOCK", strlen("LZOBLOCK") + 1);
+    strncpy(buffer, "LZOBLOCK", strlen("LZOBLOCK") + 1);
 #endif
     buffer[8] = 32;
 

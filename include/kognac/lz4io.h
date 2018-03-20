@@ -59,7 +59,7 @@ public:
 #if defined(WIN32)
         strcpy_s(compressedBuffer, strlen("LZOBLOCK") + 1, "LZOBLOCK");
 #else
-        strlcpy(compressedBuffer, "LZOBLOCK", strlen("LZOBLOCK") + 1);
+        strncpy(compressedBuffer, "LZOBLOCK", strlen("LZOBLOCK") + 1);
 #endif
     }
 
