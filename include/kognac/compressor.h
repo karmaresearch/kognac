@@ -706,15 +706,15 @@ protected:
     static uint64_t calculateMaxEntriesHashmapCompression();
 
 public:
-    Compressor(string input, string kbPath);
+	KLIBEXP Compressor(string input, string kbPath);
 
-    static void addPermutation(const int permutation, int &output);
+	KLIBEXP static void addPermutation(const int permutation, int &output);
 
-    static void parsePermutationSignature(int signature, int *output);
+	KLIBEXP static void parsePermutationSignature(int signature, int *output);
 
-    uint64_t getEstimatedFrequency(const string & el) const;
+	KLIBEXP uint64_t getEstimatedFrequency(const string & el) const;
 
-    static vector<FileInfo> *splitInputInChunks(const string & input, int nchunks, string prefix = "");
+	KLIBEXP static vector<FileInfo> *splitInputInChunks(const string & input, int nchunks, string prefix = "");
 
     /*void parse(int dictPartitions, int sampleMethod, int sampleArg, int sampleArg2,
                int parallelProcesses, int maxReadingThreads, bool copyHashes,
@@ -724,11 +724,11 @@ public:
               splitUncommonByHash, false, false);
     }*/
 
-    void parse(int dictPartitions, int sampleMethod, int sampleArg, int sampleArg2,
+	KLIBEXP void parse(int dictPartitions, int sampleMethod, int sampleArg, int sampleArg2,
                int parallelProcesses, int maxReadingThreads, bool copyHashes,
                SchemaExtractor * extractor, bool onlySample, bool ignorePredicates);
 
-    virtual void compress(string * permDirs, int nperms, int signaturePerms,
+	KLIBEXP virtual void compress(string * permDirs, int nperms, int signaturePerms,
                           string * dictionaries, int ndicts,
                           int parallelProcesses,
                           int maxReadingThreads,
@@ -754,9 +754,9 @@ public:
         table3 = std::shared_ptr<Hashtable>();
     }
 
-    static std::vector<string> getAllDictFiles(string prefixDict);
+	KLIBEXP static std::vector<string> getAllDictFiles(string prefixDict);
 
-    ~Compressor();
+	KLIBEXP ~Compressor();
 
     //I make it public only for testing purposes
 

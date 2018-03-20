@@ -46,17 +46,17 @@ protected:
     bool readAll(int id);
 
 public:
-    MultiDiskLZ4Reader(int maxNPartitions,
+	KLIBEXP MultiDiskLZ4Reader(int maxNPartitions,
                        int nbuffersPerPartition,
                        int maxopenedstreams);
 
-    void run();
+	KLIBEXP void run();
 
     virtual void start();
 
-    void addInput(int id, std::vector<string> &files);
+	KLIBEXP void addInput(int id, std::vector<string> &files);
 
-    bool areNewBuffers(const int id);
+	KLIBEXP bool areNewBuffers(const int id);
 
     virtual ~MultiDiskLZ4Reader();
 };

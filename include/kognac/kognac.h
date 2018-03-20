@@ -326,7 +326,7 @@ public:
 
     KLIBEXP void compressGraph(const int nthreads, const int nReadingThreads);
 
-    static void sortCompressedGraph(string inputFile, string outputFile, int v = 0);
+	KLIBEXP static void sortCompressedGraph(string inputFile, string outputFile, int v = 0);
 
     KLIBEXP ~Kognac();
 };

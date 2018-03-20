@@ -22,6 +22,8 @@
 #ifndef TRIPLE_H_
 #define TRIPLE_H_
 
+#include <kognac/consts.h>
+
 #include <limits>
 #include <functional>
 
@@ -70,13 +72,13 @@ typedef struct Triple {
         return false;
     }
 
-    void readFrom(LZ4Reader *reader);
+	KLIBEXP void readFrom(LZ4Reader *reader);
 
-    void readFrom(int part, MultiDiskLZ4Reader *reader);
+	KLIBEXP void readFrom(int part, MultiDiskLZ4Reader *reader);
 
-    void writeTo(LZ4Writer *writer);
+	KLIBEXP void writeTo(LZ4Writer *writer);
 
-    void writeTo(int part, MultiDiskLZ4Writer *writer);
+	KLIBEXP void writeTo(int part, MultiDiskLZ4Writer *writer);
 
     void toTriple(Triple &t) {
         t.s = s;
