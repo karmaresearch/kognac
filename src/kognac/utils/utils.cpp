@@ -1185,7 +1185,7 @@ uint64_t Utils::getUsedMemory() {
     FILE* fp = NULL;
     if ( (fp = fopen( "/proc/self/statm", "r" )) == NULL )
         return (size_t)0L; /* Can't open? */
-    if ( fscanf( fp, "%*s%ld", &rss ) != 1 ) {
+    if ( fscanf( fp, "%*s%" SCNu64, &rss ) != 1 ) {
         fclose( fp );
         return (size_t)0L; /* Can't read? */
     }

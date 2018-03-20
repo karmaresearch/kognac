@@ -507,7 +507,7 @@ void Kognac::sortCompressedGraph(string inputDir, string outputFile, int v) {
             while (!merger.isEmpty()) {
                 Triple t = merger.get();
                 if (t.s != prevs || t.p != prevp || t.o != prevo) {
-                    sprintf(tmpString, "%lld %lld %lld", t.s, t.p, t.o);
+                    sprintf(tmpString, "%" PRId64 " %" PRId64 " %" PRId64, t.s, t.p, t.o);
                     out << tmpString << '\n';
                     countTriples++;
                 }
@@ -525,7 +525,7 @@ void Kognac::sortCompressedGraph(string inputDir, string outputFile, int v) {
             for (std::vector<Triple>::iterator itr = inmemorytriples.begin();
                     itr != inmemorytriples.end(); ++itr) {
                 if (itr->s != prevs || itr->p != prevp || itr->o != prevo) {
-                    sprintf(tmpString, "%lld %lld %lld", itr->s, itr->p, itr->o);
+                    sprintf(tmpString, "%" PRId64 " %" PRId64 " %" PRId64, itr->s, itr->p, itr->o);
                     out << tmpString << '\n';
                     countTriples++;
                 }

@@ -1,3 +1,6 @@
+#if defined(_WIN32)
+#define LOG_SHARED_LIB
+#endif
 #include <kognac/logs.h>
 
 int Logger::minLevel = TRACEL;
