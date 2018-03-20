@@ -22,15 +22,15 @@ DiskLZ4Writer::DiskLZ4Writer(int npartitions, int nbuffersPerFile) : npartitions
 }
 
 DiskLZ4Writer::DiskLZ4Writer(string file,
-                             int npartitions,
-                             int nbuffersPerFile) :
+        int npartitions,
+        int nbuffersPerFile) :
     DiskLZ4Writer(npartitions, nbuffersPerFile) {
-    inputfile = file;
-    stream.open(file, std::ofstream::binary);
-    currentthread = thread(std::bind(&DiskLZ4Writer::run, this));
-    processStarted = true;
-    startpositions.resize(npartitions);
-}
+        inputfile = file;
+        stream.open(file, std::ofstream::binary);
+        currentthread = thread(std::bind(&DiskLZ4Writer::run, this));
+        processStarted = true;
+        startpositions.resize(npartitions);
+    }
 
 void DiskLZ4Writer::writeByte(const int id, const int value) {
     assert(id < npartitions);
@@ -46,7 +46,7 @@ void DiskLZ4Writer::writeVLong(const int id, const int64_t value) {
     int i = 1;
     int64_t n = value;
     if (value < 128) { // One byte is enough
-        writeByte(id, n);
+        writeByte(id, static_cast<int>(n));
         return;
     } else {
         int bytesToStore = 64 - Utils::numberOfLeadingZeros((uint64_t) n);
@@ -64,7 +64,7 @@ void DiskLZ4Writer::writeLong(const int id, const int64_t value) {
     assert(id < npartitions);
     char *buffer = fileinfo[id].buffer;
     if (fileinfo[id].sizebuffer + 8 <= SIZE_SEG) {
-        Utils::encode_long(buffer, fileinfo[id].sizebuffer, value);
+        Utils::encode_long(buffer, static_cast<int>(fileinfo[id].sizebuffer), value);
         fileinfo[id].sizebuffer += 8;
     } else {
         char supportBuffer[8];
@@ -83,20 +83,20 @@ void DiskLZ4Writer::writeLong(const int id, const int64_t value) {
 }
 
 void DiskLZ4Writer::writeString(const int id, const char *bytes,
-                                const size_t length) {
+        const size_t length) {
     writeVLong(id, length);
     writeRawArray(id, bytes, length);
 }
 
 void DiskLZ4Writer::writeRawArray(const int id, const char *bytes,
-                                  const size_t length) {
-    int len = length;
+        const size_t length) {
+    size_t len = length;
     assert(id < npartitions);
     char *buffer = fileinfo[id].buffer;
     if (fileinfo[id].sizebuffer + len <= SIZE_SEG) {
         memcpy(buffer + fileinfo[id].sizebuffer, bytes, len);
     } else {
-        int remSize = SIZE_SEG - fileinfo[id].sizebuffer;
+        size_t remSize = SIZE_SEG - fileinfo[id].sizebuffer;
         memcpy(buffer + fileinfo[id].sizebuffer, bytes, remSize);
         fileinfo[id].sizebuffer += remSize;
         compressAndQueue(id);
@@ -127,7 +127,7 @@ void DiskLZ4Writer::writeShort(const int id, const int value) {
 
 void DiskLZ4Writer::flush(const int id) {
     //Write down the last buffer
-    int sizebuffer = fileinfo[id].sizebuffer;
+    size_t sizebuffer = fileinfo[id].sizebuffer;
     if (sizebuffer > 0) {
         compressAndQueue(id);
         fileinfo[id].sizebuffer = 0;
@@ -203,15 +203,19 @@ void DiskLZ4Writer::compressAndQueue(const int id) {
     //Then there is a token which has encoded in the 0xF0 bits
     //the type of compression.
     memset(buffer, 0, 21);
-    strcpy(buffer, "LZOBLOCK");
+#if defined(WIN32)
+    strcpy_s(buffer, strlen("LZOBLOCK") + 1, "LZOBLOCK");
+#else
+    strncpy(buffer, "LZOBLOCK", strlen("LZOBLOCK") + 1);
+#endif
     buffer[8] = 32;
 
     //Then there is the compressed size but I will write it later...
     //... and finally the uncompressed size
-    Utils::encode_intLE(buffer, 13, file.sizebuffer);
+    Utils::encode_intLE(buffer, 13, static_cast<int>(file.sizebuffer));
 #if LZ4_VERSION_MAJOR > 1 || LZ4_VERSION_MINOR > 2 || (LZ4_VERSION_MINOR == 2 && LZ4_VERSION_RELEASE >= 9)
     // LZ4_compress_default does not exist before lz4 version 129.
-    const int compressedSize = LZ4_compress_default(file.buffer, buffer + 21, file.sizebuffer, SIZE_COMPRESSED_SEG - 21);
+    const size_t compressedSize = LZ4_compress_default(file.buffer, buffer + 21, static_cast<int>(file.sizebuffer), SIZE_COMPRESSED_SEG - 21);
 #else
     const int compressedSize = LZ4_compress(file.buffer, buffer + 21, file.sizebuffer);
 #endif
@@ -219,7 +223,7 @@ void DiskLZ4Writer::compressAndQueue(const int id) {
         LOG(ERRORL) << "I could not compress in the given buffer";
         throw 10;
     }
-    Utils::encode_intLE(buffer, 9, compressedSize);
+    Utils::encode_intLE(buffer, 9, static_cast<int>(compressedSize));
     file.pivotCompressedBuffer += compressedSize + 21;
 }
 
@@ -263,10 +267,10 @@ void DiskLZ4Writer::run() {
             char el[4];
             Utils::encode_int(el, it->idpart);
             stream.write(el, 4);
-            Utils::encode_int(el, it->sizebuffer);
+            Utils::encode_int(el, static_cast<int>(it->sizebuffer));
             stream.write(el, 4);
             stream.write(it->buffer, it->sizebuffer);
-			it++;
+            it++;
         }
         time_rawwriting += std::chrono::system_clock::now() - start;
 

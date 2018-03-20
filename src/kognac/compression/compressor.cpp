@@ -647,9 +647,9 @@ void Compressor::extractUncommonTerm(const char *term, const int sizeTerm,
 }
 
 uint64_t Compressor::getEstimatedFrequency(const string &e) const {
-    int64_t v1 = table1 ? table1->get(e.c_str(), e.size()) : 0;
-    int64_t v2 = table2 ? table2->get(e.c_str(), e.size()) : 0;
-    int64_t v3 = table3 ? table3->get(e.c_str(), e.size()) : 0;
+    int64_t v1 = table1 ? table1->get(e.c_str(), static_cast<int>(e.size())) : 0;
+    int64_t v2 = table2 ? table2->get(e.c_str(), static_cast<int>(e.size())) : 0;
+    int64_t v3 = table3 ? table3->get(e.c_str(), static_cast<int>(e.size())) : 0;
     return min(v1, min(v2, v3));
 }
 
@@ -659,7 +659,7 @@ void Compressor::extractCommonTerm(const char* term, const int sizeTerm,
         Hashtable *table2, Hashtable *table3,
         const int dictPartitions,
         int64_t &minValueToBeAdded,
-        const int64_t maxMapSize,  GStringToNumberMap *map,
+        const uint64_t maxMapSize,  GStringToNumberMap *map,
         std::priority_queue<std::pair<string, int64_t>,
         std::vector<std::pair<string, int64_t> >,
         priorityQueueOrder> &queue) {
@@ -797,7 +797,7 @@ void Compressor::extractCommonTerms(ParamsExtractCommonTermProcedure params) {
     const bool ignorePredicates = params.ignorePredicates;
 
     int pos = 0;
-    int thresholdForUncommon = params.thresholdForUncommon;
+    uint64_t thresholdForUncommon = params.thresholdForUncommon;
 
     Hashtable *table1 = tables[0];
     Hashtable *table2 = tables[1];
@@ -836,7 +836,7 @@ void Compressor::mergeCommonTermsMaps(ByteArrayToNumberMap *finalMap,
     for (int i = 0; i < nmaps; i++) {
         for (GStringToNumberMap::iterator itr = maps[i].begin();
                 itr != maps[i].end(); ++itr) {
-            Utils::encode_short(supportTerm, itr->first.size());
+            Utils::encode_short(supportTerm, static_cast<int>(itr->first.size()));
             memcpy(supportTerm + 2, itr->first.c_str(), itr->first.size());
 
             ByteArrayToNumberMap::iterator foundValue = finalMap->find(supportTerm);
@@ -1102,10 +1102,10 @@ vector<FileInfo> *Compressor::splitInputInChunks(const string &input, int nchunk
     /*** Sort the input files by size, and split the files through the multiple processors ***/
     std::sort(infoAllFiles.begin(), infoAllFiles.end(), cmpInfoFiles);
     vector<FileInfo> *files = new vector<FileInfo>[nchunks];
-    int64_t splitTargetSize = totalSize / nchunks;
+    uint64_t splitTargetSize = totalSize / nchunks;
     int processedFiles = 0;
     int currentSplit = 0;
-    int64_t splitSize = 0;
+    uint64_t splitSize = 0;
     while (processedFiles < infoAllFiles.size()) {
         FileInfo f = infoAllFiles[processedFiles++];
         if (!f.splittable) {
@@ -1117,9 +1117,9 @@ vector<FileInfo> *Compressor::splitInputInChunks(const string &input, int nchunk
                 splitSize = 0;
             }
         } else {
-            int64_t assignedFileSize = 0;
+            uint64_t assignedFileSize = 0;
             while (assignedFileSize < f.size) {
-                int64_t sizeToCopy;
+                uint64_t sizeToCopy;
                 if (currentSplit == nchunks - 1) {
                     sizeToCopy = f.size - assignedFileSize;
                 } else {
@@ -1279,9 +1279,9 @@ void Compressor::parse(int dictPartitions, int sampleMethod, int sampleArg,
     delete[] files;
 }
 
-unsigned int Compressor::getThresholdForUncommon(
+uint64_t Compressor::getThresholdForUncommon(
         const int parallelProcesses,
-        const int sizeHashTable,
+        const uint64_t sizeHashTable,
         const int sampleArg,
         int64_t *distinctValues,
         Hashtable **tables1,
@@ -1304,7 +1304,7 @@ void Compressor::do_countmin_secondpass(const int dictPartitions,
         const int maxReadingThreads,
         const int parallelProcesses,
         bool copyHashes,
-        const unsigned int sizeHashTable,
+        const uint64_t sizeHashTable,
         Hashtable **tables1,
         Hashtable **tables2,
         Hashtable **tables3,
@@ -1314,7 +1314,7 @@ void Compressor::do_countmin_secondpass(const int dictPartitions,
 
     /*** Calculate the threshold value to identify uncommon terms ***/
     totalCount = tables1[0]->getTotalCount() / 3;
-    unsigned int thresholdForUncommon = getThresholdForUncommon(
+    uint64_t thresholdForUncommon = getThresholdForUncommon(
             parallelProcesses, sizeHashTable,
             sampleArg, distinctValues,
             tables1, tables2, tables3);
@@ -1404,7 +1404,7 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
     int64_t memForHashTables = (int64_t)(Utils::getSystemMemory() * 0.5)
         / (1 + parallelProcesses) / 3;
     //Divided numer hash tables
-    const unsigned int sizeHashTable = std::min((int64_t)maxSize,
+    const uint64_t sizeHashTable = std::min((int64_t)maxSize,
             std::max((int64_t)1000000,
                 (int64_t)(memForHashTables / sizeof(int64_t))));
 
@@ -1517,7 +1517,7 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
     } else {
         /*** Determine a minimum threshold value from the count_min tables to
          * mark the element has common ***/
-        int64_t minFreq = getThresholdForUncommon(
+        uint64_t minFreq = getThresholdForUncommon(
                 parallelProcesses, sizeHashTable,
                 sampleArg, distinctValues,
                 tables1, tables2, tables3);
@@ -1530,10 +1530,10 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
             for (vector<string>::const_iterator itr = resultsMGS[i].begin();
                     itr != resultsMGS[i].end(); ++itr) {
                 //Get the frequency and add it
-                int64_t v1 = tables1[0]->get(*itr);
-                int64_t v2 = tables2[0]->get(*itr);
-                int64_t v3 = tables3[0]->get(*itr);
-                int64_t freq = min(v1, min(v2, v3));
+                uint64_t v1 = tables1[0]->get(*itr);
+                uint64_t v2 = tables2[0]->get(*itr);
+                uint64_t v3 = tables3[0]->get(*itr);
+                uint64_t freq = min(v1, min(v2, v3));
                 if (freq >= minFreq)
                     listFrequentTerms.push_back(make_pair(*itr, freq));
             }
@@ -1552,9 +1552,9 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
             std::pair<string, int64_t> pair = listFrequentTerms[i];
             if (i == 0 || pair.first != listFrequentTerms[i - 1].first) {
                 memcpy(supportBuffer + 2, pair.first.c_str(), pair.first.size());
-                Utils::encode_short(supportBuffer, 0, pair.first.size());
+                Utils::encode_short(supportBuffer, 0, static_cast<int>(pair.first.size()));
                 const char *newkey = poolForMap->addNew(supportBuffer,
-                        pair.first.size() + 2);
+                        static_cast<int>(pair.first.size() + 2));
                 finalMap->insert(std::make_pair(newkey, pair.second));
             }
         }
@@ -1672,11 +1672,11 @@ void Compressor::do_sample(const int dictPartitions, const int sampleArg,
     finalMap->set_deleted_key(DELETED_KEY);
     char supportTerm[MAX_TERM_SIZE];
     for (int i = 0; i < sampleArg && i < sampledTermsUniq.size(); ++i) {
-        Utils::encode_short(supportTerm, sampledTermsUniq[i].first.size());
+        Utils::encode_short(supportTerm, static_cast<int>(sampledTermsUniq[i].first.size()));
         memcpy(supportTerm + 2, sampledTermsUniq[i].first.c_str(),
                 sampledTermsUniq[i].first.size());
         const char *newkey = poolForMap->addNew(supportTerm,
-                sampledTermsUniq[i].first.size() + 2);
+                static_cast<int>(sampledTermsUniq[i].first.size() + 2));
         finalMap->insert(make_pair(newkey, sampledTermsUniq[i].second));
     }
 
@@ -1841,7 +1841,7 @@ void Compressor::inmemorysort_seq(DiskLZ4Reader *reader,
         MultiDiskLZ4Writer *sampleWriter,
         const int idReader,
         int idx,
-        const int64_t maxMemPerThread,
+        const uint64_t maxMemPerThread,
         bool removeDuplicates,
         bool sample) {
 
@@ -2078,7 +2078,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
     string prefixIntFiles = params.prefixIntFiles;
     int part = params.part;
     uint64_t *counter = params.counter;
-    int64_t maxMem = params.maxMem;
+    uint64_t maxMem = params.maxMem;
 
     std::vector<string> filesToSort;
 
@@ -2302,7 +2302,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
             }
 
             FileMerger2<SimplifiedAnnotatedTerm> merger(mergerReader,
-                    idWriter * 3, sortedFiles.size());
+                    idWriter * 3, static_cast<int>(sortedFiles.size()));
             while (!merger.isEmpty()) {
                 SimplifiedAnnotatedTerm t = merger.get();
                 if (!t.equals(previousTerm, previousTermSize, prevPrefix)) {
@@ -2678,7 +2678,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
             DiskLZ4Writer * writer,
             const int idWriter,
             string tmpfileprefix,
-            const int64_t maxMemory) {
+            const uint64_t maxMemory) {
 
         //First sort the input files in chunks of x elements
         int idx = 0;
@@ -3042,7 +3042,7 @@ void Compressor::sortPartition(ParamsSortPartition params) {
     }
 
     uint64_t Compressor::calculateSizeHashmapCompression() {
-        int64_t memoryAvailable = Utils::getSystemMemory() * 0.70;
+        int64_t memoryAvailable = static_cast<int64_t>(Utils::getSystemMemory() * 0.70);
         return memoryAvailable;
     }
 

@@ -139,10 +139,10 @@ void LZ4Writer::writeLong(int64_t n) {
     }
 }
 
-void LZ4Writer::writeVLong(int64_t n) {
+void LZ4Writer::writeVLong(uint64_t n) {
     int i = 1;
     if (n < 128) { // One byte is enough
-        writeByte(n);
+        writeByte(static_cast<char>(n));
         return;
     } else {
         int bytesToStore = 64 - Utils::numberOfLeadingZeros((uint64_t) n);

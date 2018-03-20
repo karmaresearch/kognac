@@ -51,7 +51,7 @@ private:
 
     void mergeDictionaries(string tmpDir, string **files, int dictID, int nfiles, string outputFile, int64_t maxSizeToSort);
 
-    void inmemorysort(string **inputFiles, int dictID, int nFiles, string outputFile, int &noutputFiles, const int64_t maxSizeToSort);
+    void inmemorysort(string **inputFiles, int dictID, int nFiles, string outputFile, int &noutputFiles, const uint64_t maxSizeToSort);
 
     void sortAndDumpToFile(vector<std::pair<int64_t, const char*>> *terms, string outputFile);
 

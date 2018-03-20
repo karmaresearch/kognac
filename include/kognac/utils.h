@@ -37,37 +37,37 @@ class Utils {
     private:
     public:
         //String utils
-        static bool starts_with(const string s, const string prefix);
-        static bool ends_with(const string s, const string suffix);
-        static bool contains(const string s, const string substr);
+		KLIBEXP static bool starts_with(const string s, const string prefix);
+		KLIBEXP static bool ends_with(const string s, const string suffix);
+		KLIBEXP static bool contains(const string s, const string substr);
         //End string utils
 
         //File utils
-        static string getFullPathExec();
-        static bool hasExtension(const string &file);
-        static string extension(const string &file);
-        static string removeExtension(string file);
-        static string removeLastExtension(string file);
-        static bool isDirectory(string dirname);
-        static bool isFile(string dirname);
-        static vector<string> getFilesWithPrefix(string dir, string prefix);
-        static vector<string> getFilesWithSuffix(string dir, string suffix);
-        static vector<string> getFiles(string dir, bool ignoreExtension = false);
-        static vector<string> getSubdirs(string dir);
-        static uint64_t getNBytes(std::string input);
-        static bool isCompressed(std::string input);
-        static bool exists(std::string file);
-        static uint64_t fileSize(string file);
-        static void create_directories(string newdir);
-        static void remove(string file);
-        static void remove_all(string path);
-        static void rename(string oldfile, string newfile);
-        static string parentDir(string file);
-        static string filename(string path);
-        static bool isEmpty(string dir);
-        static void resizeFile(string file, uint64_t newsize);
-        static void linkdir(string source, string dest);
-        static void rmlink(string link);
+		KLIBEXP static string getFullPathExec();
+		KLIBEXP static bool hasExtension(const string &file);
+		KLIBEXP static string extension(const string &file);
+		KLIBEXP static string removeExtension(string file);
+		KLIBEXP static string removeLastExtension(string file);
+		KLIBEXP static bool isDirectory(string dirname);
+		KLIBEXP static bool isFile(string dirname);
+		KLIBEXP static vector<string> getFilesWithPrefix(string dir, string prefix);
+		KLIBEXP static vector<string> getFilesWithSuffix(string dir, string suffix);
+		KLIBEXP static vector<string> getFiles(string dir, bool ignoreExtension = false);
+		KLIBEXP static vector<string> getSubdirs(string dir);
+		KLIBEXP static uint64_t getNBytes(std::string input);
+		KLIBEXP static bool isCompressed(std::string input);
+		KLIBEXP static bool exists(std::string file);
+		KLIBEXP static uint64_t fileSize(string file);
+		KLIBEXP static void create_directories(string newdir);
+		KLIBEXP static void remove(string file);
+		KLIBEXP static void remove_all(string path);
+		KLIBEXP static void rename(string oldfile, string newfile);
+		KLIBEXP static string parentDir(string file);
+		KLIBEXP static string filename(string path);
+		KLIBEXP static bool isEmpty(string dir);
+		KLIBEXP static void resizeFile(string file, uint64_t newsize);
+		KLIBEXP static void linkdir(string source, string dest);
+		KLIBEXP static void rmlink(string link);
         //End file utils
 
         static int numberOfLeadingZeros(uint32_t number) {
@@ -123,61 +123,61 @@ class Utils {
             return n;
         }
 
-        static short decode_short(const char* buffer, int offset);
+		KLIBEXP static short decode_short(const char* buffer, int offset);
 
-        static short decode_short(const char* buffer) {
+		static short decode_short(const char* buffer) {
             return (short) (((buffer[0] & 0xFF) << 8) + (buffer[1] & 0xFF));
         }
 
-        static void encode_short(char* buffer, int offset, int n);
-        static void encode_short(char* buffer, int n);
+		KLIBEXP static void encode_short(char* buffer, int offset, int n);
+		KLIBEXP static void encode_short(char* buffer, int n);
 
-        static int decode_int(char* buffer, int offset);
-        static int decode_int(const char* buffer);
-        static void encode_int(char* buffer, int offset, int n);
-        static void encode_int(char* buffer, int n);
-        static int decode_intLE(char* buffer, int offset);
-        static void encode_intLE(char* buffer, int offset, int n);
+		KLIBEXP static int decode_int(char* buffer, int offset);
+		KLIBEXP static int decode_int(const char* buffer);
+		KLIBEXP static void encode_int(char* buffer, int offset, int n);
+		KLIBEXP static void encode_int(char* buffer, int n);
+		KLIBEXP static int decode_intLE(char* buffer, int offset);
+		KLIBEXP static void encode_intLE(char* buffer, int offset, int n);
 
-        static int64_t decode_long(char* buffer, int offset);
-        static int64_t decode_long(const char* buffer);
-        static int64_t decode_longFixedBytes(const char* buffer, const uint8_t nbytes);
+		KLIBEXP static int64_t decode_long(char* buffer, int offset);
+		KLIBEXP static int64_t decode_long(const char* buffer);
+		KLIBEXP static int64_t decode_longFixedBytes(const char* buffer, const uint8_t nbytes);
 
-        static void encode_long(char* buffer, int offset, int64_t n);
-        static void encode_long(char* buffer, int64_t n);
-        static void encode_longNBytes(char* buffer, const uint8_t nbytes,
+		KLIBEXP static void encode_long(char* buffer, int offset, int64_t n);
+		KLIBEXP static void encode_long(char* buffer, int64_t n);
+		KLIBEXP static void encode_longNBytes(char* buffer, const uint8_t nbytes,
                 const uint64_t n);
 
-        static int64_t decode_longWithHeader(char* buffer);
-        static void encode_longWithHeader0(char* buffer, int64_t n);
-        static void encode_longWithHeader1(char* buffer, int64_t n);
+		KLIBEXP static int64_t decode_longWithHeader(char* buffer);
+		KLIBEXP static void encode_longWithHeader0(char* buffer, int64_t n);
+		KLIBEXP static void encode_longWithHeader1(char* buffer, int64_t n);
 
-        static int64_t decode_vlong(char* buffer, int *offset);
-        static int encode_vlong(char* buffer, int offset, int64_t n);
-        static uint16_t encode_vlong(char* buffer, int64_t n);
-        static int numBytes(int64_t number);
+		KLIBEXP static int64_t decode_vlong(char* buffer, int *offset);
+		KLIBEXP static int encode_vlong(char* buffer, int offset, int64_t n);
+		KLIBEXP static uint16_t encode_vlong(char* buffer, int64_t n);
+		KLIBEXP static int numBytes(int64_t number);
 
-        static int numBytesFixedLength(int64_t number);
+		KLIBEXP static int numBytesFixedLength(int64_t number);
 
-        static int decode_vint2(char* buffer, int *offset);
-        static int encode_vint2(char* buffer, int offset, int n);
+		KLIBEXP static int decode_vint2(char* buffer, int *offset);
+		KLIBEXP static int encode_vint2(char* buffer, int offset, int n);
 
-        static int64_t decode_vlong2(const char* buffer, int *offset);
+		KLIBEXP static int64_t decode_vlong2(const char* buffer, int *offset);
 
-        static int encode_vlong2_fast(uint8_t *out, uint64_t x);
-        static uint64_t decode_vlong2_fast(uint8_t *out);
+		KLIBEXP static int encode_vlong2_fast(uint8_t *out, uint64_t x);
+		KLIBEXP static uint64_t decode_vlong2_fast(uint8_t *out);
 
-        static void encode_vlong2_fixedLen(char* buffer, int64_t n, const uint8_t len);
-        static int encode_vlong2(char* buffer, int offset, int64_t n);
-        static uint16_t encode_vlong2(char* buffer, int64_t n);
-        static int numBytes2(int64_t number);
+		KLIBEXP static void encode_vlong2_fixedLen(char* buffer, int64_t n, const uint8_t len);
+		KLIBEXP static int encode_vlong2(char* buffer, int offset, int64_t n);
+		KLIBEXP static uint16_t encode_vlong2(char* buffer, int64_t n);
+		KLIBEXP static int numBytes2(int64_t number);
 
-        static int64_t decode_vlongWithHeader0(char* buffer, const int end, int *pos);
-        static int64_t decode_vlongWithHeader1(char* buffer, const int end, int *pos);
-        static int encode_vlongWithHeader0(char* buffer, int64_t n);
-        static int encode_vlongWithHeader1(char* buffer, int64_t n);
+		KLIBEXP static int64_t decode_vlongWithHeader0(char* buffer, const int end, int *pos);
+		KLIBEXP static int64_t decode_vlongWithHeader1(char* buffer, const int end, int *pos);
+		KLIBEXP static int encode_vlongWithHeader0(char* buffer, int64_t n);
+		KLIBEXP static int encode_vlongWithHeader1(char* buffer, int64_t n);
 
-        static int compare(const char* string1, int s1, int e1, const char* string2,
+		KLIBEXP static int compare(const char* string1, int s1, int e1, const char* string2,
                 int s2, int e2);
 
         static int compare(const char* o1, const int l1, const char* o2,
@@ -190,28 +190,28 @@ class Utils {
             return l1 - l2;
         }
 
-        static int prefixEquals(char* string1, int len, char* string2);
+        KLIBEXP static int prefixEquals(char* string1, int len, char* string2);
 
-        static int prefixEquals(char* o1, int len1, char* o2, int len2);
+		KLIBEXP static int prefixEquals(char* o1, int len1, char* o2, int len2);
 
-        static int commonPrefix(tTerm *o1, int s1, int e1, tTerm *o2, int s2,
+		KLIBEXP static int commonPrefix(tTerm *o1, int s1, int e1, tTerm *o2, int s2,
                 int e2);
 
-        static double get_max_mem();
+		KLIBEXP static double get_max_mem();
 
-        static uint64_t getSystemMemory();
+		KLIBEXP static uint64_t getSystemMemory();
 
-        static uint64_t getUsedMemory();
+		KLIBEXP static uint64_t getUsedMemory();
 
-        static uint64_t getIOReadBytes();
+		KLIBEXP static uint64_t getIOReadBytes();
 
-        static uint64_t getIOReadChars();
+		KLIBEXP static uint64_t getIOReadChars();
 
-        static int getNumberPhysicalCores();
+		KLIBEXP static int getNumberPhysicalCores();
 
-        static int64_t quickSelect(int64_t *vector, int size, int k);
+		KLIBEXP static int64_t quickSelect(int64_t *vector, int size, int k);
 
-        static uint64_t getCPUCounter();
+		KLIBEXP static uint64_t getCPUCounter();
 
         static int getPartition(const char *key, const int size,
                 const int partitions) {

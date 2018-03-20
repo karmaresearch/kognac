@@ -56,24 +56,28 @@ public:
 
         uncompressedBufferLen = 0;
         memset(compressedBuffer, 0, sizeof(char) * SIZE_COMPRESSED_SEG);
-        strcpy(compressedBuffer, "LZOBLOCK");
+#if defined(WIN32)
+        strcpy_s(compressedBuffer, strlen("LZOBLOCK") + 1, "LZOBLOCK");
+#else
+        strncpy(compressedBuffer, "LZOBLOCK", strlen("LZOBLOCK") + 1);
+#endif
     }
 
-    void writeByte(char i);
+	KLIBEXP void writeByte(char i);
 
-    void writeLong(int64_t n);
+	KLIBEXP void writeLong(int64_t n);
 
-    void writeShort(short n);
+	KLIBEXP void writeShort(short n);
 
-    void writeVLong(int64_t n);
+	KLIBEXP void writeVLong(uint64_t n);
 
 //  void writeString(const char *el);
 
-    void writeRawArray(const char *bytes, int length);
+	KLIBEXP void writeRawArray(const char *bytes, int length);
 
-    void writeString(const char *rawStr, int length);
+	KLIBEXP void writeString(const char *rawStr, int length);
 
-    ~LZ4Writer();
+	KLIBEXP ~LZ4Writer();
 };
 
 class LZ4Reader {
@@ -158,16 +162,16 @@ public:
         return false;
     }
 
-    int64_t parseLong();
+	KLIBEXP int64_t parseLong();
 
-    int64_t parseVLong();
+	KLIBEXP int64_t parseVLong();
 
-    int parseInt();
+	KLIBEXP int parseInt();
 
-    char parseByte();
+	KLIBEXP char parseByte();
 
-    const char *parseString(int &size) {
-        size = parseVLong();
+	const char *parseString(int &size) {
+        size = static_cast<int>(parseVLong());
 
         if (currentOffset + size <= uncompressedBufferLen) {
             memcpy(supportBuffer, uncompressedBuffer + currentOffset, size);

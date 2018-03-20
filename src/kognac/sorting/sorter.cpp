@@ -106,7 +106,7 @@ void Sorter::sortBufferAndWriteToFile(vector<Triple> &v, string fileOutput) {
 
 void Sorter::mergeSort(string inputDir, int nThreads, bool initialSorting,
         int64_t fileSize, int filesPerMerge) {
-    int filesInDir = 0;
+    size_t filesInDir = 0;
     int iteration = 0;
     LOG(DEBUGL) << "nthreads=" << nThreads;
 
@@ -128,10 +128,10 @@ void Sorter::mergeSort(string inputDir, int nThreads, bool initialSorting,
                 + to_string(i);
             threads[i - 1] = std::thread(
                     std::bind(&Sorter::sortUnsortedFiles, splits[i], inputDir,
-                        prefixOutputFile, fileSize));
+                        prefixOutputFile, static_cast<int>(fileSize)));
         }
         string prefixOutputFile = DIR_SEP + string("sorted-inputfile-0");
-        sortUnsortedFiles(splits[0], inputDir, prefixOutputFile, fileSize);
+        sortUnsortedFiles(splits[0], inputDir, prefixOutputFile, static_cast<int>(fileSize));
         for (int i = 1; i < nThreads; ++i) {
             threads[i - 1].join();
         }

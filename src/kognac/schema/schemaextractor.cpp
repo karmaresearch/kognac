@@ -33,9 +33,9 @@
 using namespace std;
 
 const int64_t SchemaExtractor::HASHCLASS = Hashes::murmur3_56(S_RDFS_CLASS,
-        strlen(S_RDFS_CLASS));
+        static_cast<int>(strlen(S_RDFS_CLASS)));
 const int64_t SchemaExtractor::HASHTYPE = Hashes::murmur3_56(S_RDF_TYPE,
-        strlen(S_RDF_TYPE));
+        static_cast<int>(strlen(S_RDF_TYPE)));
 
 #ifdef DEBUG
 /*StringCollection SchemaExtractor::support(64 * 1024 * 1024);

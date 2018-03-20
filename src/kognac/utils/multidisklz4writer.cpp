@@ -3,7 +3,7 @@
 MultiDiskLZ4Writer::MultiDiskLZ4Writer(std::vector<string> files,
                                        int nbuffersPerFile,
                                        int maxopenedstreams) :
-    DiskLZ4Writer(files.size(), nbuffersPerFile),
+    DiskLZ4Writer(static_cast<int>(files.size()), nbuffersPerFile),
     maxopenedstreams(maxopenedstreams) {
     //assert(files.size() > 0);
 

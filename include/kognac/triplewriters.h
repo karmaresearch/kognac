@@ -23,6 +23,7 @@
 #define _TRIPLEWRITERS_H
 
 #include <kognac/lz4io.h>
+#include <kognac/consts.h>
 
 #include <vector>
 #include <string>
@@ -31,7 +32,7 @@ class SimpleTripleWriter: public TripleWriter {
 private:
     LZ4Writer *writer;
 public:
-    SimpleTripleWriter(string dir, string prefixFile, bool quad);
+	KLIBEXP SimpleTripleWriter(string dir, string prefixFile, bool quad);
 
     void write(const int64_t t1, const int64_t t2, const int64_t t3);
 

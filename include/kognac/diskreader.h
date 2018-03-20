@@ -34,26 +34,26 @@ class DiskReader {
 
         std::chrono::duration<double> waitingTime;
 
-        int64_t maxsize;
+        uint64_t maxsize;
 
     public:
-        DiskReader(int nbuffers, std::vector<FileInfo> *files);
+		KLIBEXP DiskReader(int nbuffers, std::vector<FileInfo> *files);
 
         //char *getfile(size_t &size, bool &gzipped);
 
-        Buffer getfile();
+		KLIBEXP Buffer getfile();
 
         //void releasefile(char *file);
 
-        void releasefile(Buffer buffer);
+		KLIBEXP void releasefile(Buffer buffer);
 
-        bool isReady();
+		KLIBEXP bool isReady();
 
-        bool isAvailable();
+		KLIBEXP bool isAvailable();
 
-        void run();
+		KLIBEXP void run();
 
-        ~DiskReader();
+		KLIBEXP ~DiskReader();
 };
 
 #endif

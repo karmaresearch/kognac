@@ -50,7 +50,7 @@ class FileMerger {
     protected:
         priority_queue<QueueEl<K>, vector<QueueEl<K> >, QueueElCmp<K> > queue;
         LZ4Reader **files;
-        int nfiles;
+        size_t nfiles;
         int nextFileToRead;
         int64_t elementsRead;
         std::vector<int> extensions; //mark the current extension

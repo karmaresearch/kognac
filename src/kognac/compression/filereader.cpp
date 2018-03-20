@@ -91,7 +91,7 @@ bool FileReader::parseTriple() {
                     return parseTriple();
                 }
                 tripleValid = parseLine(&uncompressedByteArray[currentIdx],
-                        e - currentIdx);
+                        static_cast<int>(e - currentIdx));
                 currentIdx = e + 1;
                 return true;
             } else {
@@ -109,7 +109,7 @@ bool FileReader::parseTriple() {
                     currentIdx = e + 1;
                     return parseTriple();
                 }
-                tripleValid = parseLine(rawByteArray + currentIdx, e - currentIdx);
+                tripleValid = parseLine(rawByteArray + currentIdx, static_cast<int>(e - currentIdx));
                 currentIdx = e + 1;
                 return true;
             } else {
@@ -213,7 +213,7 @@ bool FileReader::parseLine(const char *line, const int sizeLine) {
             return false;
         }
 
-    } catch (std::exception &e) {
+    } catch (std::exception e) {
         LOG(ERRORL) << "Failed parsing line: " + string(line, sizeLine);
         //abort();
     }

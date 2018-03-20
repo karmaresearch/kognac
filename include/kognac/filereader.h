@@ -22,6 +22,8 @@
 #ifndef FILEREADER_H_
 #define FILEREADER_H_
 
+#include <kognac/consts.h>
+
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -39,8 +41,8 @@ class ParseException: public exception {
 };
 
 typedef struct FileInfo {
-    int64_t size;
-    int64_t start;
+    uint64_t size;
+    uint64_t start;
     bool splittable;
     string path;
 } FileInfo;
@@ -74,19 +76,19 @@ class FileReader {
         void checkRange(const char *pointer, const char* start, const char *end);
 
     public:
-        FileReader(FileInfo file);
+		KLIBEXP FileReader(FileInfo file);
 
-        FileReader(char *buffer, size_t sizebuffer, bool gzipped);
+		KLIBEXP FileReader(char *buffer, size_t sizebuffer, bool gzipped);
 
-        bool parseTriple();
+		KLIBEXP bool parseTriple();
 
-        bool isTripleValid();
+		KLIBEXP bool isTripleValid();
 
-        const char *getCurrentS(int &length);
+		KLIBEXP const char *getCurrentS(int &length);
 
-        const char *getCurrentP(int &length);
+		KLIBEXP const char *getCurrentP(int &length);
 
-        const char *getCurrentO(int &length);
+		KLIBEXP const char *getCurrentO(int &length);
 
         ~FileReader() {
             if (rawFile != NULL) {

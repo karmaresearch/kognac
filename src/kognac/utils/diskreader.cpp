@@ -15,7 +15,7 @@ DiskReader::DiskReader(int nbuffers, std::vector<FileInfo> *files) {
     if (maxsize > DISKREADER_MAX_SIZE) { //Limit the max size to 128MB
         maxsize = DISKREADER_MAX_SIZE;
     }
-    maxsize += 32 * 1024 + maxsize * 0.1; //max size + add a 10%
+    maxsize += static_cast<uint64_t>(32 * 1024 + maxsize * 0.1); //max size + add a 10%
     LOG(DEBUGL) << "Max size=" << maxsize;
 
     for (int i = 0; i < nbuffers; ++i) {
@@ -101,7 +101,7 @@ void DiskReader::run() {
         //Read a file and copy it in buffer
         buffer.gzipped = gzipped;
         ifs.open(itr->path);
-        int64_t readSize = itr->size;
+        uint64_t readSize = itr->size;
         if (readSize > buffer.maxsize) {
             //The buffer is too small. Must create a bigger one
             //But need some extra, to search for next '\n'.
@@ -161,7 +161,7 @@ void DiskReader::run() {
     }
 
     {
-        std::lock_guard<std::mutex> lk(mutex);
+        std::lock_guard<std::mutex> lk(mutex1);
         finished = true;
     }
     cv1.notify_all();

@@ -53,7 +53,7 @@ public:
 
     static int murmur3(const char* s) {
         int out;
-        MurmurHash3_x86_32(s, strlen(s), 0, &out);
+        MurmurHash3_x86_32(s, static_cast<int>(strlen(s)), 0, &out);
         return out;
     }
 
@@ -90,7 +90,7 @@ public:
         int c;
         while ((c = *s++))
             hash = ((hash << 5) + hash) + c;
-        return hash;
+        return static_cast<int>(hash);
     }
 
     static int dbj2s(const char* s, const int size) {
@@ -99,7 +99,7 @@ public:
         while (i < size) {
             hash = ((hash << 5) + hash) + s[i++];
         }
-        return hash;
+        return static_cast<int>(hash);
     }
 
     static int64_t dbj2s_56(const char* s, const int size) {
