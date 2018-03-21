@@ -96,7 +96,7 @@ ELSE()
 ENDIF()
 
 #LZ4
-find_library(lz4 NAMES ${CMAKE_STATIC_LIBRARY_PREFIX}lz4${CMAKE_STATIC_LIBRARY_SUFFIX} lz4)
+find_library(lz4 lz4)
 find_path (lz4h lz4.h)
 IF ((${lz4h} STREQUAL "lz4h-NOTFOUND"))
     message("Could not find LZ4. I'm going to download it from the GIT repository ...")
