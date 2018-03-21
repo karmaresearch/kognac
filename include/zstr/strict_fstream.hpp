@@ -82,19 +82,29 @@ namespace strict_fstream
                     throw Exception(std::string("strict_fstream: open('") + filename + "'): mode error: trunc and app");
                 }
             }
+	    static char *error_message(char *buf, size_t sz) {
+#if defined(WIN32)
+		strerror_s(buf, sz, errno);
+		return buf;
+#else
+#if __clang__ || ((_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && ! _GNU_SOURCE)
+		strerror_r(errno, buf, 256);
+		return buf;
+#else
+		return strerror_r(errno, buf, 256);
+#endif
+#endif
+	    }
+
             static void check_open(std::ios * s_p, const std::string& filename, std::ios_base::openmode mode)
             {
                 if (s_p->fail())
                 {
-                    char strout[100];
-#if defined(WIN32)
-                    strerror_s(strout, 100, errno);
-#else
-                    strerror_r(errno, strout, 100);
-#endif
+                    char strout[256];
+		    char *b = error_message(strout, 256);
                     throw Exception(std::string("strict_fstream: open('")
                             + filename + "'," + mode_to_string(mode) + "): open failed: "
-                            + strout);
+                            + b);
                 }
             }
             static void check_peek(std::istream * is_p, const std::string& filename, std::ios_base::openmode mode)
@@ -108,15 +118,11 @@ namespace strict_fstream
                 catch (std::ios_base::failure e) {}
                 if (peek_failed)
                 {
-                    char strout[100];
-#if defined(WIN32)
-                    strerror_s(strout, 100, errno);
-#else
-                    strerror_r(errno, strout, 100);
-#endif
+                    char strout[256];
+		    char *b = error_message(strout, 256);
                     throw Exception(std::string("strict_fstream: open('")
                             + filename + "'," + mode_to_string(mode) + "): peek failed: "
-                            + strout);
+                            + b);
                 }
                 is_p->clear();
             }

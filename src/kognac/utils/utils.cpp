@@ -76,15 +76,15 @@ string Utils::getFullPathExec() {
         // Use GetModuleFileName() with module handle to get the path
         GetModuleFileName(hModule, ownPth, (sizeof(ownPth)));
         return string(ownPth);
-    } else {
-        return string("");
     }
 #elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
     char buff[FILENAME_MAX];
-    getcwd(buff, FILENAME_MAX);
-    std::string current_working_dir(buff);
-    return current_working_dir;
+    if (getcwd(buff, FILENAME_MAX) != NULL) {
+	std::string current_working_dir(buff);
+	return current_working_dir;
+    }
 #endif
+    return string("");
 }
 
 //Return only the files or the entire path?
@@ -429,7 +429,8 @@ void Utils::resizeFile(string file, uint64_t newsize) {
 		}
 		CloseHandle(fd);
 #else
-        truncate(file.c_str(), newsize);
+        if (truncate(file.c_str(), newsize)) {
+	}
 #endif
     }
 }
@@ -1319,7 +1320,9 @@ void Utils::linkdir(string source, string dest) {
     LOG(ERRORL) << "LinkDir: Not supported";
     throw 10;
 #elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
-    symlink(source.c_str(), dest.c_str());
+    if (symlink(source.c_str(), dest.c_str())) {
+	throw 10;
+    }
 #endif
 }
 
