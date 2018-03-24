@@ -98,7 +98,7 @@ ENDIF()
 #LZ4
 find_library(lz4 lz4)
 find_path (lz4h lz4.h)
-IF ((${lz4h} STREQUAL "lz4h-NOTFOUND"))
+IF (${lz4h} STREQUAL "lz4h-NOTFOUND")
     message("Could not find LZ4. I'm going to download it from the GIT repository ...")
     ExternalProject_Add(git-lz4
         DOWNLOAD_COMMAND git clone https://github.com/Cyan4973/lz4.git
@@ -122,9 +122,9 @@ ENDIF()
 
 #standard include
 include_directories(include/)
-TARGET_LINK_LIBRARIES(kognac ${lz4})
+TARGET_LINK_LIBRARIES(kognac lz4)
 TARGET_LINK_LIBRARIES(kognac "${ZLIB_LIBRARIES}")
-TARGET_LINK_LIBRARIES(kognac_exec kognac ${lz4})
+TARGET_LINK_LIBRARIES(kognac_exec kognac lz4)
 TARGET_LINK_LIBRARIES(kognac_exec "${ZLIB_LIBRARIES}")
 if (CMAKE_THREAD_LIBS_INIT)
     TARGET_LINK_LIBRARIES(kognac_exec "${CMAKE_THREAD_LIBS_INIT}")
