@@ -80,8 +80,8 @@ string Utils::getFullPathExec() {
 #elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
     char buff[FILENAME_MAX];
     if (getcwd(buff, FILENAME_MAX) != NULL) {
-	std::string current_working_dir(buff);
-	return current_working_dir;
+        std::string current_working_dir(buff);
+        return current_working_dir;
     }
 #endif
     return string("");
@@ -106,7 +106,7 @@ vector<string> Utils::getSubdirs(string dirname) {
     //TCHAR szDir[MAX_PATH];
     HANDLE hFind = INVALID_HANDLE_VALUE;
     DWORD dwError = 0;
-	std::string toSearch = dirname + DIR_SEP + "*";
+    std::string toSearch = dirname + DIR_SEP + "*";
     hFind = FindFirstFile(toSearch.c_str(), &ffd);
     if (INVALID_HANDLE_VALUE == hFind) {
         return std::vector<string>();
@@ -114,8 +114,8 @@ vector<string> Utils::getSubdirs(string dirname) {
     // List all the files in the directory with some info about them.
     do {
         if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-			if (string(ffd.cFileName) == "." || string(ffd.cFileName) == "..")
-				continue;
+            if (string(ffd.cFileName) == "." || string(ffd.cFileName) == "..")
+                continue;
             string fileFullPath = dirname + DIR_SEP + ffd.cFileName;
             files.push_back(fileFullPath);
         }
@@ -143,7 +143,7 @@ vector<string> Utils::getFiles(string dirname, bool ignoreExtension) {
     //TCHAR szDir[MAX_PATH];
     HANDLE hFind = INVALID_HANDLE_VALUE;
     DWORD dwError = 0;
-	std::string toSearch = dirname + DIR_SEP + "*";
+    std::string toSearch = dirname + DIR_SEP + "*";
     hFind = FindFirstFile(toSearch.c_str(), &ffd);
     if (INVALID_HANDLE_VALUE == hFind) {
         return std::vector<string>();
@@ -211,7 +211,7 @@ string Utils::removeExtension(string file) {
     string fn = filename(file);
     auto pos = fn.find('.');
     if (pos != std::string::npos) {
-	pos += file.size() - fn.size();
+        pos += file.size() - fn.size();
         return file.substr(0, pos);
     } else {
         return file;
@@ -221,7 +221,7 @@ string Utils::removeLastExtension(string file) {
     string fn = filename(file);
     auto pos = fn.find_last_of('.');
     if (pos != std::string::npos) {
-	pos += file.size() - fn.size();
+        pos += file.size() - fn.size();
         return file.substr(0, pos);
     } else {
         return file;
@@ -229,51 +229,51 @@ string Utils::removeLastExtension(string file) {
 }
 bool Utils::isDirectory(string dirname) {
 #if defined(_WIN32)
-	DWORD d = GetFileAttributes(dirname.c_str());
-	if (d &FILE_ATTRIBUTE_DIRECTORY) {
-		return true;
-	} else {
-		return false;
-	}
+    DWORD d = GetFileAttributes(dirname.c_str());
+    if (d &FILE_ATTRIBUTE_DIRECTORY) {
+        return true;
+    } else {
+        return false;
+    }
 #else
-	struct stat st;
-	auto resp = stat(dirname.c_str(), &st);
-	if (resp == 0) {
-		if ((st.st_mode & S_IFDIR) != 0)
-			return true;
-	}
+    struct stat st;
+    auto resp = stat(dirname.c_str(), &st);
+    if (resp == 0) {
+        if ((st.st_mode & S_IFDIR) != 0)
+            return true;
+    }
     return false;
 #endif
 }
 bool Utils::isFile(string dirname) {
 #if defined(_WIN32)
-	DWORD d = GetFileAttributes(dirname.c_str());
-	if (!(d & FILE_ATTRIBUTE_DIRECTORY)) {
-		return true;
-	}
-	else {
-		return false;
-	}
+    DWORD d = GetFileAttributes(dirname.c_str());
+    if (!(d & FILE_ATTRIBUTE_DIRECTORY)) {
+        return true;
+    }
+    else {
+        return false;
+    }
 #else
-	struct stat st;
-	if (stat(dirname.c_str(), &st) == 0)
-		if ((st.st_mode & S_IFREG) != 0)
-			return true;
-	return false;
+    struct stat st;
+    if (stat(dirname.c_str(), &st) == 0)
+        if ((st.st_mode & S_IFREG) != 0)
+            return true;
+    return false;
 #endif
 }
 uint64_t Utils::fileSize(string file) {
 #if defined(_WIN32)
-	LARGE_INTEGER size;
-	HANDLE fd = CreateFile(file.c_str(), GENERIC_READ,
-		FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
-		FILE_ATTRIBUTE_NORMAL, NULL);
-	bool res = GetFileSizeEx(fd, &size);
-	CloseHandle(fd);
-	if (!res) {
-		throw 10;
-	}
-	return size.QuadPart;
+    LARGE_INTEGER size;
+    HANDLE fd = CreateFile(file.c_str(), GENERIC_READ,
+            FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+            FILE_ATTRIBUTE_NORMAL, NULL);
+    bool res = GetFileSizeEx(fd, &size);
+    CloseHandle(fd);
+    if (!res) {
+        throw 10;
+    }
+    return size.QuadPart;
 #else
     struct stat stat_buf;
     int rc = stat(file.c_str(), &stat_buf);
@@ -306,54 +306,54 @@ void Utils::create_directories(string newdir) {
 void Utils::remove(string file) {
     if (isDirectory(file)) {
 #if defined(_WIN32)
-		auto resp = RemoveDirectory(file.c_str());
-		if (resp == 0) {
-			DWORD errorMessageID = ::GetLastError();
-			LPSTR messageBuffer = nullptr;
-			size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-				NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
-			std::string message(messageBuffer, size);
-			LocalFree(messageBuffer);
-			LOG(ERRORL) << "Error deleting directory " << file << " " << message;
-			abort();
-		}
+        auto resp = RemoveDirectory(file.c_str());
+        if (resp == 0) {
+            DWORD errorMessageID = ::GetLastError();
+            LPSTR messageBuffer = nullptr;
+            size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                    NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+            std::string message(messageBuffer, size);
+            LocalFree(messageBuffer);
+            LOG(ERRORL) << "Error deleting directory " << file << " " << message;
+            abort();
+        }
 #else
         if (rmdir(file.c_str()) != 0) {
             LOG(ERRORL) << "Error removing dir " << file;
             abort();
         }
 #endif
-	} else {
+    } else {
 #if defined(_WIN32)
-		auto resp = DeleteFile(file.c_str());
-		if (resp == 0) {
-			DWORD errorMessageID = ::GetLastError();
-			LPSTR messageBuffer = nullptr;
-			size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-				NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
-			std::string message(messageBuffer, size);
-			LocalFree(messageBuffer);
-			LOG(ERRORL) << "Error deleting file " << file << " " << message;
-			abort();
-		}
+        auto resp = DeleteFile(file.c_str());
+        if (resp == 0) {
+            DWORD errorMessageID = ::GetLastError();
+            LPSTR messageBuffer = nullptr;
+            size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                    NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+            std::string message(messageBuffer, size);
+            LocalFree(messageBuffer);
+            LOG(ERRORL) << "Error deleting file " << file << " " << message;
+            abort();
+        }
 #else
-		int resp = ::remove(file.c_str());
-		if (resp != 0) {
-			LOG(ERRORL) << "Error deleting file " << file;
-			abort();
-		}
+        int resp = ::remove(file.c_str());
+        if (resp != 0) {
+            LOG(ERRORL) << "Error deleting file " << file;
+            abort();
+        }
 #endif
     }
 }
 void Utils::remove_all(string path) {
     if (isDirectory(path)) {
-        std::vector<std::string> filechildren = Utils::getFiles(path);
-        for (uint64_t i = 0; i < filechildren.size(); ++i) {
-            remove(filechildren[i]);
-        }
         std::vector<std::string> subdirs = Utils::getSubdirs(path);
         for (uint64_t i = 0; i < subdirs.size(); ++i) {
             remove_all(subdirs[i]);
+        }
+        std::vector<std::string> filechildren = Utils::getFiles(path);
+        for (uint64_t i = 0; i < filechildren.size(); ++i) {
+            remove(filechildren[i]);
         }
         remove(path);
     } else {
@@ -382,9 +382,9 @@ string Utils::filename(string path) {
 }
 bool Utils::exists(std::string file) {
 #if defined(_WIN32)
-	return isFile(file) || isDirectory(file);
+    return isFile(file) || isDirectory(file);
 #else
-	struct stat buffer;
+    struct stat buffer;
     return (stat(file.c_str(), &buffer) == 0);
 #endif
 }
@@ -401,36 +401,36 @@ void Utils::resizeFile(string file, uint64_t newsize) {
         throw 10;
     }
     uint64_t oldsize = Utils::fileSize(file);
-	if (oldsize != newsize) {
+    if (oldsize != newsize) {
 #if defined(_WIN32)
-		HANDLE fd = CreateFile(file.c_str(),
-			GENERIC_WRITE,
-			FILE_SHARE_WRITE,
-			NULL,
-			CREATE_NEW | OPEN_EXISTING,
-			FILE_ATTRIBUTE_NORMAL,
-			NULL);
-		LARGE_INTEGER liSize;
-		liSize.QuadPart = newsize;
-		int res = SetFilePointerEx(fd, liSize, NULL, FILE_BEGIN);
-		if (res == 0) {
-			LOG(ERRORL) << "Wronged setting the file pointer of " << file;
-		}
-		res = SetEndOfFile(fd);
-		if (res == 0) {
-			DWORD errorMessageID = ::GetLastError();
-			LPSTR messageBuffer = nullptr;
-			size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-				NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
-			std::string message(messageBuffer, size);
-			LocalFree(messageBuffer);
-			LOG(ERRORL) << "Error truncating the file " << file << " " << message;
-			abort();
-		}
-		CloseHandle(fd);
+        HANDLE fd = CreateFile(file.c_str(),
+                GENERIC_WRITE,
+                FILE_SHARE_WRITE,
+                NULL,
+                CREATE_NEW | OPEN_EXISTING,
+                FILE_ATTRIBUTE_NORMAL,
+                NULL);
+        LARGE_INTEGER liSize;
+        liSize.QuadPart = newsize;
+        int res = SetFilePointerEx(fd, liSize, NULL, FILE_BEGIN);
+        if (res == 0) {
+            LOG(ERRORL) << "Wronged setting the file pointer of " << file;
+        }
+        res = SetEndOfFile(fd);
+        if (res == 0) {
+            DWORD errorMessageID = ::GetLastError();
+            LPSTR messageBuffer = nullptr;
+            size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                    NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+            std::string message(messageBuffer, size);
+            LocalFree(messageBuffer);
+            LOG(ERRORL) << "Error truncating the file " << file << " " << message;
+            abort();
+        }
+        CloseHandle(fd);
 #else
         if (truncate(file.c_str(), newsize)) {
-	}
+        }
 #endif
     }
 }
@@ -1126,18 +1126,18 @@ double Utils::get_max_mem() {
 #endif
 #if defined(_WIN32)
     PROCESS_MEMORY_COUNTERS_EX pmc;
-	pmc.cb = sizeof(pmc);
+    pmc.cb = sizeof(pmc);
     bool result = GetProcessMemoryInfo(GetCurrentProcess(),
-		(PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(PROCESS_MEMORY_COUNTERS_EX));
-	if (!result) {
-		DWORD errorMessageID = ::GetLastError();
-		LPSTR messageBuffer = nullptr;
-		size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-			NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
-		std::string message(messageBuffer, size);
-		LocalFree(messageBuffer);
-		LOG(ERRORL) << "Error  getting peak memory " << message;
-	}
+            (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(PROCESS_MEMORY_COUNTERS_EX));
+    if (!result) {
+        DWORD errorMessageID = ::GetLastError();
+        LPSTR messageBuffer = nullptr;
+        size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+        std::string message(messageBuffer, size);
+        LocalFree(messageBuffer);
+        LOG(ERRORL) << "Error  getting peak memory " << message;
+    }
     memory = static_cast<double>(pmc.PeakWorkingSetSize / 1024 / 1024);
 #endif
     return memory;
@@ -1321,7 +1321,7 @@ void Utils::linkdir(string source, string dest) {
     throw 10;
 #elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
     if (symlink(source.c_str(), dest.c_str())) {
-	throw 10;
+        throw 10;
     }
 #endif
 }
