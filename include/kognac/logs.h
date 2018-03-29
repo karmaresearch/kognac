@@ -160,10 +160,11 @@ class Logger {
 
         ~Logger() {
             std::lock_guard<std::mutex> lock(Logger::mutex);
-            std::cerr << toprint << std::endl;
             if (Logger::file) {
                 Logger::file->write(toprint);
-            }
+            } else {
+		std::cerr << toprint << std::endl;
+	    }
         }
 };
 
