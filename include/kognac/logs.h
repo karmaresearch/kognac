@@ -28,6 +28,10 @@ class Logger {
                     ofs.open(file);
                 }
 
+		bool fail() {
+		    return ofs.fail();
+		}
+
                 void write(std::string &s) {
                     ofs << s << std::endl;
                 }
@@ -68,7 +72,15 @@ class Logger {
         }
 
         static void logToFile(std::string filepath) {
-            Logger::file = std::unique_ptr<FileLogger>(new FileLogger(filepath));
+	    if (filepath == "") {
+		Logger::file = NULL;
+	    } else {
+		Logger::file = std::unique_ptr<FileLogger>(new FileLogger(filepath));
+		if (Logger::file->fail()) {
+		    log(WARNL) << "Could not open " << filepath;
+		    Logger::file = NULL;
+		}
+	    }
         }
 
         Logger& operator << (const char *msg) {
