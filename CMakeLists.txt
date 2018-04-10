@@ -60,7 +60,7 @@ endif()
 
 #Create both a library and the executable program
 add_library(kognac-o OBJECT ${kognac_SRC})
-add_library(kognac SHARED $<TARGET_OBJECTS:kognac-o>)
+add_library(kognac-core SHARED $<TARGET_OBJECTS:kognac-o>)
 add_executable(kognac_exec src/launcher/main.cpp)
 
 set_target_properties(kognac-o PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS}")
@@ -122,9 +122,9 @@ ENDIF()
 
 #standard include
 include_directories(include/)
-TARGET_LINK_LIBRARIES(kognac lz4)
-TARGET_LINK_LIBRARIES(kognac "${ZLIB_LIBRARIES}")
-TARGET_LINK_LIBRARIES(kognac_exec kognac lz4)
+TARGET_LINK_LIBRARIES(kognac-core lz4)
+TARGET_LINK_LIBRARIES(kognac-core "${ZLIB_LIBRARIES}")
+TARGET_LINK_LIBRARIES(kognac_exec kognac-core lz4)
 TARGET_LINK_LIBRARIES(kognac_exec "${ZLIB_LIBRARIES}")
 if (CMAKE_THREAD_LIBS_INIT)
     TARGET_LINK_LIBRARIES(kognac_exec "${CMAKE_THREAD_LIBS_INIT}")
