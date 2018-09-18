@@ -37,23 +37,23 @@ class DiskReader {
         uint64_t maxsize;
 
     public:
-		KLIBEXP DiskReader(int nbuffers, std::vector<FileInfo> *files);
+        KLIBEXP DiskReader(int nbuffers, std::vector<FileInfo> *files);
 
         //char *getfile(size_t &size, bool &gzipped);
 
-		KLIBEXP Buffer getfile();
+        KLIBEXP Buffer getfile();
 
         //void releasefile(char *file);
 
-		KLIBEXP void releasefile(Buffer buffer);
+        KLIBEXP void releasefile(Buffer buffer);
 
-		KLIBEXP bool isReady();
+        KLIBEXP bool isReady();
 
-		KLIBEXP bool isAvailable();
+        KLIBEXP bool isAvailable();
 
-		KLIBEXP void run();
+        KLIBEXP void run();
 
-		KLIBEXP ~DiskReader();
+        KLIBEXP ~DiskReader();
 };
 
 #endif

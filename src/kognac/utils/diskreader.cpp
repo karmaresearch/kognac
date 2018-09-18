@@ -118,14 +118,13 @@ void DiskReader::run() {
         if (!gzipped) {
             if (itr->start > 0) {
                 ifs.seekg(itr->start);
-                while (!ifs.eof() && ifs.get() != '\n') {
+                while (readSize > 1 && !ifs.eof() && ifs.get() != '\n') {
                     readSize--;
                 };
                 readSize--;
             }
-            if (readSize <= 0) {
+            if (readSize == 0) {
                 //No line was found within the allocated chunk
-                readSize = 0;
             } else {
                 ifs.read(buffer.b, readSize);
                 assert(ifs);

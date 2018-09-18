@@ -385,7 +385,8 @@ bool Utils::exists(std::string file) {
     return isFile(file) || isDirectory(file);
 #else
     struct stat buffer;
-    return (stat(file.c_str(), &buffer) == 0);
+    auto resp = lstat(file.c_str(), &buffer);
+    return resp == 0;
 #endif
 }
 bool Utils::isEmpty(string dir) {
