@@ -230,6 +230,9 @@ string Utils::removeLastExtension(string file) {
 bool Utils::isDirectory(string dirname) {
 #if defined(_WIN32)
     DWORD d = GetFileAttributes(dirname.c_str());
+    if (d == INVALID_FILE_ATTRIBUTES) {
+	return false;
+    }
     if (d &FILE_ATTRIBUTE_DIRECTORY) {
         return true;
     } else {
@@ -248,6 +251,9 @@ bool Utils::isDirectory(string dirname) {
 bool Utils::isFile(string dirname) {
 #if defined(_WIN32)
     DWORD d = GetFileAttributes(dirname.c_str());
+    if (d == INVALID_FILE_ATTRIBUTES) {
+	return false;
+    }
     if (!(d & FILE_ATTRIBUTE_DIRECTORY)) {
         return true;
     }
