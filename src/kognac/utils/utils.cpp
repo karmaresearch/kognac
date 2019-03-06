@@ -366,10 +366,23 @@ void Utils::remove_all(string path) {
         remove(path);
     }
 }
+
+void Utils::copy(string oldfile, string newfile) {
+    std::ifstream source(oldfile, ios::binary);
+    std::ofstream dest(newfile, ios::binary);
+    std::istreambuf_iterator<char> begin_source(source);
+    std::istreambuf_iterator<char> end_source;
+    std::ostreambuf_iterator<char> begin_dest(dest); 
+    std::copy(begin_source, end_source, begin_dest);
+    source.close();
+    dest.close();
+}
+
 void Utils::rename(string oldfile, string newfile) {
     if(std::rename(oldfile.c_str(), newfile.c_str()) != 0 )
         LOG(ERRORL) << "Error renaming file " << oldfile;
 }
+
 string Utils::parentDir(string path) {
     auto pos = path.rfind(CDIR_SEP);
     if (pos != std::string::npos) {

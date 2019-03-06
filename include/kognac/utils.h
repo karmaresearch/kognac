@@ -62,6 +62,7 @@ class Utils {
         KLIBEXP static void remove(string file);
         KLIBEXP static void remove_all(string path);
         KLIBEXP static void rename(string oldfile, string newfile);
+        KLIBEXP static void copy(string oldfile, string newfile);
         KLIBEXP static string parentDir(string file);
         KLIBEXP static string filename(string path);
         KLIBEXP static bool isEmpty(string dir);
