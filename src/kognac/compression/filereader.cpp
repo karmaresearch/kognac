@@ -169,16 +169,19 @@ char FileReader::nextChar(const char *start, const char *end) {
 
 const char *FileReader::readIRI(const char *start, const char *end) {
     assert(start < end && start[0] == '<');
-    // [^#x00-#x20<>"{}|^`\]
     start++;
     char c = nextChar(start++, end);
     while (c != '>') {
-        if ((c & 0377) <= 0x20 || strchr("<\"{}|^`", c) != NULL) {
+        // Removed ` from the string below, since it actually is used in Claros
+        if ((c & 0377) <= 0x20 || strchr("<\"{}|^", c) != NULL) {
             LOG(ERRORL) << "Illegal character in IRI";
             throw ex;
         }
         if (c == '\\') {
-            start = readUnicodeEscape(start-1, end);
+            if (start[0] == 'u' || start[0] == 'U') {
+                start = readUnicodeEscape(start-1, end);
+            }
+            // Otherwise allow \, it actually is used in Claros.
         }
         c = nextChar(start++, end);
     }
@@ -314,13 +317,13 @@ bool FileReader::parseLine(const char *line, const int sizeLine) {
         startS = skipSpaces(line, endLine);
         const char *endS = readResource(startS, endLine);
         lengthS = (int)(endS - startS);
-        LOG(DEBUGL) << "S = " << std::string(startS, lengthS) << ".";
+        LOG(TRACEL) << "S = " << std::string(startS, lengthS) << ".";
 
         //Parse predicate
         startP = skipSpaces(endS, endLine);
         const char *endP = readIRI(startP, endLine);
         lengthP = (int)(endP - startP);
-        LOG(DEBUGL) << "P = " << std::string(startP, lengthP) << ".";
+        LOG(TRACEL) << "P = " << std::string(startP, lengthP) << ".";
 
         // Parse object
         startO = skipSpaces(endP, endLine);
@@ -331,7 +334,7 @@ bool FileReader::parseLine(const char *line, const int sizeLine) {
             endO = readResource(startO, endLine);
         }
         lengthO = (int)(endO - startO);
-        LOG(DEBUGL) << "O = " << std::string(startO, lengthO) << ".";
+        LOG(TRACEL) << "O = " << std::string(startO, lengthO) << ".";
 
         if (endO < endLine) {
             const char *p = skipSpaces(endO, endLine);
