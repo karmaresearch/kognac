@@ -29,11 +29,11 @@
 #include <psapi.h>
 #include <tchar.h>
 #include <direct.h>
+#include <filesystem>
 #elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
 #include <unistd.h>
 #include <sys/resource.h>
 #include <dirent.h>
-#include <filesystem>
 
 #if defined(__APPLE__) && defined(__MACH__)
 #include <mach/mach.h>
