@@ -25,6 +25,8 @@
 #include <kognac/utils.h>
 #include <zstr/zstr.hpp>
 
+#include <ctype.h>
+
 #include <fstream>
 #include <iostream>
 #include <climits>
@@ -158,51 +160,196 @@ bool FileReader::isTripleValid() {
     return tripleValid;
 }
 
-void FileReader::checkRange(const char *pointer, const char* start,
-        const char *end) {
-    if (pointer == NULL || pointer <= (start + 1) || pointer > end) {
+char FileReader::nextChar(const char *start, const char *end) {
+    if (start >= end) {
         throw ex;
     }
+    return start[0];
+}
+
+const char *FileReader::readIRI(const char *start, const char *end) {
+    assert(start < end && start[0] == '<');
+    start++;
+    char c = nextChar(start++, end);
+    while (c != '>') {
+        // Removed ` from the string below, since it actually is used in Claros
+        if ((c & 0377) <= 0x20 || strchr("<\"{}|^", c) != NULL) {
+            LOG(ERRORL) << "Illegal character in IRI";
+            throw ex;
+        }
+        if (c == '\\') {
+            if (start[0] == 'u' || start[0] == 'U') {
+                start = readUnicodeEscape(start-1, end);
+            }
+            // Otherwise allow \, it actually is used in Claros.
+        }
+        c = nextChar(start++, end);
+    }
+    return start;
+}
+
+const char *FileReader::readUnicodeEscape(const char *start, const char *end) {
+    assert(start < end && *start == '\\');
+    char c = nextChar(start+1, end);
+    start += 2;
+    int count;
+    if (c == 'u') {
+        count = 4;
+    } else if (c == 'U') {
+        count = 8;
+    } else {
+        LOG(ERRORL) << "Illegal escape sequence";
+        throw ex;
+    }
+    for (int i = 0; i < count; i++) {
+        c = nextChar(start++, end);
+        if (! isxdigit(c)) {
+            LOG(ERRORL) << "Illegal unicode escape";
+            throw ex;
+        }
+    }
+    return start;
+}
+
+const char *FileReader::skipSpaces(const char *start, const char *end) {
+    while (start < end && isspace(start[0])) {
+        start++;
+    }
+    return start;
+}
+
+const char *FileReader::readResource(const char *start, const char *end) {
+    char c = nextChar(start, end);
+    if (c == '_') {
+        start++;
+        c = nextChar(start++, end);
+        if (c == ':') {
+            c = nextChar(start, end);
+            while (c == '-' || isalnum(c)) {
+                start++;
+                if (start >= end) {
+                    return start;
+                }
+                c = nextChar(start, end);
+            }
+            return start;
+        } else {
+            LOG(ERRORL) << "Illegal blank node";
+            throw ex;
+        }
+    } else if (c == '<') {
+        return readIRI(start, end);
+    } else {
+        LOG(ERRORL) << "blank node or URI expected";
+        throw ex;
+    }
+}
+
+const char *FileReader::readLiteral(const char *start, const char *end) {
+    assert(start < end && *start == '"');
+    start++;
+    char c = nextChar(start++, end);
+    while (c != '"') {
+        if (c == '\\') {
+            c = nextChar(start, end);
+            if (strchr("tbnrf\"'\\", c) != NULL) {
+                start++;
+            } else if (c == 'u' || c == 'U') {
+                start = readUnicodeEscape(start-1, end);
+            } else {
+                LOG(ERRORL) << "Illegal escape in string";
+                throw ex;
+            }
+        }
+        c = nextChar(start++, end);
+    }
+    if (start < end) {
+        if (*start == '@') {
+            // [a-zA-Z]+ ('-' [a-zA-Z0-9]+)*
+            start++;
+            c = nextChar(start++, end);
+            if (! isalpha(c)) {
+                LOG(ERRORL) << "illegal character in language specification";
+                throw ex;
+            }
+            while (isalpha(c)) {
+                if (start == end) {
+                    return start;
+                }
+                c = nextChar(start++, end);
+            }
+            while (c == '-') {
+                c = nextChar(start++, end);
+                if (! isalnum(c)) {
+                    LOG(ERRORL) << "illegal character in language specification";
+                    throw ex;
+                }
+                while (isalnum(c)) {
+                    if (start == end) {
+                        return start;
+                    }
+                    c = nextChar(start++, end);
+                }
+            }
+        } else if (*start == '^') {
+            start++;
+            c = nextChar(start++, end);
+            if (c != '^') {
+                LOG(ERRORL) << "Expected ^ in type";
+                throw ex;
+            }
+            c = nextChar(start, end);
+            if (c != '<') {
+                LOG(ERRORL) << "Expected IRI in type";
+                throw ex;
+            }
+            start = readIRI(start, end);
+        }
+    }
+    return start;
 }
 
 bool FileReader::parseLine(const char *line, const int sizeLine) {
 
     const char* endLine = line + sizeLine;
-    const char *endS;
-    const char *endO = NULL;
     try {
         // Parse subject
-        startS = line;
-        if (line[0] == '<') {
-            endS = strchr(line, '>') + 1;
-        } else { // Is a bnode
-            endS = strchr(line, ' ');
-        }
-        checkRange(endS, startS, endLine);
+        startS = skipSpaces(line, endLine);
+        const char *endS = readResource(startS, endLine);
         lengthS = (int)(endS - startS);
+        LOG(TRACEL) << "S = " << std::string(startS, lengthS) << ".";
 
-        //Parse predicate. Skip one space
-        startP = line + lengthS + 1;
-        const char *endP = strchr(startP, '>');
-        checkRange(endP, startP, endLine);
-        lengthP = (int)(endP + 1 - startP);
+        //Parse predicate
+        startP = skipSpaces(endS, endLine);
+        const char *endP = readIRI(startP, endLine);
+        lengthP = (int)(endP - startP);
+        LOG(TRACEL) << "P = " << std::string(startP, lengthP) << ".";
 
         // Parse object
-        startO = startP + lengthP + 1;
-        if (startO[0] == '<') { // URI
-            endO = strchr(startO, '>') + 1;
-        } else if (startO[0] == '"') { // Literal
-            //Copy until the end of the string and remove character
-            endO = endLine;
-            while (*endO != '.' && endO >  startO) {
-                endO--;
-            }
-            endO--;
-        } else { // Bnode
-            endO = strchr(startO, ' ');
+        startO = skipSpaces(endP, endLine);
+        const char *endO;
+        if (startO[0] == '"') { // Literal
+            endO = readLiteral(startO, endLine);
+        } else {
+            endO = readResource(startO, endLine);
         }
-        checkRange(endO, startO, endLine);
         lengthO = (int)(endO - startO);
+        LOG(TRACEL) << "O = " << std::string(startO, lengthO) << ".";
+
+        if (endO < endLine) {
+            const char *p = skipSpaces(endO, endLine);
+            if (p < endLine) {
+                if (*p != '.') {
+                    LOG(ERRORL) << "'.' expected at end of triple";
+                    throw ex;
+                }
+                p = skipSpaces(p+1, endLine);
+                if (p != endLine) {
+                    LOG(ERRORL) << "garbage at end of triple";
+                    throw ex;
+                }
+            }
+        }
 
         if (lengthS > 0 && lengthS < (MAX_TERM_SIZE - 1) && lengthP > 0
                 && lengthP < (MAX_TERM_SIZE - 1) && lengthO > 0

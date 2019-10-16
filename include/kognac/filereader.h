@@ -73,7 +73,17 @@ class FileReader {
         ParseException ex;
         bool parseLine(const char *input, const int sizeInput);
 
-        void checkRange(const char *pointer, const char* start, const char *end);
+        char nextChar(const char *start, const char *end);
+
+        const char *readUnicodeEscape(const char *start, const char *end);
+
+        const char *readIRI(const char *start, const char *end);
+
+        const char *readResource(const char *start, const char *end);
+
+        const char *skipSpaces(const char *start, const char *end);
+
+        const char *readLiteral(const char *start, const char *end);
 
     public:
 		KLIBEXP FileReader(FileInfo file);

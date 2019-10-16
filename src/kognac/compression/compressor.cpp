@@ -1941,9 +1941,11 @@ std::vector<string> Compressor::getPartitionBoundaries(const string kbdir,
 
     std::vector<string> output;
     size_t sizePartition = sample.size() / partitions;
+	if (sizePartition == 0) {
+		sizePartition = 1;
+	}
     LOG(DEBUGL) << "sample.size()=" << (uint64_t)sample.size()
-        << " sizePartition=" << (uint64_t)sizePartition
-        << " remainder=" << (uint64_t)(sample.size() % partitions);
+        << " sizePartition=" << (uint64_t)sizePartition;
     for (size_t i = 0; i < sample.size(); ++i) {
         if ((i + 1) % sizePartition == 0 && output.size() < partitions - 1) {
             //Add element in the partition
