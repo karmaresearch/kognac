@@ -1356,7 +1356,7 @@ void Utils::rmlink(string link) {
 #endif
 }
 
-bool isAbsolutePath(string path) {
+bool Utils::isAbsolutePath(string path) {
     if (path == "") {
         LOG(ERRORL) << "Cannot determine if " << path << "is absolute or not";
         throw 10;
