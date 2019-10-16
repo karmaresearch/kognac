@@ -69,6 +69,7 @@ class Utils {
         KLIBEXP static void resizeFile(string file, uint64_t newsize);
         KLIBEXP static void linkdir(string source, string dest);
         KLIBEXP static void rmlink(string link);
+        KLIBEXP static bool isAbsolutePath(string path);
         //End file utils
 
         static int numberOfLeadingZeros(uint32_t number) {

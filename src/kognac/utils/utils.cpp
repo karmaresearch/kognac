@@ -33,6 +33,7 @@
 #include <unistd.h>
 #include <sys/resource.h>
 #include <dirent.h>
+#include <filesystem>
 
 #if defined(__APPLE__) && defined(__MACH__)
 #include <mach/mach.h>
@@ -231,7 +232,7 @@ bool Utils::isDirectory(string dirname) {
 #if defined(_WIN32)
     DWORD d = GetFileAttributes(dirname.c_str());
     if (d == INVALID_FILE_ATTRIBUTES) {
-	return false;
+        return false;
     }
     if (d &FILE_ATTRIBUTE_DIRECTORY) {
         return true;
@@ -252,7 +253,7 @@ bool Utils::isFile(string dirname) {
 #if defined(_WIN32)
     DWORD d = GetFileAttributes(dirname.c_str());
     if (d == INVALID_FILE_ATTRIBUTES) {
-	return false;
+        return false;
     }
     if (!(d & FILE_ATTRIBUTE_DIRECTORY)) {
         return true;
@@ -372,7 +373,7 @@ void Utils::copy(string oldfile, string newfile) {
     std::ofstream dest(newfile, ios::binary);
     std::istreambuf_iterator<char> begin_source(source);
     std::istreambuf_iterator<char> end_source;
-    std::ostreambuf_iterator<char> begin_dest(dest); 
+    std::ostreambuf_iterator<char> begin_dest(dest);
     std::copy(begin_source, end_source, begin_dest);
     source.close();
     dest.close();
@@ -1352,6 +1353,23 @@ void Utils::rmlink(string link) {
     throw 10;
 #elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
     unlink(link.c_str());
+#endif
+}
+
+bool isAbsolutePath(string path) {
+    if (path == "") {
+        LOG(ERRORL) << "Cannot determine if " << path << "is absolute or not";
+        throw 10;
+    }
+#if defined(_WIN32)
+    std::filesystem::path path(path);
+    return path.is_absolute();
+#elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
+    if (path[0] == '/') {
+        return true;
+    } else {
+        return false;
+    }
 #endif
 }
 
