@@ -96,9 +96,9 @@ ELSE()
 ENDIF()
 
 #LZ4
-# find_library(lz4 lz4)
-# find_path (lz4h lz4.h)
-# IF (${lz4h} STREQUAL "lz4h-NOTFOUND")
+ find_library(lz4 lz4)
+ find_path (lz4h lz4.h)
+ IF (${lz4h} STREQUAL "lz4h-NOTFOUND")
 #    message("Could not find LZ4. I'm going to download it from the GIT repository ...")
     message("Downloading lz4, static version required")
     ExternalProject_Add(git-lz4
@@ -116,10 +116,10 @@ ENDIF()
     set_property(TARGET lz4 PROPERTY IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/external/lz4/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lz4${CMAKE_STATIC_LIBRARY_SUFFIX})
     add_dependencies(lz4 git-lz4)
     add_dependencies(kognac-o lz4)
-    # ELSE()
-    # include_directories(lz4h)
-    # message("Found LZ4, lz4=${lz4}")
-    # ENDIF()
+ELSE()
+    include_directories(lz4h)
+    message("Found LZ4, lz4=${lz4}")
+ENDIF()
 
 #standard include
 include_directories(include/)
