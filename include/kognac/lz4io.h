@@ -124,8 +124,8 @@ private:
                 LOG(ERRORL) << "Problems reading from the file. Only " << (int64_t)is.gcount() << " out of " << compressedLen << " were being read";
             }
 
-            if (!LZ4_decompress_fast(compressedBuffer, uncompressedBuffer,
-                                     uncompressedLen)) {
+            if (!LZ4_decompress_safe(compressedBuffer, uncompressedBuffer,
+                                     compressedLen, uncompressedLen)) {
                 LOG(ERRORL) << "Error in the decompression.";
             }
             break;

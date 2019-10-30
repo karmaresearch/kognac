@@ -335,7 +335,7 @@ bool DiskLZ4Reader::uncompressBuffer(const int id) {
             memcpy(f.buffer, startb, uncompressedLen);
             break;
         case 32:
-            if (LZ4_decompress_fast(startb, f.buffer, uncompressedLen) < 0) {
+            if (LZ4_decompress_safe(startb, f.buffer, compressedLen, uncompressedLen) < 0) {
                 LOG(ERRORL) << "Error in the decompression.";
                 throw 10;
             }
