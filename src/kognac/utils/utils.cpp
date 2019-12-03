@@ -1361,15 +1361,20 @@ bool Utils::isAbsolutePath(string path) {
         LOG(ERRORL) << "Cannot determine if " << path << "is absolute or not";
         throw 10;
     }
-#if defined(_WIN32)
-    std::filesystem::path path(path);
-    return path.is_absolute();
-#elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
+// Commented out: too new (for my Windows Visual Studio).ZZ
+// #if defined(_WIN32)
+//     std::filesystem::path path(path);
+//     return path.is_absolute();
+// #elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
+#if defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
     if (path[0] == '/') {
         return true;
     } else {
         return false;
     }
+#else
+    LOG(ERRORL) << "IsAbsolutePath: Not supported";
+    throw 10;
 #endif
 }
 
