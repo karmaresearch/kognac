@@ -34,14 +34,24 @@
 
 string GZIP_EXTENSION = string(".gz");
 
+struct membuf : std::streambuf
+{
+    membuf(char* begin, char* end) {
+        this->setg(begin, begin, end);
+    }
+};
+
 FileReader::FileReader(char *buffer, size_t sizebuffer, bool gzipped) :
     byteArray(true), rawByteArray(buffer),
     sizeByteArray(sizebuffer), compressed(gzipped) {
         rawFile = NULL;
         if (compressed) {
             //Decompress the stream
-            std::string b(buffer, buffer + sizebuffer);
-            std::istringstream bytestream(b);
+            // std::string b(buffer, buffer + sizebuffer);
+            // std::istringstream bytestream(b);
+            // Avoid copy...
+            membuf sbuf(buffer, buffer + sizebuffer);
+            std::istream bytestream(&sbuf);
             zstr::istream stream(bytestream);
             std::vector<char> contents((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
             uncompressedByteArray.swap(contents);
@@ -173,15 +183,25 @@ const char *FileReader::readIRI(const char *start, const char *end) {
     char c = nextChar(start++, end);
     while (c != '>') {
         // Removed ` from the string below, since it actually is used in Claros
-        if ((c & 0377) <= 0x20 || strchr("<\"{}|^", c) != NULL) {
+        if ((c & 0377) <= 0x20 /* || strchr("<\"{}|^", c) != NULL Commented out; slow. */) {
             LOG(ERRORL) << "Illegal character in IRI";
             throw ex;
         }
-        if (c == '\\') {
+        switch(c) {
+        case '<':
+        case '"':
+        case '{':
+        case '}':
+        case '|':
+        case '^':
+            LOG(ERRORL) << "Illegal character in IRI";
+            throw ex;
+        case '\\':
             if (start[0] == 'u' || start[0] == 'U') {
                 start = readUnicodeEscape(start-1, end);
             }
             // Otherwise allow \, it actually is used in Claros.
+            break;
         }
         c = nextChar(start++, end);
     }

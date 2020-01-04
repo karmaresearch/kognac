@@ -371,27 +371,38 @@ int64_t DiskLZ4Reader::readLong(const int id) {
     } else {
         char header[8];
         size_t copiedBytes = files[id].sizebuffer - files[id].pivot;
-        memcpy(header, files[id].buffer + files[id].pivot, copiedBytes);
+        // memcpy(header, files[id].buffer + files[id].pivot, copiedBytes);
+        for (int i = 0; i < copiedBytes; i++) {
+            header[i] = files[id].buffer[files[id].pivot + i];
+        }
 #ifdef DEBUG
         bool resp = uncompressBuffer(id);
         assert(resp);
 #else
         uncompressBuffer(id);
 #endif
-        memcpy(header + copiedBytes, files[id].buffer, 8 - copiedBytes);
+        // memcpy(header + copiedBytes, files[id].buffer, 8 - copiedBytes);
+        for (int i = copiedBytes; i < 8; i++) {
+            header[i] = files[id].buffer[i - copiedBytes];
+        }
         files[id].pivot = 8 - copiedBytes;
         return Utils::decode_long(header);
     }
 }
 
 int64_t DiskLZ4Reader::readVLong(const int id) {
-    int shift = 7;
-    char b = readByte(id);
+    int b = readByte(id);
     int64_t n = b & 127;
-    while (b < 0) {
-        b = readByte(id);
-        n += (int64_t) (b & 127) << shift;
-        shift += 7;
+    if ((b & 128) != 0) {
+        int shift = 7;
+        for (;;) {
+            b = readByte(id);
+            n += ((int64_t) (b & 127)) << shift;
+            if ((b & 128) == 0) {
+                break;
+            }
+            shift += 7;
+        }
     }
     return n;
 }

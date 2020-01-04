@@ -153,16 +153,21 @@ struct TriplePair {
 
 };
 
+#define PREFIX_HEADER "<http://"
+#define PREFIX_HEADER_LEN 8
+
 struct SimplifiedAnnotatedTerm {
     const char *term;
     int64_t tripleIdAndPosition;
     //int prefixid;
     const char *prefix;
     int size;
+    int prefixSize;
 
     SimplifiedAnnotatedTerm() {
         prefix = NULL;
         size = 0;
+        prefixSize = 0;
     }
 
     void readFrom(const int id, DiskLZ4Reader *reader) {
@@ -177,190 +182,151 @@ struct SimplifiedAnnotatedTerm {
 
     void writeTo(LZ4Writer *writer) {
         if (prefix != NULL) {
-            int lenprefix = Utils::decode_short(prefix);
-            int64_t len = lenprefix + size;
+            int64_t len = prefixSize + PREFIX_HEADER_LEN + size;
             writer->writeVLong(len);
-            writer->writeRawArray(prefix + 2, lenprefix);
+            writer->writeRawArray(PREFIX_HEADER, PREFIX_HEADER_LEN);
+            writer->writeRawArray(prefix + 2, prefixSize);
             writer->writeRawArray(term, size);
-            writer->writeLong(tripleIdAndPosition);
         } else {
             writer->writeString(term, size);
-            writer->writeLong(tripleIdAndPosition);
         }
+        writer->writeLong(tripleIdAndPosition);
     }
 
     void writeTo(const int id,
                  DiskLZ4Writer *writer) {
         if (prefix != NULL) {
-            int lenprefix = Utils::decode_short(prefix);
-            int64_t len = lenprefix + size;
+            int64_t len = prefixSize + PREFIX_HEADER_LEN + size;
             writer->writeVLong(id, len);
-            writer->writeRawArray(id, prefix + 2, lenprefix);
+            writer->writeRawArray(id, PREFIX_HEADER, PREFIX_HEADER_LEN);
+            writer->writeRawArray(id, prefix + 2, prefixSize);
             writer->writeRawArray(id, term, size);
-            writer->writeLong(id, tripleIdAndPosition);
         } else {
             writer->writeString(id, term, size);
-            writer->writeLong(id, tripleIdAndPosition);
         }
+        writer->writeLong(id, tripleIdAndPosition);
     }
 
-    bool equals(const char *el, const int sizeel, const char *prevPrefix) {
-        if (prevPrefix == prefix && sizeel == size) {
-            return memcmp(el, term, size) == 0;
+    bool equals(SimplifiedAnnotatedTerm &t) {
+        if (t.prefix == prefix && t.size == size) {
+            return memcmp(t.term, term, size) == 0;
         }
         return false;
     }
 
-    const char *getPrefix(int &sizeprefix) {
-        if (size > 10 && memcmp(term, "<http://", 8) == 0) {
-            const char *endprefix = (const char *) memchr(term + 8, '#', size - 8);
+    bool equals(char *oldterm, int oldsz) {
+        if (oldsz != size) {
+            return false;
+        }
+        return memcmp(term, oldterm, size) == 0;
+    }
+
+    // splitOffPrefix will try and split of a header, but the header will not yet include
+    // the encoding of its length.
+    const void splitOffPrefix() {
+        if (prefix == NULL && size > 10 && memcmp(term, PREFIX_HEADER, PREFIX_HEADER_LEN) == 0) {
+            const char *endprefix = (const char *) memchr(term + PREFIX_HEADER_LEN, '#', size - PREFIX_HEADER_LEN);
             if (endprefix) {
-                sizeprefix = static_cast<int>(endprefix - term);
-                return term;
+                prefix = term + PREFIX_HEADER_LEN;
+                prefixSize = static_cast<int>(endprefix + 1 - prefix);
+                size -= prefixSize + PREFIX_HEADER_LEN;
+                term = endprefix + 1;
             } else {
                 //Try to get subdomain structures
-                endprefix = (const char *) memchr(term + 8, '/', size - 8);
+                endprefix = (const char *) memchr(term + PREFIX_HEADER_LEN, '/', size - PREFIX_HEADER_LEN);
                 if (endprefix) {
-                    sizeprefix = static_cast<int>(endprefix - term);
-                    return term;
+                    prefix = term + PREFIX_HEADER_LEN;
+                    prefixSize = static_cast<int>(endprefix + 1 - prefix);
+                    size -= prefixSize + PREFIX_HEADER_LEN;
+                    term = endprefix + 1;
                 } else {
-                    sizeprefix = 0;
-                    return NULL;
+                    prefixSize = 0;
+                    prefix = NULL;
                 }
             }
+            if (prefixSize != 0) {
+                assert(term == prefix + prefixSize);
+            } else {
+                assert(prefix == NULL);
+            }
         } else {
-            sizeprefix = 0;
-            return NULL;
+            prefixSize = 0;
+            prefix = NULL;
         }
     }
 
+    std::string tostring() const {
+        if (prefix == NULL) {
+            return std::string(term, size);
+        }
+        return PREFIX_HEADER + std::string(prefix+2, prefixSize) + std::string(term, size);
+    }
+
+    void log(std::string v) const {
+        LOG(DEBUGL) << v;
+        if (prefix != NULL) {
+            LOG(DEBUGL) << "prefix: " << std::string(prefix + 2, prefixSize);
+        }
+        LOG(DEBUGL) << "term: " << std::string(term, size);
+    }
+
+    // sless assumes that either all terms have at least attempted split-off headers
+    // or all terms have no headers.
     static bool sless(const SimplifiedAnnotatedTerm &i,
                       const SimplifiedAnnotatedTerm &j) {
-        if (i.prefix == NULL) {
-            if (j.prefix == NULL) {
-                int ret = memcmp(i.term, j.term, min(i.size, j.size));
-                if (ret == 0) {
-                    return (i.size - j.size) < 0;
-                } else {
-                    return ret < 0;
-                }
+        if (i.prefix == j.prefix) {
+            // First case: same (or no) header
+            int ret = memcmp(i.term, j.term, min(i.size, j.size));
+            if (ret == 0) {
+                return (i.size - j.size) < 0;
             } else {
-                //Get the size of the prefix of j
-                //assert(prefixMap != NULL);
-                //auto itr = prefixMap->find(j.prefixid);
-                //assert(itr != prefixMap->end());
-                const int lenprefix = Utils::decode_short(j.prefix);
-                const int minsize = min(i.size, lenprefix);
-                int ret = memcmp(i.term, j.prefix + 2, minsize);
-                if (ret != 0) {
-                    return ret < 0;
+                return ret < 0;
+            }
+        }
+        if (i.prefix == NULL) {
+            // Now we know j.prefix != NULL, and also that no header could be split off from i.
+            // so we only have to compare the header.
+            int minsize = min(i.size, PREFIX_HEADER_LEN);
+            int ret = memcmp(i.term, PREFIX_HEADER, minsize);
+            if (ret != 0) {
+                return ret < 0;
+            }
+            minsize = min(i.size - PREFIX_HEADER_LEN, j.prefixSize);
+            ret = memcmp(i.term + PREFIX_HEADER_LEN, j.prefix + 2, minsize);
+            if (ret != 0) {
+                return ret < 0;
+            } else {
+                throw "Assumption in SimplifiedAnnotatedTerm violated";
+            }
+        } else if (j.prefix != NULL) {
+            // Compare the two prefixes. They should not be equal.
+            const int minsize = min(i.prefixSize, j.prefixSize);
+            int ret = memcmp(i.prefix + 2, j.prefix + 2, minsize);
+            if (ret == 0) {
+                if (minsize == i.prefixSize) {
+                    ret = memcmp(i.term, j.prefix + 2 + minsize, j.prefixSize - minsize);
                 } else {
-                    //Check the difference
-                    ret = memcmp(i.term + minsize, j.term,
-                                 min(i.size - minsize, j.size));
-                    if (ret != 0) {
-                        return ret < 0;
-                    } else {
-                        return ((i.size - minsize) - j.size) < 0;
-                    }
+                    ret = memcmp(j.term, i.prefix + 2 + minsize, i.prefixSize - minsize);
+                }
+                if (ret == 0) {
+                    throw "Assumption in SimplifiedAnnotatedTerm violated";
                 }
             }
+            return ret < 0;
         } else {
-            if (j.prefix != NULL) {
-                if (i.prefix == j.prefix) {
-                    int ret = memcmp(i.term, j.term, min(i.size, j.size));
-                    if (ret == 0) {
-                        return (i.size - j.size) < 0;
-                    } else {
-                        return ret < 0;
-                    }
-                } else {
-                    //Compare the two prefixes
-                    const int len1 = Utils::decode_short(i.prefix);
-                    const int len2 = Utils::decode_short(j.prefix);
-                    int ret = memcmp(i.prefix + 2, j.prefix + 2,
-                                     min(len1, len2));
-                    if (ret == 0) {
-                        assert(len1 != len2);
-                        if (len1 < len2) {
-                            if (i.size > 0) {
-                                //Must compare the second prefix with the
-                                //remaining of the first part
-                                int s1 = i.size;
-                                int s2 = len2 - len1;
-                                int mins = min(s1, s2);
-                                ret = memcmp(i.term, j.prefix + 2 + len1, mins);
-                                if (ret == 0) {
-                                    if (s1 < s2) {
-                                        return true;
-                                    } else if (s1 == s2) {
-                                        return j.size > 0;
-                                    } else {
-                                        ret = memcmp(i.term + mins, j.term,
-                                                     min(i.size - mins, j.size));
-                                        if (ret == 0) {
-                                            return ((i.size - mins) - j.size) < 0;
-                                        } else {
-                                            return ret < 0;
-                                        }
-                                    }
-                                } else {
-                                    return ret < 0;
-                                }
-                            } else {
-                                return true;
-                            }
-                        } else {
-                            if (j.size > 0) {
-                                //Must compare the second prefix with the
-                                //remaining of the first part
-                                int s1 = len1 - len2;
-                                int s2 = j.size;
-                                int mins = min(s1, s2);
-                                ret = memcmp(i.prefix + 2 + len2, j.term, mins);
-                                if (ret == 0) {
-                                    if (s1 > s2) {
-                                        return false;
-                                    } else if (s1 == s2) {
-                                        return false;
-                                    } else {
-                                        ret = memcmp(i.term, j.term + mins,
-                                                     min(i.size, j.size - mins));
-                                        if (ret == 0) {
-                                            return (i.size - (j.size - mins)) < 0;
-                                        } else {
-                                            return ret < 0;
-                                        }
-                                    }
-                                } else {
-                                    return ret < 0;
-                                }
-                            } else {
-                                return false;
-                            }
-                        }
-                    } else {
-                        return ret < 0;
-                    }
-                }
+            // Now we know i.prefix != NULL, and also that no header could be split off from j,
+            // so we only have to compare the header.
+            int minsize = min(PREFIX_HEADER_LEN, j.size);
+            int ret = memcmp(PREFIX_HEADER, j.term, minsize);
+            if (ret != 0) {
+                return ret < 0;
+            }
+            minsize = min(i.prefixSize, j.size - PREFIX_HEADER_LEN);
+            ret = memcmp(i.prefix + 2, j.term + PREFIX_HEADER_LEN, minsize);
+            if (ret != 0) {
+                return ret < 0;
             } else {
-                //Get the size of the prefix of i
-                //assert(prefixMap != NULL);
-                const int lenprefix = Utils::decode_short(i.prefix);
-                const int minsize = min(lenprefix, j.size);
-                int ret = memcmp(i.prefix + 2, j.term, minsize);
-                if (ret != 0) {
-                    return ret < 0;
-                } else {
-                    //Check the difference
-                    ret = memcmp(i.term, j.term + minsize,
-                                 min(i.size, j.size - minsize));
-                    if (ret != 0) {
-                        return ret < 0;
-                    } else {
-                        return (i.size - (j.size - minsize)) < 0;
-                    }
-                }
+                throw "Assumption in SimplifiedAnnotatedTerm violated";
             }
         }
     }

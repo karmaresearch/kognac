@@ -43,21 +43,27 @@ void DiskLZ4Writer::writeByte(const int id, const int value) {
 }
 
 void DiskLZ4Writer::writeVLong(const int id, const int64_t value) {
-    int i = 1;
     int64_t n = value;
-    if (value < 128) { // One byte is enough
+    // Note: assumes that the value to be written is >= 0.
+    while (n >= 128) {
+        writeByte(id, ((int) n & 127) + 128);
+        n >>= 7;
+    }
+    writeByte(id, ((int) n) & 127);
+    /*
+    if (n < 128) { // One byte is enough
         writeByte(id, static_cast<int>(n));
         return;
     } else {
         int bytesToStore = 64 - Utils::numberOfLeadingZeros((uint64_t) n);
         while (bytesToStore > 7) {
-            i++;
             writeByte(id, (n & 127) + 128);
             n >>= 7;
             bytesToStore -= 7;
         }
         writeByte(id, n & 127);
     }
+    */
 }
 
 void DiskLZ4Writer::writeLong(const int id, const int64_t value) {

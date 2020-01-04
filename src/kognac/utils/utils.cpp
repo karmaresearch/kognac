@@ -659,56 +659,56 @@ void Utils::encode_longNBytes(char* buffer, const uint8_t nbytes,
     uint8_t offset = 0;
     switch (nbytes) {
         case 1:
-            buffer[offset] = n & 0xFF;
+            buffer[0] = n & 0xFF;
             break;
         case 2:
-            buffer[offset++] = (n >> 8) & 0xFF;
-            buffer[offset++] = n & 0xFF;
+            buffer[0] = (n >> 8) & 0xFF;
+            buffer[1] = n & 0xFF;
             break;
         case 3:
-            buffer[offset++] = (n >> 16) & 0xFF;
-            buffer[offset++] = (n >> 8) & 0xFF;
-            buffer[offset++] = n & 0xFF;
+            buffer[0] = (n >> 16) & 0xFF;
+            buffer[1] = (n >> 8) & 0xFF;
+            buffer[2] = n & 0xFF;
             break;
         case 4:
-            buffer[offset++] = (n >> 24) & 0xFF;
-            buffer[offset++] = (n >> 16) & 0xFF;
-            buffer[offset++] = (n >> 8) & 0xFF;
-            buffer[offset++] = n & 0xFF;
+            buffer[0] = (n >> 24) & 0xFF;
+            buffer[1] = (n >> 16) & 0xFF;
+            buffer[2] = (n >> 8) & 0xFF;
+            buffer[3] = n & 0xFF;
             break;
         case 5:
-            buffer[offset++] = (n >> 32) & 0xFF;
-            buffer[offset++] = (n >> 24) & 0xFF;
-            buffer[offset++] = (n >> 16) & 0xFF;
-            buffer[offset++] = (n >> 8) & 0xFF;
-            buffer[offset++] = n & 0xFF;
+            buffer[0] = (n >> 32) & 0xFF;
+            buffer[1] = (n >> 24) & 0xFF;
+            buffer[2] = (n >> 16) & 0xFF;
+            buffer[3] = (n >> 8) & 0xFF;
+            buffer[4] = n & 0xFF;
             break;
         case 6:
-            buffer[offset++] = (n >> 40) & 0xFF;
-            buffer[offset++] = (n >> 32) & 0xFF;
-            buffer[offset++] = (n >> 24) & 0xFF;
-            buffer[offset++] = (n >> 16) & 0xFF;
-            buffer[offset++] = (n >> 8) & 0xFF;
-            buffer[offset++] = n & 0xFF;
+            buffer[0] = (n >> 40) & 0xFF;
+            buffer[1] = (n >> 32) & 0xFF;
+            buffer[2] = (n >> 24) & 0xFF;
+            buffer[3] = (n >> 16) & 0xFF;
+            buffer[4] = (n >> 8) & 0xFF;
+            buffer[5] = n & 0xFF;
             break;
         case 7:
-            buffer[offset++] = (n >> 48) & 0xFF;
-            buffer[offset++] = (n >> 40) & 0xFF;
-            buffer[offset++] = (n >> 32) & 0xFF;
-            buffer[offset++] = (n >> 24) & 0xFF;
-            buffer[offset++] = (n >> 16) & 0xFF;
-            buffer[offset++] = (n >> 8) & 0xFF;
-            buffer[offset++] = n & 0xFF;
+            buffer[0] = (n >> 48) & 0xFF;
+            buffer[1] = (n >> 40) & 0xFF;
+            buffer[2] = (n >> 32) & 0xFF;
+            buffer[3] = (n >> 24) & 0xFF;
+            buffer[4] = (n >> 16) & 0xFF;
+            buffer[5] = (n >> 8) & 0xFF;
+            buffer[6] = n & 0xFF;
             break;
         case 8:
-            buffer[offset++] = (n >> 56) & 0xFF;
-            buffer[offset++] = (n >> 48) & 0xFF;
-            buffer[offset++] = (n >> 40) & 0xFF;
-            buffer[offset++] = (n >> 32) & 0xFF;
-            buffer[offset++] = (n >> 24) & 0xFF;
-            buffer[offset++] = (n >> 16) & 0xFF;
-            buffer[offset++] = (n >> 8) & 0xFF;
-            buffer[offset++] = n & 0xFF;
+            buffer[0] = (n >> 56) & 0xFF;
+            buffer[1] = (n >> 48) & 0xFF;
+            buffer[2] = (n >> 40) & 0xFF;
+            buffer[3] = (n >> 32) & 0xFF;
+            buffer[4] = (n >> 24) & 0xFF;
+            buffer[5] = (n >> 16) & 0xFF;
+            buffer[6] = (n >> 8) & 0xFF;
+            buffer[7] = n & 0xFF;
             break;
         default:
             throw 10;

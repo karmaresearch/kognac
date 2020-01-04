@@ -24,6 +24,8 @@
 #include <kognac/logs.h>
 #include <kognac/progargs.h>
 
+#include <thread>
+
 using namespace std;
 
 void printHelp(const char *programName, ProgramArgs &desc) {
@@ -35,14 +37,24 @@ void printHelp(const char *programName, ProgramArgs &desc) {
 void initParams(int argc, const char** argv, ProgramArgs &vm) {
     ProgramArgs::GroupArgs& g = *vm.newGroup("Options");
 
+    int nHardwareThreads = std::thread::hardware_concurrency();
+    if (nHardwareThreads == 0) {
+        nHardwareThreads = 8;
+    }
+    int defaultConcurrentReaders = 2;
+
+    if (nHardwareThreads % defaultConcurrentReaders != 0) {
+        defaultConcurrentReaders = 1;
+    }
+
     g.add<string>("i","input", "", "input directory", true)
         .add("l", "logLevel", INFOL, "Set the log level (accepted values: trace, debug, info, warning, error, fatal)", false)
         .add<string>("h","help", "", "print help message", false)
         .add<bool>("f","fp", false, "Use FPTree to mine classes", false)
         .add<int>("s","minSupport", 1000, "Sets the minimum support necessary to indentify class patterns", false)
         .add<int>("p","maxPatternLength", 3, "Sets the maximum length of class patterns", false)
-        .add<int>("", "maxThreads", 8, "Sets the maximum number of threads to use during the compression", false)
-        .add<int>("", "maxConcThreads", 2, "Sets the number of concurrent threads that reads the raw input", false)
+        .add<int>("", "maxThreads", nHardwareThreads, "Sets the maximum number of threads to use during the compression", false)
+        .add<int>("", "maxConcThreads", defaultConcurrentReaders, "Sets the number of concurrent threads that reads the raw input", false)
         .add<string>("o","output", "", "output directory", true)
         .add<bool>("", "serializeTax", false, "Should I also serialize the content of the classes' taxonomy on a file?", false)
         .add<bool>("c","compressGraph", false, "Should I also compress the graph. If set, I create a compressed version of the triples.", false)
