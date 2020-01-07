@@ -170,6 +170,20 @@ class LZ4Reader {
 
         KLIBEXP char parseByte();
 
+        void parseRawArray(char *buffer, const int size) {
+            if (currentOffset + size <= uncompressedBufferLen) {
+                memcpy(buffer, uncompressedBuffer + currentOffset, size);
+                currentOffset += size;
+            } else {
+                int remSize = uncompressedBufferLen - currentOffset;
+                memcpy(buffer, uncompressedBuffer + currentOffset, remSize);
+                currentOffset += remSize;
+                isEof(); //Load the next buffer
+                memcpy(buffer + remSize, uncompressedBuffer, size - remSize);
+                currentOffset += size - remSize;
+            }
+        }
+
         const char *parseString(int &size) {
             size = static_cast<int>(parseVLong());
 

@@ -34,6 +34,7 @@ class MultiDiskLZ4Reader;
 
 typedef struct Triple {
     int64_t s, p, o, count;
+    static Triple maxEl;
 
     Triple(int64_t s, int64_t p, int64_t o) {
         this->s = s;
@@ -72,13 +73,13 @@ typedef struct Triple {
         return false;
     }
 
-	KLIBEXP void readFrom(LZ4Reader *reader);
+    KLIBEXP void readFrom(LZ4Reader *reader);
 
-	KLIBEXP void readFrom(int part, MultiDiskLZ4Reader *reader);
+    KLIBEXP void readFrom(int part, MultiDiskLZ4Reader *reader);
 
-	KLIBEXP void writeTo(LZ4Writer *writer);
+    KLIBEXP void writeTo(LZ4Writer *writer);
 
-	KLIBEXP void writeTo(int part, MultiDiskLZ4Writer *writer);
+    KLIBEXP void writeTo(int part, MultiDiskLZ4Writer *writer);
 
     void toTriple(Triple &t) {
         t.s = s;
@@ -98,6 +99,10 @@ typedef struct Triple {
         t.o = INT64_C(-1);
         t.count = INT64_C(-1);
         return t;
+    }
+
+    static Triple getMaxEl() {
+        return Triple::maxEl;
     }
 
     static bool ismax(const Triple &t) {
