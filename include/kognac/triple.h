@@ -92,12 +92,12 @@ typedef struct Triple {
         return t1.less(t2);
     }
 
-    static Triple max() {
+    static Triple largestTriple() {
         Triple t;
-        t.s = INT64_C(-1);
-        t.p = INT64_C(-1);
-        t.o = INT64_C(-1);
-        t.count = INT64_C(-1);
+        t.s = std::numeric_limits<int64_t>::max();
+        t.p = std::numeric_limits<int64_t>::max();
+        t.o = std::numeric_limits<int64_t>::max();
+        t.count = std::numeric_limits<int64_t>::max();
         return t;
     }
 

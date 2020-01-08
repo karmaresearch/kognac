@@ -24,7 +24,7 @@
 #include <kognac/multidisklz4writer.h>
 #include <kognac/multidisklz4reader.h>
 
-Triple Triple::maxEl = Triple::max();
+Triple Triple::maxEl = Triple::largestTriple();
 
 void Triple::readFrom(LZ4Reader *reader) {
     s = reader->parseVLong();
