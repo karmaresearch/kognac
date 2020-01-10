@@ -1755,7 +1755,9 @@ void Compressor::immemorysort(string **inputFiles,
         int parallelProcesses,
         string outputFile, //int *noutputFiles,
         bool removeDuplicates,
-        const int64_t maxSizeToSort, bool sample) {
+        const int64_t maxSizeToSort,
+        int sampleInterval,
+        bool sample) {
     //std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
 
     //Split maxSizeToSort in n threads
@@ -1807,6 +1809,7 @@ void Compressor::immemorysort(string **inputFiles,
                             i,
                             maxMemPerThread,
                             removeDuplicates,
+                            sampleInterval,
                             sample));
             }
         }
@@ -1818,6 +1821,7 @@ void Compressor::immemorysort(string **inputFiles,
                     sampleWriter, 0, 0,
                     maxMemPerThread,
                     removeDuplicates,
+                    sampleInterval,
                     sample);
         }
         for (int i = 1; i < parallelProcesses; ++i) {
@@ -1843,6 +1847,7 @@ void Compressor::inmemorysort_seq(DiskLZ4Reader *reader,
         int idx,
         const uint64_t maxMemPerThread,
         bool removeDuplicates,
+        int sampleInterval,
         bool sample) {
 
     vector<SimplifiedAnnotatedTerm> terms;
@@ -1859,7 +1864,7 @@ void Compressor::inmemorysort_seq(DiskLZ4Reader *reader,
         SimplifiedAnnotatedTerm t;
         t.readFrom(idReader, reader);
         if (sample) {
-            if (sampleCount % 100 == 0) {
+            if (sampleCount % sampleInterval == 0) {
                 sampleWriter->writeString(idReader, t.term, t.size);
                 sampleAdded++;
                 sampleCount = 0;
@@ -2889,12 +2894,13 @@ void Compressor::sortDictionaryEntriesByText(string **input,
         string * prefixOutputFiles,
         ByteArrayToNumberMap * map,
         bool filterDuplicates,
+        int sampleInterval,
         bool sample) {
     int64_t maxMemAllocate = max((int64_t) (BLOCK_SUPPORT_BUFFER_COMPR * 2),
             (int64_t) (Utils::getSystemMemory() * 0.70 / ndicts));
     LOG(DEBUGL) << "Max memory to use to sort inmemory a number of terms: " << maxMemAllocate << " bytes";
     immemorysort(input, maxReadingThreads, parallelProcesses, prefixOutputFiles[0],
-            filterDuplicates, maxMemAllocate, sample);
+            filterDuplicates, maxMemAllocate, sampleInterval, sample);
 }
 
 void Compressor::compress(string * permDirs, int nperms, int signaturePerms,
@@ -2917,6 +2923,7 @@ void Compressor::compress(string * permDirs, int nperms, int signaturePerms,
             uncommonDictionaries,
             NULL,
             false,
+            1000,   // sample rate. TODO: make it depend on size of input?
             true);
     LOG(DEBUGL) << "...done";
 
