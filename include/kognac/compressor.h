@@ -656,7 +656,9 @@ protected:
                              string outputFile,
                              //int *noutputFiles,
                              bool removeDuplicates,
-                             const int64_t maxSizeToSort, bool sample);
+                             const int64_t maxSizeToSort,
+                             int sampleInterval,
+                             bool sample);
 
     static void inmemorysort_seq(DiskLZ4Reader *reader,
                                  DiskLZ4Writer *writer,
@@ -665,6 +667,7 @@ protected:
                                  int idx,
                                  const uint64_t maxMemPerThread,
                                  bool removeDuplicates,
+                                 int sampleInterval,
                                  bool sample);
 
     static uint64_t calculateSizeHashmapCompression();
@@ -734,6 +737,7 @@ public:
                                             string * prefixOutputFiles,
                                             ByteArrayToNumberMap * map,
                                             bool filterDuplicates,
+                                            int sampleInterval,
                                             bool sample);
 
     static void sortFilesByTripleSource(string kbPath,
