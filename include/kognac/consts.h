@@ -66,7 +66,7 @@
 //Used in the schema extractor
 #define SC_SIZE_SUPPORT_BUFFER 512*1024
 
-#define SIZE_DISK_BUFFER SIZE_COMPRESSED_SEG * 100
+#define SIZE_DISK_BUFFER SIZE_COMPRESSED_SEG * 16
 
 typedef unsigned char tTerm;
 typedef uint64_t nTerm;

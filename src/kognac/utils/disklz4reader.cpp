@@ -108,7 +108,7 @@ bool DiskLZ4Reader::areNewBuffers(const int id) {
 
 void DiskLZ4Reader::run() {
     size_t totalsize = 0;
-    char tmpbuffer[4];
+    char tmpbuffer[8];
     int currentFileIdx = 0;
 
     while (true) {
@@ -174,13 +174,12 @@ void DiskLZ4Reader::run() {
         //LOG(DEBUGL) << "Read block " << blocknumber << " for file " << currentFileIdx << " at position " << position;
 
         reader.seekg(position);
-        reader.read(tmpbuffer, 4);
+        reader.read(tmpbuffer, 8);
 #ifdef DEBUG
         int fileidx = Utils::decode_int(tmpbuffer);
         assert(fileidx == currentFileIdx);
 #endif
-        reader.read(tmpbuffer, 4);
-        size_t sizeToBeRead = Utils::decode_int(tmpbuffer);
+        size_t sizeToBeRead = Utils::decode_int(tmpbuffer+4);
         totalsize += sizeToBeRead + 8;
         reader.read(buffer, sizeToBeRead);
 

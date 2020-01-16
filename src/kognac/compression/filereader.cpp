@@ -34,28 +34,29 @@
 
 string GZIP_EXTENSION = string(".gz");
 
-struct membuf : std::streambuf
-{
-    membuf(char* begin, char* end) {
-        this->setg(begin, begin, end);
-    }
-};
+#define THRESHOLD_SIZE	(1024*1024)
 
 FileReader::FileReader(char *buffer, size_t sizebuffer, bool gzipped) :
-    byteArray(true), rawByteArray(buffer),
+    byteArray(! gzipped || sizebuffer < THRESHOLD_SIZE), rawByteArray(buffer),
     sizeByteArray(sizebuffer), compressed(gzipped) {
-        rawFile = NULL;
         if (compressed) {
             //Decompress the stream
             // std::string b(buffer, buffer + sizebuffer);
             // std::istringstream bytestream(b);
             // Avoid copy...
-            membuf sbuf(buffer, buffer + sizebuffer);
-            std::istream bytestream(&sbuf);
-            zstr::istream stream(bytestream);
-            std::vector<char> contents((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
-            uncompressedByteArray.swap(contents);
-        }
+	    Membuf buf(buffer, buffer + sizebuffer);
+	    if (byteArray) {
+		zstr::istream stream(&buf);
+		std::vector<char> contents((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
+		uncompressedByteArray.swap(contents);
+		rawFile = NULL;
+	    } else {
+		this->sbuf = buf;
+		rawFile = new zstr::istream(&this->sbuf);
+	    }
+        } else {
+	    rawFile = NULL;
+	}
         currentIdx = 0;
     }
 

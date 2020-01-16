@@ -110,7 +110,7 @@ struct ParamsUncompressTriples {
 };
 
 struct ParamsSortPartition {
-    string prefixInputFiles;
+    std::string dirPrefix;
     MultiDiskLZ4Reader *reader;
     MultiMergeDiskLZ4Reader *mergerReader;
     MultiDiskLZ4Writer *dictWriter;
@@ -528,9 +528,9 @@ private:
         Hashtable **tables2,
         Hashtable **tables3);
 
-    static void concatenateFiles_seq(string prefix, int part);
+    static void concatenateFiles_seq(int part, std::vector<std::string> *rangeFiles);
 
-    static void concatenateFiles(string prefix,
+    static void concatenateFiles(std::vector<std::string> &rangeFiles,
                                  int parallelProcesses,
                                  int maxReadingThreads);
 
@@ -539,16 +539,19 @@ private:
 
     static void rangePartitionFiles(int readingThreads,
                                     int nthreads,
-                                    string prefixInputFiles,
+				    const std::string dirPrefix,
+                                    const std::string prefixInputFiles,
                                     const std::vector<string> &boundaries);
 
     static void sortRangePartitionedTuples(DiskLZ4Reader *reader,
                                            int idxReader,
-                                           const string outputFile,
+					   const std::string dirPrefix,
+                                           const std::string outputFile,
                                            const std::vector<string> *boundaries);
 
-    static void sortPartitionsAndAssignCounters(string prefixInputFile,
-            string dictfile, string outputfile, int partitions,
+    static void sortPartitionsAndAssignCounters(const std::string dirPrefix,
+	    std::string prefixInputFile,
+	    std::string dictfile, string outputfile, int partitions,
             int64_t &counter, int parallelProcesses, int maxReadingThreads);
 
     static void assignCountersAndPartByTripleID(int64_t startCounter,

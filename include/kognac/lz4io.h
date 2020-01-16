@@ -31,8 +31,8 @@
 #include <string>
 #include <cstring>
 
-#define SIZE_SEG 64*1024
-#define SIZE_COMPRESSED_SEG 70*1024
+#define SIZE_SEG 512*1024
+#define SIZE_COMPRESSED_SEG (512+64)*1024
 
 using namespace std;
 
@@ -40,8 +40,8 @@ class LZ4Writer {
     private:
         string path;
         std::ofstream os;
-        char compressedBuffer[SIZE_COMPRESSED_SEG];
-        char uncompressedBuffer[SIZE_SEG];
+        char *compressedBuffer = new char[SIZE_COMPRESSED_SEG];
+        char *uncompressedBuffer = new char[SIZE_SEG];
         int uncompressedBufferLen;
 
         void compressAndWriteBuffer();
@@ -84,8 +84,8 @@ class LZ4Reader {
 
     private:
         char supportBuffer[MAX_TERM_SIZE + 2];
-        char compressedBuffer[SIZE_COMPRESSED_SEG];
-        char uncompressedBuffer[SIZE_SEG];
+        char *compressedBuffer = new char[SIZE_COMPRESSED_SEG];
+        char *uncompressedBuffer = new char[SIZE_SEG];
         int uncompressedBufferLen;
         int currentOffset;
 
@@ -214,6 +214,8 @@ class LZ4Reader {
 
         ~LZ4Reader() {
             is.close();
+	    delete[] uncompressedBuffer;
+	    delete[] compressedBuffer;
         }
 };
 

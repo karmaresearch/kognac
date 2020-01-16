@@ -47,16 +47,27 @@ typedef struct FileInfo {
     string path;
 } FileInfo;
 
+typedef struct Membuf : std::streambuf
+{
+    Membuf() {
+    }
+
+    Membuf(char* begin, char* end) {
+        this->setg(begin, begin, end);
+    }
+} Membuf;
+
 class FileReader {
     private:
         //Params used if we read from a byte array
         const bool byteArray;
-        std::vector<char> uncompressedByteArray;
+	std::vector<char> uncompressedByteArray;
         char *rawByteArray;
         size_t sizeByteArray;
         size_t currentIdx;
 
         const bool compressed;
+        Membuf sbuf;
         istream *rawFile;
         string currentLine;
         bool tripleValid;

@@ -693,7 +693,7 @@ void Compressor::extractCommonTerm(const char* term, const int sizeTerm,
                 minValue);
         map->insert(pair);
         queue.push(pair);
-        if (map->size() > maxMapSize) {
+        if (! mapTooSmall) {
             //Replace term and minCount with values to be added
             std::pair<string, int64_t> elToRemove = queue.top();
             queue.pop();
@@ -1102,30 +1102,31 @@ vector<FileInfo> *Compressor::splitInputInChunks(const string &input, int nchunk
     /*** Sort the input files by size, and split the files through the multiple processors ***/
     std::sort(infoAllFiles.begin(), infoAllFiles.end(), cmpInfoFiles);
     vector<FileInfo> *files = new vector<FileInfo>[nchunks];
-    uint64_t splitTargetSize = totalSize / nchunks;
+    uint64_t *splitSizes = new uint64_t[nchunks];
+    uint64_t splitTargetSize = totalSize + nchunks - 1 / nchunks;
+    for (int i = 0; i < nchunks; i++) {
+	splitSizes[i] = 0;
+    }
     int processedFiles = 0;
     int currentSplit = 0;
-    uint64_t splitSize = 0;
     while (processedFiles < infoAllFiles.size()) {
         FileInfo f = infoAllFiles[processedFiles++];
         if (!f.splittable) {
-            splitSize += f.size;
+	    while (splitSizes[currentSplit] >= splitTargetSize) {
+		currentSplit = (currentSplit + 1) % nchunks;
+	    }
             files[currentSplit].push_back(f);
-            if (splitSize >= splitTargetSize
-                    && currentSplit < nchunks - 1) {
-                currentSplit++;
-                splitSize = 0;
-            }
+	    splitSizes[currentSplit] += f.size;
+	    currentSplit = (currentSplit + 1) % nchunks;
         } else {
             uint64_t assignedFileSize = 0;
             while (assignedFileSize < f.size) {
                 uint64_t sizeToCopy;
-                if (currentSplit == nchunks - 1) {
-                    sizeToCopy = f.size - assignedFileSize;
-                } else {
-                    sizeToCopy = min(f.size - assignedFileSize,
-                            splitTargetSize - splitSize);
-                }
+		while (splitSizes[currentSplit] >= splitTargetSize) {
+		    currentSplit = (currentSplit + 1) % nchunks;
+		}
+		sizeToCopy = min(f.size - assignedFileSize,
+                            splitTargetSize - splitSizes[currentSplit]);
 
                 //Copy inside the split
                 FileInfo splitF;
@@ -1134,14 +1135,9 @@ vector<FileInfo> *Compressor::splitInputInChunks(const string &input, int nchunk
                 splitF.splittable = true;
                 splitF.size = sizeToCopy;
                 files[currentSplit].push_back(splitF);
-
-                splitSize += sizeToCopy;
+                splitSizes[currentSplit] += sizeToCopy;
                 assignedFileSize += sizeToCopy;
-                if (splitSize >= splitTargetSize
-                        && currentSplit < nchunks - 1) {
-                    currentSplit++;
-                    splitSize = 0;
-                }
+		currentSplit = (currentSplit + 1) % nchunks;
             }
         }
     }
@@ -1401,8 +1397,8 @@ void Compressor::do_countmin(const int dictPartitions, const int sampleArg,
     maxSize = std::max((int64_t)sampleArg, maxSize);
     LOG(DEBUGL) << "Size Input: " << nBytesInput <<
         " bytes. Max table size=" << maxSize;
-    int64_t memForHashTables = (int64_t)(Utils::getSystemMemory() * 0.5)
-        / (1 + parallelProcesses) / 3;
+    int64_t memForHashTables = (int64_t)(Utils::getSystemMemory() * 0.7)
+        / (3 * parallelProcesses);
     //Divided numer hash tables
     const uint64_t sizeHashTable = std::min((int64_t)maxSize,
             std::max((int64_t)1000000,
@@ -1872,7 +1868,7 @@ void Compressor::inmemorysort_seq(DiskLZ4Reader *reader,
             sampleCount++;
         }
 
-        if ((bytesAllocated + (sizeof(AnnotatedTerm) * terms.size() * 2))
+        if ((bytesAllocated + sizeof(AnnotatedTerm) * terms.size())
                 >= maxMemPerThread) {
             sortAndDumpToFile(terms, writer, idReader);
             terms.clear();
@@ -1951,10 +1947,10 @@ std::vector<string> Compressor::getPartitionBoundaries(const string kbdir,
     }
     LOG(DEBUGL) << "sample.size()=" << (uint64_t)sample.size()
         << " sizePartition=" << (uint64_t)sizePartition;
-    for (size_t i = 0; i < sample.size(); ++i) {
-        if ((i + 1) % sizePartition == 0 && output.size() < partitions - 1) {
+    for (size_t i = sizePartition; i < sample.size(); i += sizePartition) {
+        if (output.size() < partitions - 1) {
             //Add element in the partition
-            string s = string(sample[i].first, sample[i].second);
+            string s = string(sample[i-1].first, sample[i-1].second);
             output.push_back(s);
         }
     }
@@ -1963,8 +1959,9 @@ std::vector<string> Compressor::getPartitionBoundaries(const string kbdir,
 
 void Compressor::sortRangePartitionedTuples(DiskLZ4Reader *reader,
         int idReader,
-        const string outputFile,
-        const std::vector<string> *boundaries) {
+	const std::string dirPrefix,
+        const std::string outputFile,
+        const std::vector<std::string> *boundaries) {
     int idx = 0; //partition within the same file
     int idxFile = 0; //multiple sorted files in the stream
     LZ4Writer *output = NULL;
@@ -1987,10 +1984,8 @@ void Compressor::sortRangePartitionedTuples(DiskLZ4Reader *reader,
             idx = 0;
             //Create a new file
             delete output;
-            output = new LZ4Writer(outputFile + "-" +
-                    to_string(idxFile) +
-                    string(".") +
-                    to_string(idx));
+            output = new LZ4Writer(dirPrefix + std::to_string(idx) + DIR_SEP + outputFile + "-" +
+                    to_string(idxFile));
             if (boundaries->size() > 0) {
                 bound = boundaries->at(idx);
                 isLast = false;
@@ -2006,22 +2001,16 @@ void Compressor::sortRangePartitionedTuples(DiskLZ4Reader *reader,
         string term = string(t.term, t.size);
         if (!isLast && term > bound) {
             do {
-                delete output;
                 idx++;
-                output = new LZ4Writer(outputFile + "-" +
-                        to_string(idxFile) +
-                        string(".") +
-                        to_string(idx));
                 if (idx < boundaries->size()) {
                     bound = boundaries->at(idx);
                 } else {
                     isLast = true;
                 }
-                //Check condition
-                if (term <= bound) {
-                    break;
-                }
-            } while (!isLast);
+            } while (!isLast && term > bound);
+	    delete output;
+	    output = new LZ4Writer(dirPrefix + std::to_string(idx) + DIR_SEP + outputFile + "-" +
+		    to_string(idxFile));
         }
         t.writeTo(output);
         counter++;
@@ -2032,7 +2021,8 @@ void Compressor::sortRangePartitionedTuples(DiskLZ4Reader *reader,
 }
 
 void Compressor::rangePartitionFiles(int readThreads, int maxThreads,
-        string prefixInputFiles,
+	const std::string dirPrefix,
+        const std::string prefixInputFiles,
         const std::vector<string> &boundaries) {
     DiskLZ4Reader **readers = new DiskLZ4Reader*[readThreads];
     std::vector<string> infiles;
@@ -2048,18 +2038,19 @@ void Compressor::rangePartitionFiles(int readThreads, int maxThreads,
     std::vector<std::thread> threads(maxThreads);
     for (int i = 1; i < maxThreads; ++i) {
         DiskLZ4Reader *reader = readers[i % readThreads];
-        string outputFile = prefixInputFiles + string("-range-") + to_string(i);
+        string outputFile = std::string("r-") + std::to_string(i);
         threads[i] =
             std::thread(std::bind(&Compressor::sortRangePartitionedTuples,
                         reader,
                         i / readThreads,
+			dirPrefix,
                         outputFile,
                         &boundaries));
     }
-    string outputFile = prefixInputFiles + string("-range-") + to_string(0);
     sortRangePartitionedTuples(readers[0],
             0,
-            outputFile,
+	    dirPrefix,
+            "r-0",
             &boundaries);
     for (int i = 1; i < maxThreads; ++i) {
         threads[i].join();
@@ -2075,7 +2066,7 @@ void Compressor::rangePartitionFiles(int readThreads, int maxThreads,
 }
 
 void Compressor::sortPartition(ParamsSortPartition params) {
-    string prefixInputFiles = params.prefixInputFiles;
+    std::string dirPrefix = params.dirPrefix;
     MultiDiskLZ4Reader *reader = params.reader;
     MultiMergeDiskLZ4Reader *mergerReader = params.mergerReader;
     DiskLZ4Writer *dictWriter = params.dictWriter;
@@ -2087,23 +2078,16 @@ void Compressor::sortPartition(ParamsSortPartition params) {
     uint64_t *counter = params.counter;
     uint64_t maxMem = params.maxMem;
 
-    std::vector<string> filesToSort;
 
-    string parentDir = Utils::parentDir(prefixInputFiles);
+    std::string parentDir = dirPrefix + std::to_string(part);
     std::vector<string> children = Utils::getFiles(parentDir);
-    for (auto child : children) {
-        if (Utils::contains(child, "range")) {
-            if (Utils::hasExtension(child)) {
-                string ext = Utils::extension(child);
-                if (ext == string(".") + to_string(part)) {
-                    if (Utils::fileSize(child) > 0) {
-                        filesToSort.push_back(child);
-                    } else {
-                        Utils::remove(child);
-                    }
-                }
-            }
-        }
+    std::vector<string> filesToSort;
+    for(auto child : children) {
+	if (Utils::fileSize(child) > 0) {
+	    filesToSort.push_back(child);
+	} else {
+	    Utils::remove(child);
+	}
     }
     reader->addInput(idWriter, filesToSort);
 
@@ -2334,33 +2318,29 @@ void Compressor::sortPartition(ParamsSortPartition params) {
     dictWriter->setTerminated(idDictWriter);
 }
 
-void Compressor::concatenateFiles_seq(string prefix, int part) {
+void Compressor::concatenateFiles_seq(int part, std::vector<std::string> *rangeFiles) {
     LOG(DEBUGL) << "Concatenating files in partition " << part;
     std::vector<string> filestoconcat;
 
-    string parentDir = Utils::parentDir(prefix);
-    std::vector<string> children = Utils::getFiles(parentDir);
-    for(auto child : children) {
-        if (Utils::contains(child, "range")) {
-            if (Utils::hasExtension(child)) {
-                string ext = Utils::extension(child);
-                if (ext == string(".") + to_string(part)) {
-                    if (Utils::fileSize(child) > 0) {
-                        filestoconcat.push_back(child);
-                    } else {
-                        Utils::remove(child);
-                    }
-                }
-            }
-        }
+    for(auto child : *rangeFiles) {
+	string ext = Utils::extension(child);
+	if (ext == string(".") + to_string(part)) {
+	    filestoconcat.push_back(child);
+	}
     }
 
     if (filestoconcat.size() > 1) {
         string dest = filestoconcat[0];
         std::ofstream fdest(dest, std::ios_base::binary | std::ios_base::app | std::ios_base::ate);
+	std::vector<char> buffer;
         for (int i = 1; i < filestoconcat.size(); ++i) {
             std::ifstream input(filestoconcat[i], std::ios_base::binary);
-            fdest << input.rdbuf();
+	    uint64_t size = Utils::fileSize(filestoconcat[i]);
+	    if (buffer.size() < size) {
+		buffer.resize(size);
+	    }
+	    input.read(&buffer[0], size);
+	    fdest.write(&buffer[0], size);
             input.close();
             Utils::remove(filestoconcat[i]);
         }
@@ -2368,32 +2348,57 @@ void Compressor::concatenateFiles_seq(string prefix, int part) {
     }
 }
 
-void Compressor::concatenateFiles(string prefix,
+void Compressor::concatenateFiles(std::vector<std::string> &rangeFiles,
         int parallelProcesses,
         int maxReadingThreads) {
 
-    std::thread *threads = new std::thread[maxReadingThreads];
+    std::thread *threads = new std::thread[maxReadingThreads-1];
     int part = 0;
     while (part < parallelProcesses) {
-        for (int i = 0; i < maxReadingThreads; ++i) {
-            threads[i] = std::thread(Compressor::concatenateFiles_seq,
-                    prefix, part + i);
+        for (int i = 1; i < maxReadingThreads; ++i) {
+            threads[i-1] = std::thread(Compressor::concatenateFiles_seq,
+                    part + i, &rangeFiles);
         }
-        for (int i = 0; i < maxReadingThreads; ++i) {
-            threads[i].join();
+	concatenateFiles_seq(part, &rangeFiles);
+        for (int i = 1; i < maxReadingThreads; ++i) {
+            threads[i-1].join();
         }
         part += maxReadingThreads;
     }
     delete[] threads;
 }
 
-void Compressor::sortPartitionsAndAssignCounters(string prefixInputFile,
+void Compressor::sortPartitionsAndAssignCounters(const string dirPrefix,
+	string prefixInputFile,
         string dictfile,
         string outputfile, int partitions,
         int64_t & counter, int parallelProcesses, int maxReadingThreads) {
 
+    string parentDir = Utils::parentDir(prefixInputFile);
+    std::vector<string> children = Utils::getFiles(parentDir);
+    std::vector<string> rangeFiles;
+    for(auto child : children) {
+        if (Utils::contains(child, "range") && Utils::hasExtension(child)) {
+	    if (Utils::fileSize(child) > 0) {
+		rangeFiles.push_back(child);
+	    } else {
+		Utils::remove(child);
+	    }
+	}
+    }
+
+#if 0
     //Before I start sorting the files, I concatenate files together
-    concatenateFiles(prefixInputFile, parallelProcesses, maxReadingThreads);
+    concatenateFiles(rangeFiles, parallelProcesses, maxReadingThreads);
+    // When concatenating, again determine the list of files.
+    children = Utils::getFiles(parentDir);
+    rangeFiles.clear();
+    for(auto child : children) {
+        if (Utils::contains(child, "range") && Utils::hasExtension(child)) {
+	    rangeFiles.push_back(child);
+	}
+    }
+#endif
 
     std::vector<std::thread> threads(partitions);
     std::vector<string> outputfiles;
@@ -2426,10 +2431,10 @@ void Compressor::sortPartitionsAndAssignCounters(string prefixInputFile,
         dictwriters[i] = new MultiDiskLZ4Writer(dictfiles, 3, 4);
     }
 
-    for (int i = 0; i < partitions; ++i) {
+    ParamsSortPartition params;
 
-        ParamsSortPartition params;
-        params.prefixInputFiles = prefixInputFile;
+    for (int i = 0; i < partitions; ++i) {
+        params.dirPrefix = dirPrefix;
         params.reader = mreaders[i % maxReadingThreads];
         params.mergerReader = mergereaders[i % maxReadingThreads];
         params.dictWriter = dictwriters[i % maxReadingThreads];
@@ -2639,17 +2644,26 @@ void Compressor::mergeNotPopularEntries(string prefixInputFile,
 
     //Range-partitions all the files in the input collection
     LOG(DEBUGL) << "Range-partitions the files...";
-    rangePartitionFiles(maxReadingThreads, parallelProcesses, prefixInputFile,
+    string dirPrefix = Utils::parentDir(prefixInputFile) + DIR_SEP
+	+ Utils::filename(prefixInputFile) + "-ranges-";
+    for (int i = 0; i < parallelProcesses; ++i) {
+	Utils::create_directories(dirPrefix + std::to_string(i));
+    }
+    rangePartitionFiles(maxReadingThreads, parallelProcesses, dirPrefix, prefixInputFile,
             boundaries);
 
     //Collect all ranged-partitions files by partition and globally sort them.
     LOG(DEBUGL) << "Sort and assign the counters to the files...";
-    sortPartitionsAndAssignCounters(prefixInputFile,
+    sortPartitionsAndAssignCounters(dirPrefix,
+	    prefixInputFile,
             dictOutput,
             outputFile2,
             parallelProcesses,
             *startCounter, parallelProcesses,
             maxReadingThreads);
+    for (int i = 0; i < parallelProcesses; ++i) {
+	Utils::remove_all(dirPrefix + std::to_string(i));
+    }
 }
 
 void Compressor::sortByTripleID(//vector<string> *inputFiles,
@@ -2665,7 +2679,7 @@ void Compressor::sortByTripleID(//vector<string> *inputFiles,
     vector<TriplePair> pairs;
     int64_t count = 0;
     while (!reader->isEOF(idWriter)) {
-        if (sizeof(TriplePair) * pairs.size() * 2 >= maxMemory) {
+        if (sizeof(TriplePair) * pairs.size() >= maxMemory) {
             string file = tmpfileprefix + string(".") + to_string(idx++);
             sortAndDumpToFile2(pairs, file);
             filesToMerge.push_back(file);

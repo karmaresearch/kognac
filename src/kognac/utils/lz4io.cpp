@@ -140,19 +140,25 @@ void LZ4Writer::writeLong(int64_t n) {
 }
 
 void LZ4Writer::writeVLong(uint64_t n) {
-    int i = 1;
     if (n < 128) { // One byte is enough
         writeByte(static_cast<char>(n));
         return;
-    } else {
-        int bytesToStore = 64 - Utils::numberOfLeadingZeros((uint64_t) n);
+    } 
+    int bytesToStore = 64 - Utils::numberOfLeadingZeros((uint64_t) n);
+    if (uncompressedBufferLen + bytesToStore + 2 >= SIZE_SEG) {
         while (bytesToStore > 7) {
-            i++;
             writeByte((n & 127) + 128);
             n >>= 7;
             bytesToStore -= 7;
         }
         writeByte(n & 127);
+    } else {
+        while (bytesToStore > 7) {
+	    uncompressedBuffer[uncompressedBufferLen++] = (n & 127) + 128;
+            n >>= 7;
+            bytesToStore -= 7;
+        }
+	uncompressedBuffer[uncompressedBufferLen++] = (n & 127);
     }
 }
 
@@ -167,6 +173,8 @@ LZ4Writer::~LZ4Writer() {
     }
 
     os.close();
+    delete[] compressedBuffer;
+    delete[] uncompressedBuffer;
 }
 
 int64_t LZ4Reader::parseLong() {
@@ -203,12 +211,22 @@ int64_t LZ4Reader::parseLong() {
 
 int64_t LZ4Reader::parseVLong() {
     int shift = 7;
-    char b = parseByte();
+    if (currentOffset + 9 >= uncompressedBufferLen) {
+	char b = parseByte();
+	int64_t n = b & 127;
+	while (b < 0) {
+	    b = parseByte();
+	    n += (int64_t) (b & 127) << shift;
+	    shift += 7;
+	}
+	return n;
+    }
+    char b = uncompressedBuffer[currentOffset++];
     int64_t n = b & 127;
     while (b < 0) {
-        b = parseByte();
-        n += (int64_t) (b & 127) << shift;
-        shift += 7;
+	b = uncompressedBuffer[currentOffset++];
+	n += (int64_t) (b & 127) << shift;
+	shift += 7;
     }
     return n;
 }
