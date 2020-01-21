@@ -246,7 +246,8 @@ const char *FileReader::readResource(const char *start, const char *end) {
         c = nextChar(start++, end);
         if (c == ':') {
             c = nextChar(start, end);
-            while (c == '-' || isalnum(c)) {
+            while (c == '*'	// Actually used in btc2012, but not in the N-Triples standard
+		    || c == '-' || c == '_' || c == ':' || isalnum(c)) {
                 start++;
                 if (start >= end) {
                     return start;
@@ -342,6 +343,10 @@ bool FileReader::parseLine(const char *line, const int sizeLine) {
 
         //Parse predicate
         startP = skipSpaces(endS, endLine);
+	if (*startP != '<') {
+	    LOG(ERRORL) << "Expected start of IRI";
+	    throw ex;
+	}
         const char *endP = readIRI(startP, endLine);
         lengthP = (int)(endP - startP);
         LOG(TRACEL) << "P = " << std::string(startP, lengthP) << ".";

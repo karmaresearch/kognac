@@ -28,6 +28,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <future>
 
 using namespace std;
 
@@ -95,6 +96,21 @@ public:
 
         return output;
     }
+
+    //Procedure inspired by https://stackoverflow.com/questions/24130307/performance-problems-in-parallel-mergesort-c
+    template<typename It, typename Cmp>
+	static void sort_int(It begin, It end, const Cmp &cmp, int32_t nthreads) {
+	    auto len = std::distance(begin, end);
+	    if (len <= 1024 || nthreads < 2) {
+		std::sort(begin, end, cmp);
+	    } else {
+		It mid = std::next(begin, len / 2);
+		auto fn = std::async(Sorter::sort_int<It, Cmp>, begin, mid, std::ref(cmp), nthreads / 2);
+		sort_int<It,Cmp>(mid, end, cmp, nthreads - (nthreads / 2));
+		fn.wait();
+		std::inplace_merge(begin, mid, end, cmp);
+	    }
+	}
 
 };
 
