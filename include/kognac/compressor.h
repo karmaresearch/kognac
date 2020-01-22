@@ -118,10 +118,12 @@ struct ParamsSortPartition {
     //string dictfile;
     DiskLZ4Writer *writer;
     int idWriter;
+    int idReader;
     string prefixIntFiles;
     int part;
     uint64_t *counter;
     int64_t maxMem;
+    int threadsPerPartition;
 };
 
 struct TriplePair {
@@ -270,9 +272,22 @@ struct SimplifiedAnnotatedTerm {
         LOG(DEBUGL) << "term: " << std::string(term, size);
     }
 
+#if 0
+    static bool sless(const SimplifiedAnnotatedTerm &i,
+                      const SimplifiedAnnotatedTerm &j) {
+	bool result = i.tostring() < j.tostring();
+	if (result != sless1(i, j)) {
+	    abort();
+	}
+	return result;
+    }
+
     // sless assumes that either all terms have at least attempted split-off headers
     // or all terms have no headers.
+    static bool sless1(const SimplifiedAnnotatedTerm &i,
+#else
     static bool sless(const SimplifiedAnnotatedTerm &i,
+#endif
                       const SimplifiedAnnotatedTerm &j) {
         if (i.prefix == j.prefix) {
             // First case: same (or no) header
@@ -296,7 +311,13 @@ struct SimplifiedAnnotatedTerm {
             if (ret != 0) {
                 return ret < 0;
             } else {
-                throw "Assumption in SimplifiedAnnotatedTerm violated";
+		if (minsize == i.size - PREFIX_HEADER_LEN) {
+		    LOG(ERRORL) << "Assumption in SimplifiedAnnotatedTerm violated";
+		    abort();
+		}
+		minsize = min(i.size - PREFIX_HEADER_LEN - j.prefixSize, j.size);
+		ret = memcmp(i.term + PREFIX_HEADER_LEN + j.prefixSize, j.term, minsize);
+		return ret < 0;
             }
         } else if (j.prefix != NULL) {
             // Compare the two prefixes. They should not be equal.
@@ -306,10 +327,11 @@ struct SimplifiedAnnotatedTerm {
                 if (minsize == i.prefixSize) {
                     ret = memcmp(i.term, j.prefix + 2 + minsize, j.prefixSize - minsize);
                 } else {
-                    ret = memcmp(j.term, i.prefix + 2 + minsize, i.prefixSize - minsize);
+                    ret = memcmp(i.prefix + 2 + minsize, j.term, i.prefixSize - minsize);
                 }
                 if (ret == 0) {
-                    throw "Assumption in SimplifiedAnnotatedTerm violated";
+                    LOG(ERRORL) << "Assumption in SimplifiedAnnotatedTerm violated";
+		    abort();
                 }
             }
             return ret < 0;
@@ -326,7 +348,13 @@ struct SimplifiedAnnotatedTerm {
             if (ret != 0) {
                 return ret < 0;
             } else {
-                throw "Assumption in SimplifiedAnnotatedTerm violated";
+		if (minsize == j.size - PREFIX_HEADER_LEN) {
+		    LOG(ERRORL) << "Assumption in SimplifiedAnnotatedTerm violated";
+		    abort();
+		}
+		minsize = min(j.size - PREFIX_HEADER_LEN - i.prefixSize, i.size);
+		ret = memcmp(i.term, j.term + PREFIX_HEADER_LEN + i.prefixSize, minsize);
+		return ret < 0;
             }
         }
     }
@@ -638,6 +666,7 @@ protected:
 
     static void sortAndDumpToFile(vector<SimplifiedAnnotatedTerm> &vector,
                                   string outputFile,
+				  int nthreads,
                                   bool removeDuplicates);
 
     static void sortAndDumpToFile(vector<SimplifiedAnnotatedTerm> &vector,
