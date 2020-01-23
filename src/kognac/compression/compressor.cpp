@@ -2456,7 +2456,7 @@ void Compressor::sortPartitionsAndAssignCounters(const string dirPrefix,
     }
 
     int64_t maxMem = max((int64_t) 128 * 1024 * 1024,
-            (int64_t) (Utils::getSystemMemory() * 0.7)) / nparallel;
+            (int64_t) (Utils::getSystemMemory() * (MAXPAR < 8 ? 0.7 : 0.6))) / nparallel;
     LOG(DEBUGL) << "nparallel = " << nparallel << ", max memory per thread " << maxMem;
 
     for (int i = 0; i < partitions; i += nparallel) {
