@@ -1104,7 +1104,7 @@ vector<FileInfo> *Compressor::splitInputInChunks(const string &input, int nchunk
     std::sort(infoAllFiles.begin(), infoAllFiles.end(), cmpInfoFiles);
     vector<FileInfo> *files = new vector<FileInfo>[nchunks];
     uint64_t *splitSizes = new uint64_t[nchunks];
-    uint64_t splitTargetSize = totalSize + nchunks - 1 / nchunks;
+    uint64_t splitTargetSize = (totalSize + nchunks - 1) / nchunks;
     for (int i = 0; i < nchunks; i++) {
 	splitSizes[i] = 0;
     }
