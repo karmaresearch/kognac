@@ -34,8 +34,8 @@
 #include <string>
 #include <cstring>
 
-const char EMPTY_KEY[2] = { '0', '0' };
-const char DELETED_KEY[2] = { 127, 127 };
+const char EMPTY_KEY[3] = { '0', '0', 0 };
+const char DELETED_KEY[3] = { 127, 127, 0 };
 
 struct eqstr {
     bool operator()(const char* s1, const char* s2) const {
