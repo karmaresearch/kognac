@@ -455,6 +455,9 @@ void Utils::resizeFile(string file, uint64_t newsize) {
 #endif
     }
 }
+string Utils::join(string dir, string filename) {
+    return dir + CDIR_SEP + filename;
+}
 /**** END FILE UTILS ****/
 /**** START STRING UTILS ****/
 bool Utils::starts_with(const string s, const string prefix) {

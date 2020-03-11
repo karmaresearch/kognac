@@ -70,6 +70,7 @@ class Utils {
         KLIBEXP static void linkdir(string source, string dest);
         KLIBEXP static void rmlink(string link);
         KLIBEXP static bool isAbsolutePath(string path);
+        KLIBEXP static string join(string dir, string filename);
         //End file utils
 
         static int numberOfLeadingZeros(uint32_t number) {
