@@ -34,7 +34,7 @@ class MultiDiskLZ4Reader;
 
 typedef struct Triple {
     int64_t s, p, o, count;
-    static Triple maxEl;
+    KLIBEXP static Triple maxEl;
 
     Triple(int64_t s, int64_t p, int64_t o) {
         this->s = s;
