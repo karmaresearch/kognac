@@ -206,6 +206,9 @@ bool Utils::hasExtension(const string &file){
 string Utils::extension(const string &file) {
     string fn = filename(file);
     auto pos = fn.find_last_of('.');
+    if (pos == std::string::npos) {
+        return "";
+    }
     return fn.substr(pos, fn.size() - pos); //must return also '.'
 }
 string Utils::removeExtension(string file) {
