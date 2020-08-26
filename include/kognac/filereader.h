@@ -80,6 +80,7 @@ class FileReader {
         int lengthP;
         const char *startO;
         int lengthO;
+        char tempbuf[MAX_TERM_SIZE];
 
         ParseException ex;
         bool parseLine(const char *input, const int sizeInput);

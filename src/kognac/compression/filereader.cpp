@@ -356,10 +356,17 @@ bool FileReader::parseLine(const char *line, const int sizeLine) {
         const char *endO;
         if (startO[0] == '"') { // Literal
             endO = readLiteral(startO, endLine);
+            lengthO = (int)(endO - startO);
+            if (*(endO-1) == '"') {
+                strncpy(tempbuf, startO, lengthO);
+                strncpy(tempbuf+lengthO, "^^<http://www.w3.org/2001/XMLSchema#string>", 43);
+                lengthO += 43;
+                startO = tempbuf;
+            }
         } else {
             endO = readResource(startO, endLine);
+            lengthO = (int)(endO - startO);
         }
-        lengthO = (int)(endO - startO);
         LOG(TRACEL) << "O = " << std::string(startO, lengthO) << ".";
 
         if (endO < endLine) {
