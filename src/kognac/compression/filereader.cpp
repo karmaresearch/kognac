@@ -289,28 +289,31 @@ const char *FileReader::readLiteral(const char *start, const char *end) {
         if (*start == '@') {
             // [a-zA-Z]+ ('-' [a-zA-Z0-9]+)*
             start++;
-            c = nextChar(start++, end);
+            c = nextChar(start, end);
             if (! isalpha(c)) {
                 LOG(ERRORL) << "illegal character in language specification";
                 throw ex;
             }
             while (isalpha(c)) {
+                start++;
                 if (start == end) {
                     return start;
                 }
-                c = nextChar(start++, end);
+                c = nextChar(start, end);
             }
             while (c == '-') {
-                c = nextChar(start++, end);
+                start++;
+                c = nextChar(start, end);
                 if (! isalnum(c)) {
                     LOG(ERRORL) << "illegal character in language specification";
                     throw ex;
                 }
                 while (isalnum(c)) {
+                    start++;
                     if (start == end) {
                         return start;
                     }
-                    c = nextChar(start++, end);
+                    c = nextChar(start, end);
                 }
             }
         } else if (*start == '^') {
