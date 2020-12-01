@@ -55,7 +55,7 @@ message("CMAKE_CXX_COMPILER_ID = ${CMAKE_CXX_COMPILER_ID}")
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")
   set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
-  set(COMPILE_FLAGS "-c -fPIC -std=c++11")
+  set(COMPILE_FLAGS "-c -fPIC -fsigned-char -std=c++11")
 endif()
 
 #Create both a library and the executable program
