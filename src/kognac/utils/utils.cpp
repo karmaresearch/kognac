@@ -1264,9 +1264,15 @@ uint64_t Utils::getIOReadBytes() {
 
 uint64_t Utils::getCPUCounter() {
 #if defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
-    unsigned a, d;
-    __asm__ volatile("rdtsc" : "=a" (a), "=d" (d));
-    return ((uint64_t)a) | (((uint64_t)d) << 32);
+	#ifdef __i386__
+    		unsigned a, d;
+    		__asm__ volatile("rdtsc" : "=a" (a), "=d" (d));
+    		return ((uint64_t)a) | (((uint64_t)d) << 32);
+	#elif __aarch64__
+		return 0; //unsupported
+	#else
+		return 0; //unsupported
+	#endif
 #else
     return 0; //unsupported
 #endif
