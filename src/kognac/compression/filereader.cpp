@@ -360,11 +360,10 @@ bool FileReader::parseLine(const char *line, const int sizeLine) {
         if (startO[0] == '"') { // Literal
             endO = readLiteral(startO, endLine);
             lengthO = (int)(endO - startO);
-            if (*(endO-1) == '"') {
-                strncpy(tempbuf, startO, lengthO);
-                strncpy(tempbuf+lengthO, "^^<http://www.w3.org/2001/XMLSchema#string>", 43);
-                lengthO += 43;
-                startO = tempbuf;
+            if (*(endO-1) == '>') {
+                if (strncmp(endO - 43, "^^<http://www.w3.org/2001/XMLSchema#string>", 43) == 0) {
+                    lengthO -= 43;
+                }
             }
         } else {
             endO = readResource(startO, endLine);
