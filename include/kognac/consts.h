@@ -53,6 +53,7 @@
 
 #define MAX_TERM_SIZE 16384
 
+//Used in the compressed file
 #define BLOCK_SUPPORT_BUFFER_COMPR 64000000
 #define MIN_MEM_SORT_TRIPLES 128000000
 
