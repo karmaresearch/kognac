@@ -2,11 +2,14 @@ cmake_minimum_required (VERSION 2.8)
 
 set(CMAKE_CXX_COMPILER "g++")
 set(CMAKE_C_COMPILER "gcc")
-#set(CMAKE_VS_PLATFORM_NAME, "x64")
 
 project (kognac)
 include(ExternalProject)
 set(CMAKE_MACOSX_RPATH 1)
+if (DIST)
+  set(CMAKE_OSX_ARCHITECTURES arm64 x86_64)
+  set(ONLY_ACIVE_ARCH NO)
+endif()
 
 #Set to release mode if nothing is specified
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -101,14 +104,20 @@ ENDIF()
 # find_path (lz4h lz4.h)
 # IF (${lz4h} STREQUAL "lz4h-NOTFOUND")
 #    message("Could not find LZ4. I'm going to download it from the GIT repository ...")
-    message("Downloading lz4, static version required")
+message("Downloading lz4, static version required")
+IF (DIST AND ${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+    set(MOREFLAGS "-fPIC -arch x86_64 -arch arm64")
+ELSE()
+    set(MOREFLAGS "-fPIC")
+ENDIF()
+
     ExternalProject_Add(git-lz4
         DOWNLOAD_COMMAND git clone https://github.com/Cyan4973/lz4.git
         DOWNLOAD_DIR external
         SOURCE_DIR external/lz4/
         CONFIGURE_COMMAND ""
         BUILD_IN_SOURCE 1
-        BUILD_COMMAND make -C lib lib MOREFLAGS=-fPIC
+        BUILD_COMMAND make -C lib lib MOREFLAGS=${MOREFLAGS}
         INSTALL_COMMAND ""
     )
     ExternalProject_Get_Property(git-lz4 SOURCE_DIR)
